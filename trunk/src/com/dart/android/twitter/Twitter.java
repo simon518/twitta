@@ -72,8 +72,7 @@ public class Twitter extends Activity {
     
     mApi = new TwitterApi();
     mDb = new TwitterDbAdapter(this);
-    mDb.open();
-    
+    mDb.open();    
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     
     setContentView(R.layout.main);
@@ -160,7 +159,7 @@ public class Twitter extends Activity {
     enableLogin();
     disableEntry();
     // TODO: cancel pending stuff?
-    // TODO: Kill any timers.
+    // TODO: kill any timers.
   }
 
   private void switchTweetsUi() {
@@ -185,16 +184,32 @@ public class Twitter extends Activity {
           new SimpleCursorAdapter(this, R.layout.tweet, cursor, from, to);
     mTweetList.setAdapter(tweets); 
   }
+
+  
+  private void enableLogin() {
+    mUsernameEdit.setEnabled(true);
+    mPasswordEdit.setEnabled(true);
+    mSigninButton.setEnabled(true);    
+  }
+
+  private void disableLogin() {
+    mUsernameEdit.setEnabled(false);
+    mPasswordEdit.setEnabled(false);
+    mSigninButton.setEnabled(false);    
+  }
+
+  private void enableEntry() {
+    mTweetEdit.setEnabled(true);
+    mSendButton.setEnabled(true);
+  }
+
+  private void disableEntry() {
+    mTweetEdit.setEnabled(false);
+    mSendButton.setEnabled(false);
+  }
   
   // Helpers.
   
-  private boolean hasCredentials() {
-    String username = mPreferences.getString(PREFERENCES_USERNAME_KEY, "");
-    String password = mPreferences.getString(PREFERENCES_PASSWORD_KEY, "");
-    
-    return isValidCredentials(username, password);
-  }
-
   public static boolean isValidCredentials(String username, String password) {
     return !Utils.isEmpty(username) && !Utils.isEmpty(password);
   }
@@ -231,28 +246,6 @@ public class Twitter extends Activity {
     enableLogin();
   }
   
-  private void enableLogin() {
-    mUsernameEdit.setEnabled(true);
-    mPasswordEdit.setEnabled(true);
-    mSigninButton.setEnabled(true);    
-  }
-
-  private void disableLogin() {
-    mUsernameEdit.setEnabled(false);
-    mPasswordEdit.setEnabled(false);
-    mSigninButton.setEnabled(false);    
-  }
-
-  private void enableEntry() {
-    mTweetEdit.setEnabled(true);
-    mSendButton.setEnabled(true);
-  }
-
-  private void disableEntry() {
-    mTweetEdit.setEnabled(false);
-    mSendButton.setEnabled(false);
-  }
-  
   private void logout() {    
     SharedPreferences.Editor editor = mPreferences.edit();
     editor.putString(PREFERENCES_USERNAME_KEY, "");
@@ -260,11 +253,10 @@ public class Twitter extends Activity {
     editor.commit();
     
     mApi.setCredentials("", "");
-        
     mDb.deleteAllTweets();
     updateTweets();    
     
-    // TODO: stop pending tasks.
+    // TODO: stop pending tasks?
     updateStatus("");
     mUsernameEdit.setText("");
     mPasswordEdit.setText("");
@@ -282,8 +274,6 @@ public class Twitter extends Activity {
     mRetrieveTask = new RetrieveTask().execute();    
   }
    
-  // Tasks.
-  
   private class LoginTask extends UserTask<Void, String, Boolean> {
     @Override
     public void onPreExecute() {
@@ -366,11 +356,6 @@ public class Twitter extends Activity {
       
       return SendResult.OK;
     }
-
-    @Override    
-    public void onProgressUpdate(String... progress) {
-      updateStatus(progress[0]);
-    }
     
     @Override
     public void onPostExecute(SendResult result) {
@@ -403,7 +388,7 @@ public class Twitter extends Activity {
   
   
   private enum RetrieveResult {
-    OK, IO_ERROR, AUTH_ERROR, JSON_ERROR
+    OK, IO_ERROR, AUTH_ERROR
   }
   
   private class RetrieveTask extends UserTask<Void, String, RetrieveResult> {
@@ -447,10 +432,11 @@ public class Twitter extends Activity {
             }          
           }      
                   
+          // TODO: could be interrupted. Should add to a temp array.
           mDb.createTweet(tweetId, screenName, message, imageUrl);      
         } catch (JSONException e) {
           e.printStackTrace();
-          return RetrieveResult.JSON_ERROR;
+          return RetrieveResult.IO_ERROR;
         }      
       }      
       

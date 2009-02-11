@@ -2,10 +2,6 @@ package com.dart.android.twitter;
 
 import java.io.IOException;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
