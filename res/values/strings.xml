@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Twitter</string>
+    
+    <string name="username_label">Username:</string>    
+    <string name="password_label">Password:</string>
+    <string name="signin">Sign-In!</string>
+    
+    <string name="signout">Sign out</string>
+    
+</resources>

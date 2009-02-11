@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="fill_parent"
+  android:layout_height="fill_parent"
+  android:background="@drawable/background"
+  >
+    <!-- Main content area. -->
+	<ListView
+   	android:id="@+id/tweet_list"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingTop="33px"
+    android:paddingBottom="55px"    	    
+    android:paddingLeft="9px"
+    android:paddingRight="12px"    
+    android:fadingEdge="none"
+    android:cacheColorHint="#E0FF92"
+    android:visibility="gone"	    
+    android:scrollbars="none"
+    />    	    
+    
+    <!-- Login screen. -->    
+    <LinearLayout
+    android:id="@+id/login_ui"        
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:paddingTop="40px"
+    android:paddingBottom="10px"    	    
+    android:paddingLeft="15px"
+    android:paddingRight="15px"    
+    >    
+    <TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textColor="@drawable/label_color"
+    android:text="@string/username_label"
+    />
+    <EditText
+    android:id="@+id/username_edit"
+    android:background="@drawable/edittext_background"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:singleLine="true"
+    />
+    <TextView
+    android:layout_marginTop="3px"            
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textColor="@drawable/label_color"
+    android:text="@string/password_label"
+    />
+    <EditText
+    android:id="@+id/password_edit"
+    android:password="true"
+    android:background="@drawable/edittext_background"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:singleLine="true"
+    />	    
+    <Button
+    android:layout_marginTop="10px"        
+    android:id="@+id/signin_button"
+    android:background="@drawable/button_background_selector"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:textColor="@drawable/label_color"
+    android:text="@string/signin"
+    />
+    </LinearLayout>
+
+    <!-- Input area. -->    
+
+    <LinearLayout
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_alignParentBottom="true"    
+    android:paddingBottom="10px"    	    
+    android:paddingLeft="7px"
+    android:paddingRight="9px"        
+    >    
+
+    <LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    >
+    <TextView
+    android:id="@+id/chars_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="13px"
+    android:singleLine="true"
+    android:textColor="#FF000000"
+    android:layout_marginRight="5px"
+    />	             
+    <TextView
+    android:id="@+id/status_text"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textSize="13px"
+    android:singleLine="true"
+    android:textColor="@drawable/status_color"
+    />	 
+    </LinearLayout>       
+    
+    <LinearLayout
+    android:orientation="horizontal"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    >    
+    <EditText
+    android:id="@+id/tweet_edit"
+    android:background="@drawable/edittext_background"
+    android:layout_width="0px"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:textSize="15px"
+    android:singleLine="true"
+    />	    
+    <ImageButton
+    android:id="@+id/send_button"
+    android:background="@drawable/heart_background_selector"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="3px"
+    />
+    </LinearLayout>
+    </LinearLayout>
+    
+    <!-- Logo. -->
+    <ImageView
+    android:src="@drawable/logo"
+    android:paddingTop="6px"
+    android:paddingLeft="8px"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"    
+    />
+        	    
+</RelativeLayout>
