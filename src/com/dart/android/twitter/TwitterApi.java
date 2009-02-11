@@ -72,8 +72,7 @@ public class TwitterApi {
   }
    
   private InputStream requestData(String url, String httpMethod,
-      ArrayList<NameValuePair> params) throws
-      IOException, AuthException {
+      ArrayList<NameValuePair> params) throws IOException, AuthException {
     Log.i(TAG, "Sending " + httpMethod + " request to " + url);
     
     URI uri;
@@ -96,7 +95,7 @@ public class TwitterApi {
       post.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
       method = post;
     } else {
-      method = new HttpPost(uri);            
+      method = new HttpGet(uri);            
     }
     
     HttpResponse response;
