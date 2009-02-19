@@ -221,7 +221,7 @@ public class TwitterActivity extends Activity {
   private void doSend() {    
     if (mSendTask != null &&
         mSendTask.getStatus() == UserTask.Status.RUNNING) {
-      Log.i(TAG, "Already sending.");      
+      Log.w(TAG, "Already sending.");      
     } else {
       mSendTask = new SendTask().execute();
     }
@@ -288,7 +288,7 @@ public class TwitterActivity extends Activity {
    
     if (mRetrieveTask != null &&
         mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
-      Log.i(TAG, "Already retrieving.");      
+      Log.w(TAG, "Already retrieving.");      
     } else {
       mRetrieveTask = new RetrieveTask().execute();
     }
