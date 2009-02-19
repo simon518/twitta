@@ -7,5 +7,6 @@
     <string name="signin">Sign-In!</string>
     
     <string name="signout">Sign out</string>
+    <string name="refresh">Refresh</string>
     
 </resources>
