@@ -21,6 +21,7 @@ import org.apache.http.impl.auth.BasicSchemeFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,9 +47,12 @@ public class TwitterApi {
   private static final String METHOD_GET = "GET";
   private static final String METHOD_POST = "POST";
 
-  public class AuthException extends Exception {    
+  public class AuthException extends Exception {
+    private static final long serialVersionUID = 1703735789572778599L;    
   }
     
+  private static final int CONNECTION_TIMEOUT = 30 * 1000;
+  private static final int SOCKET_TIMEOUT = 30 * 1000;
   
   public TwitterApi() {
     prepareHttpClient();
@@ -97,6 +101,9 @@ public class TwitterApi {
     } else {
       method = new HttpGet(uri);            
     }
+    
+    HttpConnectionParams.setConnectionTimeout(method.getParams(), CONNECTION_TIMEOUT);
+    HttpConnectionParams.setSoTimeout(method.getParams(), SOCKET_TIMEOUT);    
     
     HttpResponse response;
     

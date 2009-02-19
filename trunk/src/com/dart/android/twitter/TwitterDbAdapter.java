@@ -89,7 +89,8 @@ public class TwitterDbAdapter {
   }
 
   public Cursor fetchAllTweets() {
-    return mDb.query(DATABASE_TABLE, COLUMNS, null, null, null, null, null);
+    return mDb.query(DATABASE_TABLE, COLUMNS, null, null, null, null,
+        KEY_ID + " DESC");
   }
   
   public boolean deleteAllTweets() {

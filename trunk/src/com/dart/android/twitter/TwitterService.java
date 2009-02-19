@@ -31,7 +31,7 @@ public class TwitterService extends Service {
     
   private final IBinder mBinder = new LocalBinder();
 
-  private Twitter mClient;
+  private TwitterActivity mClient;
     
   private SharedPreferences mPreferences;    
   private SharedPreferences.Editor mEditor;
@@ -51,7 +51,8 @@ public class TwitterService extends Service {
     String username = mPreferences.getString(PREFERENCES_USERNAME_KEY, "");
     String password = mPreferences.getString(PREFERENCES_PASSWORD_KEY, "");
     
-    return Twitter.isValidCredentials(username, password);
+    return true;
+    // return TwitterActivity.isValidCredentials(username, password);
   }
 
   public void login(String username, String password) throws 
@@ -70,7 +71,7 @@ public class TwitterService extends Service {
     return mBinder;
   }
   
-  public void setClient(Twitter client) {
+  public void setClient(TwitterActivity client) {
     mClient = client;
   }
   
@@ -93,9 +94,11 @@ public class TwitterService extends Service {
     
     mApi = new TwitterApi();
     
-    if (Twitter.isValidCredentials(username, password)) {
+    /*
+    if (TwitterActivity.isValidCredentials(username, password)) {
       mApi.setCredentials(username, password);
     }
+    */
     
     mHandler.sendEmptyMessage(0);    
   }
