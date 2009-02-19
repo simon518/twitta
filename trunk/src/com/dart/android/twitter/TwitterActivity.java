@@ -59,7 +59,6 @@ public class TwitterActivity extends Activity {
  
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
-  @SuppressWarnings("unused")
   private UserTask<Void, String, SendResult> mSendTask;
   
   @Override
@@ -204,7 +203,6 @@ public class TwitterActivity extends Activity {
   // Actions.
 
   private void logout() {
-    // TODO: stop pending tasks?        
     mDb.deleteAllTweets();
     
     SharedPreferences.Editor editor = mPreferences.edit();
@@ -220,8 +218,13 @@ public class TwitterActivity extends Activity {
     finish();           
   }
   
-  private void doSend() {
-    mSendTask = new SendTask().execute();
+  private void doSend() {    
+    if (mSendTask != null &&
+        mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.i(TAG, "Already sending.");      
+    } else {
+      mSendTask = new SendTask().execute();
+    }
   }
 
   private enum SendResult {
@@ -352,8 +355,7 @@ public class TwitterActivity extends Activity {
           mDb.createTweet(tweetId, screenName, message, imageUrl);
           
           if (imageUrl != null &&
-              mImageManager.lookup(imageUrl) == null) {
-            
+              mImageManager.lookup(imageUrl) == null) {            
             // Download image to cache.
             try {
               mImageManager.fetch(imageUrl);
