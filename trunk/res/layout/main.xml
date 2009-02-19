@@ -5,7 +5,7 @@
   android:background="@drawable/background"
   >
     <!-- Main content area. -->
-	<ListView
+    <ListView
    	android:id="@+id/tweet_list"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
@@ -15,62 +15,11 @@
     android:paddingRight="12px"    
     android:fadingEdge="none"
     android:cacheColorHint="#E0FF92"
-    android:visibility="gone"	    
     android:scrollbars="none"
+    android:listSelector="#00000000"
     />    	    
     
-    <!-- Login screen. -->    
-    <LinearLayout
-    android:id="@+id/login_ui"        
-    android:orientation="vertical"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:paddingTop="40px"
-    android:paddingBottom="10px"    	    
-    android:paddingLeft="15px"
-    android:paddingRight="15px"    
-    >    
-    <TextView
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textColor="@drawable/label_color"
-    android:text="@string/username_label"
-    />
-    <EditText
-    android:id="@+id/username_edit"
-    android:background="@drawable/edittext_background"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:singleLine="true"
-    />
-    <TextView
-    android:layout_marginTop="3px"            
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textColor="@drawable/label_color"
-    android:text="@string/password_label"
-    />
-    <EditText
-    android:id="@+id/password_edit"
-    android:password="true"
-    android:background="@drawable/edittext_background"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:singleLine="true"
-    />	    
-    <Button
-    android:layout_marginTop="10px"        
-    android:id="@+id/signin_button"
-    android:background="@drawable/button_background_selector"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:textColor="@drawable/label_color"
-    android:text="@string/signin"
-    />
-    </LinearLayout>
-
     <!-- Input area. -->    
-
     <LinearLayout
     android:orientation="vertical"
     android:layout_width="fill_parent"
