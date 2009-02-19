@@ -51,8 +51,8 @@ public class TwitterApi {
     private static final long serialVersionUID = 1703735789572778599L;    
   }
     
-  private static final int CONNECTION_TIMEOUT = 30 * 1000;
-  private static final int SOCKET_TIMEOUT = 30 * 1000;
+  private static final int CONNECTION_TIMEOUT_MS = 30 * 1000;
+  private static final int SOCKET_TIMEOUT_MS = 30 * 1000;
   
   public TwitterApi() {
     prepareHttpClient();
@@ -102,8 +102,8 @@ public class TwitterApi {
       method = new HttpGet(uri);            
     }
     
-    HttpConnectionParams.setConnectionTimeout(method.getParams(), CONNECTION_TIMEOUT);
-    HttpConnectionParams.setSoTimeout(method.getParams(), SOCKET_TIMEOUT);    
+    HttpConnectionParams.setConnectionTimeout(method.getParams(), CONNECTION_TIMEOUT_MS);
+    HttpConnectionParams.setSoTimeout(method.getParams(), SOCKET_TIMEOUT_MS);    
     
     HttpResponse response;
     
