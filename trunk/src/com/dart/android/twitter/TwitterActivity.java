@@ -1,6 +1,7 @@
 package com.dart.android.twitter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -327,40 +328,40 @@ public class TwitterActivity extends Activity {
         return RetrieveResult.AUTH_ERROR;
       }
       
+      ArrayList<Tweet> tweets = new ArrayList<Tweet>(); 
+      
       for (int i = 0; i < jsonArray.length(); ++i) {
+        Tweet tweet = new Tweet();
+        
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
            
-          String tweetId = "";      
           if (jsonObject.has("id")) {
-            tweetId = jsonObject.getLong("id") + "";
+            tweet.tweetId = jsonObject.getLong("id") + "";
           }
           
-          String message = "";  
           if (jsonObject.has("text")) {
-            message = Utils.decodeTwitterJson(jsonObject.getString("text"));
+            tweet.message = Utils.decodeTwitterJson(jsonObject.getString("text"));
           } 
 
-          String screenName = "";
-          String imageUrl = "";       
           if (jsonObject.has("user")) {
             JSONObject user = jsonObject.getJSONObject("user");
             if (user.has("screen_name")) {
-              screenName = Utils.decodeTwitterJson(
+              tweet.screenName = Utils.decodeTwitterJson(
                   user.getString("screen_name"));
             }
             if (user.has("profile_image_url")) {
-              imageUrl = user.getString("profile_image_url");
+              tweet.imageUrl = user.getString("profile_image_url");
             }          
           }      
-                  
-          mDb.createTweet(tweetId, screenName, message, imageUrl);
+                 
+          tweets.add(tweet);
           
-          if (imageUrl != null &&
-              mImageManager.lookup(imageUrl) == null) {            
+          if (tweet.imageUrl != null &&
+              mImageManager.lookup(tweet.imageUrl) == null) {            
             // Download image to cache.
             try {
-              mImageManager.fetch(imageUrl);
+              mImageManager.fetch(tweet.imageUrl);
             } catch (IOException e) {
               e.printStackTrace();            
             }
@@ -370,6 +371,8 @@ public class TwitterActivity extends Activity {
           return RetrieveResult.IO_ERROR;
         }      
       }      
+      
+      mDb.syncTweets(tweets);
       
       return RetrieveResult.OK;
     }
