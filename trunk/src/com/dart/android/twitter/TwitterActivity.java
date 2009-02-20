@@ -273,6 +273,7 @@ public class TwitterActivity extends Activity {
   private void onSendSuccess() {
     mTweetEdit.setText("");
     updateStatus("");
+    updateChars("");
     enableEntry();    
     doRetrieve();
   }
@@ -337,7 +338,7 @@ public class TwitterActivity extends Activity {
           
           String message = "";  
           if (jsonObject.has("text")) {
-            message = jsonObject.getString("text");
+            message = Utils.decodeTwitterJson(jsonObject.getString("text"));
           } 
 
           String screenName = "";
@@ -345,7 +346,8 @@ public class TwitterActivity extends Activity {
           if (jsonObject.has("user")) {
             JSONObject user = jsonObject.getJSONObject("user");
             if (user.has("screen_name")) {
-              screenName = user.getString("screen_name");
+              screenName = Utils.decodeTwitterJson(
+                  user.getString("screen_name"));
             }
             if (user.has("profile_image_url")) {
               imageUrl = user.getString("profile_image_url");

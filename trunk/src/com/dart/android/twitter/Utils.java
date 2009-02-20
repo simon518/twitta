@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class Utils {
+  
   public static boolean isEmpty(String s) {
     return s == null || s.length() == 0;      
   }
@@ -20,6 +21,11 @@ public class Utils {
     }
      
     return sb.toString();
+  }
+
+  // Twitter JSON encodes < and > to prevent XSS attacks on websites.
+  public static String decodeTwitterJson(String s) {
+    return s.replace("&lt;", "<").replace("&gt;", ">");
   }
   
 }
