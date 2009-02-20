@@ -47,7 +47,6 @@ public class LoginActivity extends Activity {
   private SharedPreferences mPreferences;    
   
   // Tasks.
-  @SuppressWarnings("unused")
   private UserTask<Void, String, Boolean> mLoginTask;
   
   @Override
@@ -82,6 +81,16 @@ public class LoginActivity extends Activity {
         doLogin();
       }
     });    
+  }
+
+  @Override  
+  protected void onDestroy() {
+    if (mLoginTask != null &&
+        mLoginTask.getStatus() == UserTask.Status.RUNNING) {
+      mLoginTask.cancel(true);
+    }    
+
+    super.onDestroy();    
   }
 
   void launchTwitterActivity() {

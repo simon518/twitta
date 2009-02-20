@@ -97,10 +97,30 @@ public class TwitterActivity extends Activity {
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
     mApi.setCredentials(username, password);
   
-    setupAdapter();    
-    doRetrieve();
+    setupAdapter();
+    
+    final Object data = getLastNonConfigurationInstance();
+    
+    if (data == null) {    
+      doRetrieve();
+    } else {
+      mImageManager = ((NonConfigurationState) data).imageManager;
+    }
   }
 
+  private class NonConfigurationState {
+    NonConfigurationState(ImageManager imageManager) {
+      this.imageManager = imageManager;
+    }
+    
+    ImageManager imageManager;
+  }
+  
+  @Override
+  public Object onRetainNonConfigurationInstance() {
+    return new NonConfigurationState(mImageManager);  
+  }
+  
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);  
@@ -120,6 +140,17 @@ public class TwitterActivity extends Activity {
   protected void onDestroy() {
     Log.i(TAG, "onDestroy");    
     mDb.close();        
+    
+    if (mSendTask != null &&
+        mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      mSendTask.cancel(true);
+    }
+
+    if (mRetrieveTask != null &&
+        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      mRetrieveTask.cancel(true);
+    }
+    
     super.onDestroy();    
   }
     
@@ -174,21 +205,27 @@ public class TwitterActivity extends Activity {
           TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
       
       tweetUserText.setText(cursor.getString(userTextColumn));
-      tweetText.setText(cursor.getString(textColumn));      
-      Bitmap profileBitmap = mImageManager.lookup(
-          cursor.getString(profileImageUrlColumn));
+      tweetText.setText(cursor.getString(textColumn));
       
-      if (profileBitmap != null) {
-        profileImage.setImageBitmap(profileBitmap);        
-      } 
+      String profileImageUrl = cursor.getString(profileImageUrlColumn);
+      
+      if (!Utils.isEmpty(profileImageUrl)) {
+        Bitmap profileBitmap = mImageManager.lookup(profileImageUrl);
+        
+        if (profileBitmap != null) {
+          profileImage.setImageBitmap(profileBitmap);        
+        }         
+      }      
     }    
+    
+    public void refresh() {
+      getCursor().requery();
+    }
     
   }
     
   private void updateTweets() {
-    Cursor cursor = mDb.fetchAllTweets();
-    startManagingCursor(cursor);
-    mTweetAdapter.changeCursor(cursor);
+    mTweetAdapter.refresh();
   }
   
   private void enableEntry() {
@@ -219,17 +256,21 @@ public class TwitterActivity extends Activity {
     finish();           
   }
   
-  private void doSend() {    
+  private void doSend() {
     if (mSendTask != null &&
         mSendTask.getStatus() == UserTask.Status.RUNNING) {
       Log.w(TAG, "Already sending.");      
     } else {
-      mSendTask = new SendTask().execute();
+      String status = mTweetEdit.getText().toString();
+      
+      if (!Utils.isEmpty(status)) {
+        mSendTask = new SendTask().execute();
+      }
     }
   }
 
   private enum SendResult {
-    OK, IO_ERROR, AUTH_ERROR
+    OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
   
   private class SendTask extends UserTask<Void, String, SendResult> {
@@ -305,7 +346,7 @@ public class TwitterActivity extends Activity {
   }
     
   private enum RetrieveResult {
-    OK, IO_ERROR, AUTH_ERROR
+    OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
   
   private class RetrieveTask extends UserTask<Void, Void, RetrieveResult> {
@@ -331,6 +372,10 @@ public class TwitterActivity extends Activity {
       ArrayList<Tweet> tweets = new ArrayList<Tweet>(); 
       
       for (int i = 0; i < jsonArray.length(); ++i) {
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }
+        
         Tweet tweet = new Tweet();
         
         try {
@@ -341,7 +386,8 @@ public class TwitterActivity extends Activity {
           }
           
           if (jsonObject.has("text")) {
-            tweet.message = Utils.decodeTwitterJson(jsonObject.getString("text"));
+            tweet.message = Utils.decodeTwitterJson(
+                jsonObject.getString("text"));
           } 
 
           if (jsonObject.has("user")) {
@@ -357,7 +403,11 @@ public class TwitterActivity extends Activity {
                  
           tweets.add(tweet);
           
-          if (tweet.imageUrl != null &&
+          if (isCancelled()) {
+            return RetrieveResult.CANCELLED;
+          }
+          
+          if (!Utils.isEmpty(tweet.imageUrl) &&
               mImageManager.lookup(tweet.imageUrl) == null) {            
             // Download image to cache.
             try {
@@ -371,6 +421,10 @@ public class TwitterActivity extends Activity {
           return RetrieveResult.IO_ERROR;
         }      
       }      
+      
+      if (isCancelled()) {
+        return RetrieveResult.CANCELLED;
+      }
       
       mDb.syncTweets(tweets);
       
