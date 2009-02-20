@@ -87,16 +87,19 @@ public class TwitterDbAdapter {
   }
 
   public void syncTweets(List<Tweet> tweets) {
-    mDb.beginTransaction();
-    
-    deleteAllTweets();
-    
-    for (Tweet tweet : tweets) {
-      createTweet(tweet.tweetId, tweet.screenName, tweet.message,
-          tweet.imageUrl);
+    try {
+      mDb.beginTransaction();
+      
+      deleteAllTweets();
+      
+      for (Tweet tweet : tweets) {
+        createTweet(tweet.tweetId, tweet.screenName, tweet.message,
+            tweet.imageUrl);
+      }
+      mDb.setTransactionSuccessful();
+    } finally {      
+      mDb.endTransaction();
     }
-    
-    mDb.endTransaction();
   }
   
   public boolean deleteTweet(long id) {
