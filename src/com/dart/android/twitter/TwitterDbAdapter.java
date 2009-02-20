@@ -1,5 +1,7 @@
 package com.dart.android.twitter;
 
+import java.util.List;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -84,6 +86,19 @@ public class TwitterDbAdapter {
     return mDb.insert(DATABASE_TABLE, null, initialValues);
   }
 
+  public void syncTweets(List<Tweet> tweets) {
+    mDb.beginTransaction();
+    
+    deleteAllTweets();
+    
+    for (Tweet tweet : tweets) {
+      createTweet(tweet.tweetId, tweet.screenName, tweet.message,
+          tweet.imageUrl);
+    }
+    
+    mDb.endTransaction();
+  }
+  
   public boolean deleteTweet(long id) {
     return mDb.delete(DATABASE_TABLE, KEY_ID + "=" + id, null) > 0;
   }
