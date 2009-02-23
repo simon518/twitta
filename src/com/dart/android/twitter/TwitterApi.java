@@ -58,6 +58,10 @@ public class TwitterApi {
     prepareHttpClient();
   }
 
+  public static boolean isValidCredentials(String username, String password) {
+    return !Utils.isEmpty(username) && !Utils.isEmpty(password);
+  }
+    
   private void prepareHttpClient() {
     mAuthScope = new AuthScope(TWITTER_HOST, AuthScope.ANY_PORT);
     mClient = new DefaultHttpClient();

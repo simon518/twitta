@@ -62,16 +62,29 @@ public class TwitterActivity extends Activity {
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
   
+  private void controlUpdateChecks() {
+    // If update checks are on.
+    if (mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
+      TwitterService.schedule(this);          
+    } else {
+      TwitterService.stop(this);
+    }       
+  }
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     
+    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);        
+        
     mApi = new TwitterApi();
     mDb = new TwitterDbAdapter(this);
     mDb.open();
     mImageManager = new ImageManager();
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    
+    controlUpdateChecks();
     
     setContentView(R.layout.main);
             
@@ -99,7 +112,7 @@ public class TwitterActivity extends Activity {
   
     setupAdapter();
     
-    final Object data = getLastNonConfigurationInstance();
+    Object data = getLastNonConfigurationInstance();
     
     if (data == null) {    
       doRetrieve();
@@ -138,9 +151,6 @@ public class TwitterActivity extends Activity {
   
   @Override
   protected void onDestroy() {
-    Log.i(TAG, "onDestroy");    
-    mDb.close();        
-    
     if (mSendTask != null &&
         mSendTask.getStatus() == UserTask.Status.RUNNING) {
       mSendTask.cancel(true);
@@ -150,6 +160,8 @@ public class TwitterActivity extends Activity {
         mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
     }
+
+    mDb.close();        
     
     super.onDestroy();    
   }
@@ -249,7 +261,7 @@ public class TwitterActivity extends Activity {
     editor.putString(Preferences.USERNAME_KEY, "");
     editor.putString(Preferences.PASSWORD_KEY, "");    
     editor.commit();
-        
+    
     Intent intent = new Intent(); 
     intent.setClass(this, LoginActivity.class); 
     startActivity(intent); 
@@ -453,6 +465,7 @@ public class TwitterActivity extends Activity {
   
   private static final int OPTIONS_MENU_ID_LOGOUT = 1;
   private static final int OPTIONS_MENU_ID_REFRESH = 2;
+  private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
   
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -461,14 +474,20 @@ public class TwitterActivity extends Activity {
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0,
         R.string.signout);           
     item.setIcon(android.R.drawable.ic_menu_revert);
-    
+
+    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0,
+        R.string.preferences);
+    item.setIcon(android.R.drawable.ic_menu_preferences);    
+        
     item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0,
         R.string.refresh);           
     item.setIcon(android.R.drawable.stat_notify_sync);    
-        
+
     return true;
   }    
 
+  private static final int REQUEST_CODE_PREFERENCES = 1;
+  
   @Override
   public boolean onOptionsItemSelected(MenuItem item){
     switch (item.getItemId()) {
@@ -477,12 +496,28 @@ public class TwitterActivity extends Activity {
         return true;
       case OPTIONS_MENU_ID_REFRESH:
         doRetrieve();
-        return true;        
+        return true;       
+      case OPTIONS_MENU_ID_PREFERENCES:
+        Intent launchPreferencesIntent =
+          new Intent().setClass(this, PreferencesActivity.class);          
+        startActivityForResult(launchPreferencesIntent,
+          REQUEST_CODE_PREFERENCES);
     }
 
     return super.onOptionsItemSelected(item);
   }
   
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode,
+      Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (requestCode == REQUEST_CODE_PREFERENCES &&
+        resultCode == RESULT_OK) {
+      controlUpdateChecks();
+    }
+  }  
+ 
   // Various handlers.  
  
   private TextWatcher mTextWatcher = new TextWatcher() {

@@ -58,9 +58,9 @@ public class LoginActivity extends Activity {
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
     
-    if (isValidCredentials(username, password)) {
+    if (TwitterApi.isValidCredentials(username, password)) {
       launchTwitterActivity();
-      // Method should finish the activity.
+      // the method above finishes the activity.
     }
     
     mApi = new TwitterApi();
@@ -123,12 +123,6 @@ public class LoginActivity extends Activity {
     mSigninButton.setEnabled(false);    
   }
 
-  // Helpers.
-  
-  public static boolean isValidCredentials(String username, String password) {
-    return !Utils.isEmpty(username) && !Utils.isEmpty(password);
-  }
-  
   // Actions.
 
   private void doLogin() {
@@ -173,7 +167,7 @@ public class LoginActivity extends Activity {
             
       publishProgress("Logging in...");
 
-      if (!isValidCredentials(username, password)) {
+      if (!TwitterApi.isValidCredentials(username, password)) {
         publishProgress("Invalid username or password");
         return false;
       }    
