@@ -96,6 +96,7 @@ public class TwitterDbAdapter {
         createTweet(tweet.tweetId, tweet.screenName, tweet.message,
             tweet.imageUrl);
       }
+      
       mDb.setTransactionSuccessful();
     } finally {      
       mDb.endTransaction();
@@ -126,6 +127,23 @@ public class TwitterDbAdapter {
     
     return mCursor;
   }
+  
+  public int fetchMaxId() {
+    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM tweets",
+        null);
+
+    int result = 0;
+        
+    if (mCursor == null) {
+      return result;
+    } 
+    
+    mCursor.moveToFirst();    
+    result = mCursor.getInt(0);
+    mCursor.close();
+    
+    return result;
+  }  
 
   public boolean updateTweet(String id, String user, String text,
       String imageUrl) {
