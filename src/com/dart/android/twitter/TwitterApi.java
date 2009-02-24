@@ -159,11 +159,34 @@ public class TwitterApi {
     return json;
   }  
 
+  public JSONArray getTimelineSinceId(int sinceId) throws
+      IOException, AuthException {
+    Log.i(TAG, "Requesting friends timeline since id.");
+
+    ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+    params.add(new BasicNameValuePair("since_id", sinceId + ""));    
+    
+    InputStream data = requestData(FRIENDS_TIMELINE_URL, METHOD_GET, params);        
+    JSONArray json = null;
+    
+    try {
+      json = new JSONArray(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      e.printStackTrace();
+      throw new IOException("Could not parse JSON.");
+    } finally {      
+      data.close();
+    }
+        
+    return json;
+  }  
+  
   public JSONObject update(String status) throws IOException, AuthException {
     Log.i(TAG, "Updating status.");
     
     ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
     params.add(new BasicNameValuePair("status", status));    
+    params.add(new BasicNameValuePair("source", "Twitta"));
     
     InputStream data = requestData(UPDATE_URL, METHOD_POST, params);
     JSONObject json = null;
