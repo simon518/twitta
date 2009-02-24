@@ -51,7 +51,7 @@
     android:text="@string/signin"
     />
     <TextView
-    android:id="@+id/status_text"
+    android:id="@+id/progress_text"
     android:layout_width="wrap_content"
     android:layout_height="0px"
     android:layout_weight="1"

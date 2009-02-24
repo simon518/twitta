@@ -4,21 +4,20 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Tweet {
-  public String tweetId;
+  public String id;
   public String screenName;
-  public String message;
-  public String imageUrl;
+  public String text;
+  public String profileImageUrl;
   
-  public static Tweet parse(JSONObject jsonObject) throws JSONException {
+  public static Tweet create(JSONObject jsonObject) throws JSONException {
     Tweet tweet = new Tweet();
     
-    tweet.tweetId = jsonObject.getLong("id") + "";    
-    tweet.message = Utils.decodeTwitterJson(
-          jsonObject.getString("text"));
+    tweet.id = jsonObject.getLong("id") + "";    
+    tweet.text = Utils.decodeTwitterJson(jsonObject.getString("text"));
 
     JSONObject user = jsonObject.getJSONObject("user");
     tweet.screenName = Utils.decodeTwitterJson(user.getString("screen_name"));
-    tweet.imageUrl = user.getString("profile_image_url");
+    tweet.profileImageUrl = user.getString("profile_image_url");
     
     return tweet;
   }
