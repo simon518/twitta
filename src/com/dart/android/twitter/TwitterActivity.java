@@ -66,7 +66,7 @@ public class TwitterActivity extends Activity {
     if (mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
       TwitterService.schedule(this);          
     } else {
-      TwitterService.stop(this);
+      TwitterService.unschedule(this);
     }       
   }
 
@@ -129,9 +129,10 @@ public class TwitterActivity extends Activity {
 
   @Override
   protected void onResume() {
-    super.onResume();
-    TwitterService.stop(this);    
     Log.i(TAG, "onResume.");
+    super.onResume();
+    // Try to prevent update checks while activity is visible.
+    TwitterService.unschedule(this);    
   }
     
   private class NonConfigurationState {

@@ -114,7 +114,7 @@ public class TwitterService extends Service {
     alarm.set(AlarmManager.RTC, c.getTimeInMillis(), pending);
   }
   
-  static void stop(Context context) {
+  static void unschedule(Context context) {
     Intent intent = new Intent(context, TwitterService.class);
     PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
     AlarmManager alarm =
