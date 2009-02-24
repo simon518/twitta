@@ -1,9 +1,15 @@
 package com.dart.android.twitter;
 
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.AlarmManager;
 import android.app.Notification;
@@ -17,17 +23,23 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.dart.android.twitter.TwitterApi.AuthException;
+import com.google.android.photostream.UserTask;
+
 public class TwitterService extends Service {
   private static final String TAG = "TwitterService";
   
-  private static final int REFRESH_INTERVAL = 30 * 1000;
+  private static final int REFRESH_INTERVAL_MS = 60 * 1000;
 
-  // Sources.
   private TwitterApi mApi;
   private TwitterDbAdapter mDb;
-    
-  // Preferences.
-  private SharedPreferences mPreferences;    
+  private SharedPreferences mPreferences;  
+  
+  private NotificationManager mNotificationManager;
+  
+  private ArrayList<Tweet> mTweets;           
+  
+  private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   
   @Override
   public IBinder onBind(Intent intent) {
@@ -42,58 +54,75 @@ public class TwitterService extends Service {
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");    
         
-    mApi = new TwitterApi();
-    mDb = new TwitterDbAdapter(this);
-    mDb.open();
-            
     if (!TwitterApi.isValidCredentials(username, password)) {
       Log.i(TAG, "No credentials.");
       stopSelf();      
       return;
     }        
-    
+
+    mApi = new TwitterApi();
     mApi.setCredentials(username, password);
-    
-    // TODO: create check update task.
-    // Check for updates.
-    int maxId = mDb.fetchMaxId();
-    
-    Log.i(TAG, "Max id is:" + maxId);
-    
-    // Insert into database in a batch.    
-    // If > 1 or others ... say blah new ones.
-    
-    NotificationManager notificationManager =
+
+    mNotificationManager =
       (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
     
+    mDb = new TwitterDbAdapter(this);
+    mDb.open();                
+    
+    mTweets = new ArrayList<Tweet>();           
+    
+    mRetrieveTask = new RetrieveTask().execute();            
+  }
+
+  private static final int NOTIFICATION_ID = 0;
+  
+  private void notifyNew() {
+    int size = mTweets.size();
+    
+    if (size <= 0) {
+      return;
+    }
+    
+    Tweet latestTweet = mTweets.get(0);
+           
     Notification notification = new Notification(
         android.R.drawable.stat_notify_chat,
-        "snippet goes here",
+        latestTweet.message,
         System.currentTimeMillis());
+    
+    String title;
+    String text;
+    
+    if (size == 1) {
+      title = latestTweet.screenName;
+      text = latestTweet.message;
+    } else {
+      title = size + " new tweets";
+      text = "";
+    }
     
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
         new Intent(this, LoginActivity.class), 0);
     
-    notification.setLatestEventInfo(this, "foo",
-        "bar", contentIntent);
+    notification.setLatestEventInfo(this, title, text, contentIntent);
+    notification.flags = 
+        Notification.FLAG_AUTO_CANCEL |
+        Notification.FLAG_ONLY_ALERT_ONCE |
+        Notification.FLAG_SHOW_LIGHTS;
     
-    // Send the notification.
-    // We use a string id because it is a unique number.  We use it later to cancel.
-    notificationManager.notify(0, notification);
-    
-    // TODO: vibrate and play sound.
-        
-    // TODO: should reschedule upon successful task execution.
-    schedule(this);
-    stopSelf();
+    mNotificationManager.notify(NOTIFICATION_ID, notification);       
   }
   
   @Override
   public void onDestroy() {
-    // TODO: kill tasks.
+    Log.i(TAG, "IM DYING!!!");
+    
+    if (mRetrieveTask != null &&
+        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      mRetrieveTask.cancel(true);
+    }    
     
     mDb.close();
-    Log.i(TAG, "IM DYING!!!");
     
     super.onDestroy();
   }
@@ -103,7 +132,7 @@ public class TwitterService extends Service {
     PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
 
     Calendar c = new GregorianCalendar();
-    c.add(Calendar.MINUTE, 1);
+    c.add(Calendar.SECOND, REFRESH_INTERVAL_MS / 1000);
     
     DateFormat df = new SimpleDateFormat("h:mm a");
     Log.i(TAG, "Scheduling alarm at " + df.format(c.getTime()));
@@ -121,6 +150,75 @@ public class TwitterService extends Service {
       (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     Log.i(TAG, "Cancelling alarms.");    
     alarm.cancel(pending);
+  }
+
+  private enum RetrieveResult {
+    OK, IO_ERROR, AUTH_ERROR, CANCELLED
+  }
+  
+  private class RetrieveTask extends UserTask<Void, Void, RetrieveResult> {
+    @Override
+    public RetrieveResult doInBackground(Void... params) {
+      int maxId = mDb.fetchMaxId();    
+      Log.i(TAG, "Max id is:" + maxId);      
+      
+      JSONArray jsonArray;
+      
+      try {
+        jsonArray = mApi.getTimelineSinceId(0);
+      } catch (IOException e) {
+        e.printStackTrace();
+        return RetrieveResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return RetrieveResult.AUTH_ERROR;
+      }
+      
+      for (int i = 0; i < jsonArray.length(); ++i) {
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }
+        
+        Tweet tweet;
+        
+        try {
+          JSONObject jsonObject = jsonArray.getJSONObject(i);
+          tweet = Tweet.parse(jsonObject);
+        } catch (JSONException e) {
+          e.printStackTrace();
+          return RetrieveResult.IO_ERROR;
+        }
+        
+        mTweets.add(tweet);
+        
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }                  
+      }      
+      
+      if (isCancelled()) {
+        return RetrieveResult.CANCELLED;
+      }
+      
+      return RetrieveResult.OK;
+    }
+
+    @Override
+    public void onPostExecute(RetrieveResult result) {
+      boolean shouldSchedule = result == RetrieveResult.OK ||
+          result == RetrieveResult.IO_ERROR;      
+      onRetrieveFinished(shouldSchedule);
+    }
+  }
+  
+  private void onRetrieveFinished(boolean shouldSchedule) {
+    notifyNew();
+    
+    if (shouldSchedule) {
+      schedule(this);
+    }
+    
+    stopSelf();            
   }
   
 }

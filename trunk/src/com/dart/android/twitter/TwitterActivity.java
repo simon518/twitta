@@ -136,11 +136,11 @@ public class TwitterActivity extends Activity {
   }
     
   private class NonConfigurationState {
+    public ImageManager imageManager;
+
     NonConfigurationState(ImageManager imageManager) {
       this.imageManager = imageManager;
-    }
-    
-    ImageManager imageManager;
+    }    
   }
   
   @Override
@@ -404,50 +404,30 @@ public class TwitterActivity extends Activity {
           return RetrieveResult.CANCELLED;
         }
         
-        Tweet tweet = new Tweet();
+        Tweet tweet;
         
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-           
-          if (jsonObject.has("id")) {
-            tweet.tweetId = jsonObject.getLong("id") + "";
-          }
-          
-          if (jsonObject.has("text")) {
-            tweet.message = Utils.decodeTwitterJson(
-                jsonObject.getString("text"));
-          } 
-
-          if (jsonObject.has("user")) {
-            JSONObject user = jsonObject.getJSONObject("user");
-            if (user.has("screen_name")) {
-              tweet.screenName = Utils.decodeTwitterJson(
-                  user.getString("screen_name"));
-            }
-            if (user.has("profile_image_url")) {
-              tweet.imageUrl = user.getString("profile_image_url");
-            }          
-          }      
-                 
+          tweet = Tweet.parse(jsonObject);                           
           tweets.add(tweet);
-          
-          if (isCancelled()) {
-            return RetrieveResult.CANCELLED;
-          }
-          
-          if (!Utils.isEmpty(tweet.imageUrl) &&
-              mImageManager.lookup(tweet.imageUrl) == null) {            
-            // Download image to cache.
-            try {
-              mImageManager.fetch(tweet.imageUrl);
-            } catch (IOException e) {
-              e.printStackTrace();            
-            }
-          }          
         } catch (JSONException e) {
           e.printStackTrace();
           return RetrieveResult.IO_ERROR;
         }      
+          
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }
+        
+        if (!Utils.isEmpty(tweet.imageUrl) &&
+            mImageManager.lookup(tweet.imageUrl) == null) {
+          // Download image to cache.
+          try {
+            mImageManager.fetch(tweet.imageUrl);
+          } catch (IOException e) {
+            e.printStackTrace();            
+          }
+        }          
       }      
       
       if (isCancelled()) {
