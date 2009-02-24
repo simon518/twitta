@@ -1,132 +1,126 @@
 package com.dart.android.twitter;
 
-import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 
+import android.app.AlarmManager;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.os.Binder;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
-import com.dart.android.twitter.TwitterApi.AuthException;
-
 public class TwitterService extends Service {
-
   private static final String TAG = "TwitterService";
   
-  private static final int REFRESH_INTERVAL = 10 * 1000;
+  private static final int REFRESH_INTERVAL = 30 * 1000;
 
-  public class LocalBinder extends Binder {
-    TwitterService getService() {
-      return TwitterService.this;
-    }
-  }
-  
+  // Sources.
   private TwitterApi mApi;
+  private TwitterDbAdapter mDb;
     
-  private final IBinder mBinder = new LocalBinder();
-
-  private TwitterActivity mClient;
-    
+  // Preferences.
   private SharedPreferences mPreferences;    
-  private SharedPreferences.Editor mEditor;
-  
-  private TwitterDbAdapter mDbHelper;    
-  
-  private static final String PREFERENCES_USERNAME_KEY = "username";
-  private static final String PREFERENCES_PASSWORD_KEY = "password";
-    
-  private void setCredentials(String username, String password) {
-    mEditor.putString(PREFERENCES_USERNAME_KEY, username);
-    mEditor.putString(PREFERENCES_PASSWORD_KEY, password);
-    mEditor.commit();
-  }
-  
-  public boolean hasCredentials() {
-    String username = mPreferences.getString(PREFERENCES_USERNAME_KEY, "");
-    String password = mPreferences.getString(PREFERENCES_PASSWORD_KEY, "");
-    
-    return true;
-    // return TwitterActivity.isValidCredentials(username, password);
-  }
-
-  public void login(String username, String password) throws 
-      IOException, AuthException {
-    mApi.login(username, password);    
-    setCredentials(username, password);
-  }
-  
-  public void logout() {
-    setCredentials("", "");
-    mDbHelper.deleteAllTweets();        
-  }  
   
   @Override
   public IBinder onBind(Intent intent) {
-    return mBinder;
+    return null;
   }
-  
-  public void setClient(TwitterActivity client) {
-    mClient = client;
-  }
-  
-  public void retrieve() throws IOException, AuthException {
-  }
-
   
   @Override
   public void onCreate() {
     super.onCreate();
 
-    mDbHelper = new TwitterDbAdapter(this);
-    mDbHelper.open();
-            
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    mEditor = mPreferences.edit();    
+    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
+    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");    
         
-    String username = mPreferences.getString(PREFERENCES_USERNAME_KEY, "");
-    String password = mPreferences.getString(PREFERENCES_PASSWORD_KEY, "");
-    
     mApi = new TwitterApi();
+    mDb = new TwitterDbAdapter(this);
+    mDb.open();
+            
+    if (!TwitterApi.isValidCredentials(username, password)) {
+      Log.i(TAG, "No credentials.");
+      stopSelf();      
+      return;
+    }        
     
-    /*
-    if (TwitterActivity.isValidCredentials(username, password)) {
-      mApi.setCredentials(username, password);
-    }
-    */
+    mApi.setCredentials(username, password);
     
-    mHandler.sendEmptyMessage(0);    
+    // TODO: create check update task.
+    // Check for updates.
+    int maxId = mDb.fetchMaxId();
+    
+    Log.i(TAG, "Max id is:" + maxId);
+    
+    // Insert into database in a batch.    
+    // If > 1 or others ... say blah new ones.
+    
+    NotificationManager notificationManager =
+      (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    
+    Notification notification = new Notification(
+        android.R.drawable.stat_notify_chat,
+        "snippet goes here",
+        System.currentTimeMillis());
+    
+    PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+        new Intent(this, LoginActivity.class), 0);
+    
+    notification.setLatestEventInfo(this, "foo",
+        "bar", contentIntent);
+    
+    // Send the notification.
+    // We use a string id because it is a unique number.  We use it later to cancel.
+    notificationManager.notify(0, notification);
+    
+    // TODO: vibrate and play sound.
+        
+    // TODO: should reschedule upon successful task execution.
+    schedule(this);
+    stopSelf();
   }
   
   @Override
   public void onDestroy() {
-    // Right order?
-    super.onDestroy();
+    // TODO: kill tasks.
     
-    mDbHelper.close();
-    Log.i(TAG, "IM DYING");
+    mDb.close();
+    Log.i(TAG, "IM DYING!!!");
+    
+    super.onDestroy();
   }
-     
-  private int mValue = 0;
+        
+  static void schedule(Context context) {
+    Intent intent = new Intent(context, TwitterService.class);
+    PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
+
+    Calendar c = new GregorianCalendar();
+    c.add(Calendar.MINUTE, 1);
+    
+    DateFormat df = new SimpleDateFormat("h:mm a");
+    Log.i(TAG, "Scheduling alarm at " + df.format(c.getTime()));
+
+    AlarmManager alarm =
+        (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    alarm.cancel(pending);
+    alarm.set(AlarmManager.RTC, c.getTimeInMillis(), pending);
+  }
   
-  private final Handler mHandler = new Handler() {
-    @Override public void handleMessage(Message msg) {
-      Log.i(TAG, ++mValue + "");
-              
-      sendMessageDelayed(obtainMessage(0), REFRESH_INTERVAL);
-    }
-  };
-
-  public void send(String text) {
-  }
-
-  public Cursor fetchAllTweets() {
-    return mDbHelper.fetchAllTweets();
+  static void stop(Context context) {
+    Intent intent = new Intent(context, TwitterService.class);
+    PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
+    AlarmManager alarm =
+      (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    Log.i(TAG, "Cancelling alarms.");    
+    alarm.cancel(pending);
   }
   
 }
