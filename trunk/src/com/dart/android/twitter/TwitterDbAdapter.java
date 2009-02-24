@@ -93,8 +93,8 @@ public class TwitterDbAdapter {
       deleteAllTweets();
       
       for (Tweet tweet : tweets) {
-        createTweet(tweet.tweetId, tweet.screenName, tweet.message,
-            tweet.imageUrl);
+        createTweet(tweet.id, tweet.screenName, tweet.text,
+            tweet.profileImageUrl);
       }
       
       mDb.setTransactionSuccessful();
@@ -103,10 +103,6 @@ public class TwitterDbAdapter {
     }
   }
   
-  public boolean deleteTweet(long id) {
-    return mDb.delete(DATABASE_TABLE, KEY_ID + "=" + id, null) > 0;
-  }
-
   public Cursor fetchAllTweets() {
     return mDb.query(DATABASE_TABLE, COLUMNS, null, null, null, null,
         KEY_ID + " DESC");
@@ -116,18 +112,6 @@ public class TwitterDbAdapter {
     return mDb.delete(DATABASE_TABLE, null, null) > 0;
   }  
 
-  public Cursor fetchTweet(long id) throws SQLException {
-    Cursor mCursor = mDb.query(true, DATABASE_TABLE, COLUMNS,
-        KEY_ID + "=" + id,
-        null, null, null, null, null);
-    
-    if (mCursor != null) {
-      mCursor.moveToFirst();
-    }
-    
-    return mCursor;
-  }
-  
   public int fetchMaxId() {
     Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM tweets",
         null);
@@ -145,15 +129,4 @@ public class TwitterDbAdapter {
     return result;
   }  
 
-  public boolean updateTweet(String id, String user, String text,
-      String imageUrl) {
-    ContentValues args = new ContentValues();
-    args.put(KEY_ID, id);
-    args.put(KEY_USER, user);      
-    args.put(KEY_TEXT, text);
-    args.put(KEY_PROFILE_IMAGE_URL, imageUrl);      
-
-    return mDb.update(DATABASE_TABLE, args, KEY_ID + "=" + id, null) > 0;
-  }
-    
 }

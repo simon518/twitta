@@ -24,11 +24,12 @@ public class LoginActivity extends Activity {
   private EditText mUsernameEdit;
   private EditText mPasswordEdit;
   
-  private TextView mStatusText;
+  // Displays progress of tasks.
+  private TextView mProgressText;
   
   private Button mSigninButton;
   
-  private View.OnKeyListener loginEnterHandler = new View.OnKeyListener() {
+  private View.OnKeyListener enterKeyHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
       if (keyCode == KeyEvent.KEYCODE_ENTER) {
         if (event.getAction() == KeyEvent.ACTION_UP) {
@@ -69,13 +70,13 @@ public class LoginActivity extends Activity {
             
     mUsernameEdit = (EditText) findViewById(R.id.username_edit);
     mPasswordEdit = (EditText) findViewById(R.id.password_edit);
-    mUsernameEdit.setOnKeyListener(loginEnterHandler);
-    mPasswordEdit.setOnKeyListener(loginEnterHandler);
+    mUsernameEdit.setOnKeyListener(enterKeyHandler);
+    mPasswordEdit.setOnKeyListener(enterKeyHandler);
     
-    mStatusText = (TextView) findViewById(R.id.status_text);
+    mProgressText = (TextView) findViewById(R.id.progress_text);
+    mProgressText.setFreezesText(true);
            
-    mSigninButton = (Button) findViewById(R.id.signin_button);
-    
+    mSigninButton = (Button) findViewById(R.id.signin_button);    
     mSigninButton.setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         doLogin();
@@ -99,7 +100,7 @@ public class LoginActivity extends Activity {
     startActivity(intent); 
     finish();           
   }
-    
+  
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);  
@@ -107,8 +108,8 @@ public class LoginActivity extends Activity {
   
   // UI helpers.
   
-  private void updateStatus(String status) {
-    mStatusText.setText(status);
+  private void updateProgress(String progress) {
+    mProgressText.setText(progress);
   }
     
   private void enableLogin() {
@@ -123,7 +124,7 @@ public class LoginActivity extends Activity {
     mSigninButton.setEnabled(false);    
   }
 
-  // Actions.
+  // Login task.
 
   private void doLogin() {
     mLoginTask = new LoginTask().execute();
@@ -134,7 +135,7 @@ public class LoginActivity extends Activity {
   }
   
   private void onLoginSuccess() {
-    updateStatus("");
+    updateProgress("");
     
     String username = mUsernameEdit.getText().toString();
     String password = mPasswordEdit.getText().toString();
@@ -172,10 +173,6 @@ public class LoginActivity extends Activity {
         return false;
       }    
       
-      if (isCancelled()) {
-        return false;        
-      }
-      
       try {
         mApi.login(username, password);
       } catch (IOException e) {
@@ -192,7 +189,7 @@ public class LoginActivity extends Activity {
 
     @Override    
     public void onProgressUpdate(String... progress) {
-      updateStatus(progress[0]);
+      updateProgress(progress[0]);
     }
     
     @Override

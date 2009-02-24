@@ -45,7 +45,7 @@
     android:layout_marginRight="5px"
     />	             
     <TextView
-    android:id="@+id/status_text"
+    android:id="@+id/progress_text"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:textSize="13px"

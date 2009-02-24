@@ -42,13 +42,13 @@ public class TwitterActivity extends Activity {
     
   // Views.
   private ListView mTweetList;
-  private TwitterAdapter mTweetAdapter;
+  private TweetAdapter mTweetAdapter;
   
   private EditText mTweetEdit;
   private ImageButton mSendButton;
   
-  private TextView mCharsText;  
-  private TextView mStatusText;
+  private TextView mCharsRemainText;  
+  private TextView mProgressText;
     
   // Sources.
   private TwitterApi mApi;
@@ -61,7 +61,7 @@ public class TwitterActivity extends Activity {
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
-  
+
   private void controlUpdateChecks() {
     if (mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
       TwitterService.schedule(this);          
@@ -69,7 +69,7 @@ public class TwitterActivity extends Activity {
       TwitterService.unschedule(this);
     }       
   }
-
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -82,7 +82,7 @@ public class TwitterActivity extends Activity {
     mImageManager = new ImageManager();
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    
+     
     controlUpdateChecks();
     
     setContentView(R.layout.main);
@@ -95,8 +95,8 @@ public class TwitterActivity extends Activity {
         new InputFilter.LengthFilter(MAX_TWEET_LENGTH) });
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
     
-    mCharsText = (TextView) findViewById(R.id.chars_text);
-    mStatusText = (TextView) findViewById(R.id.status_text);
+    mCharsRemainText = (TextView) findViewById(R.id.chars_text);
+    mProgressText = (TextView) findViewById(R.id.progress_text);
        
     mSendButton = (ImageButton) findViewById(R.id.send_button);    
     mSendButton.setOnClickListener(new View.OnClickListener() {
@@ -109,20 +109,39 @@ public class TwitterActivity extends Activity {
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
     mApi.setCredentials(username, password);
   
-    setupAdapter();
-    
+    // Nice optimization which can preserve objects in an Activity 
+    // that the system wants to destroyed and recreated immediately.
+    // See Activity doc for more.
     Object data = getLastNonConfigurationInstance();
     
     if (data == null) {    
       doRetrieve();
     } else {
+      // Use the ImageManager from previous Activity instance.
       mImageManager = ((NonConfigurationState) data).imageManager;
     }
+    
+    setupAdapter();       
   }
 
   @Override
+  public Object onRetainNonConfigurationInstance() {
+    // Save ImageManager for new Activity instance.
+    return new NonConfigurationState(mImageManager);  
+  }
+    
+  private class NonConfigurationState {
+    public ImageManager imageManager;
+
+    NonConfigurationState(ImageManager imageManager) {
+      this.imageManager = imageManager;
+    }    
+  }
+    
+  @Override
   protected void onPause() {
     Log.i(TAG, "onPause.");
+    // Update checker should be active when Activity is paused. 
     controlUpdateChecks();        
     super.onPause();    
   }
@@ -135,19 +154,6 @@ public class TwitterActivity extends Activity {
     TwitterService.unschedule(this);    
   }
     
-  private class NonConfigurationState {
-    public ImageManager imageManager;
-
-    NonConfigurationState(ImageManager imageManager) {
-      this.imageManager = imageManager;
-    }    
-  }
-  
-  @Override
-  public Object onRetainNonConfigurationInstance() {
-    return new NonConfigurationState(mImageManager);  
-  }
-  
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);  
@@ -160,7 +166,7 @@ public class TwitterActivity extends Activity {
     // TODO: why do we need to do this? Can't we detect the box is being set?
     // Update the char remaining message.
     int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
-    updateChars(remaining + "");
+    updateCharsRemain(remaining + "");
   } 
   
   @Override
@@ -184,25 +190,25 @@ public class TwitterActivity extends Activity {
     
   // UI helpers.
 
-  private void updateStatus(String status) {
-    mStatusText.setText(status);
+  private void updateProgress(String progress) {
+    mProgressText.setText(progress);
   }
   
-  private void updateChars(String chars) {
-    mCharsText.setText(chars);
+  private void updateCharsRemain(String remaining) {
+    mCharsRemainText.setText(remaining);
   }
 
   private void setupAdapter() {
     Cursor cursor = mDb.fetchAllTweets();
     startManagingCursor(cursor);
     
-    mTweetAdapter = new TwitterAdapter(this, cursor);
+    mTweetAdapter = new TweetAdapter(this, cursor);
     mTweetList.setAdapter(mTweetAdapter);
   }
   
-  private class TwitterAdapter extends CursorAdapter {
+  private class TweetAdapter extends CursorAdapter {
 
-    public TwitterAdapter(Context context, Cursor cursor) {
+    public TweetAdapter(Context context, Cursor cursor) {
       super(context, cursor);
       
       mInflater = LayoutInflater.from(context);                  
@@ -252,7 +258,7 @@ public class TwitterActivity extends Activity {
     
   }
     
-  private void updateTweets() {
+  private void update() {
     mTweetAdapter.refresh();
   }
   
@@ -273,9 +279,10 @@ public class TwitterActivity extends Activity {
     
     SharedPreferences.Editor editor = mPreferences.edit();
     // It is very important to clear these out.
-    // Or else LoginActivity may launch TwitterActivity again and so on. 
+    // Or else LoginActivity may launch TwitterActivity again because
+    // it thinks it has valid credentials. 
     editor.putString(Preferences.USERNAME_KEY, "");
-    editor.putString(Preferences.PASSWORD_KEY, "");    
+    editor.putString(Preferences.PASSWORD_KEY, "");
     editor.commit();
     
     Intent intent = new Intent(); 
@@ -337,19 +344,19 @@ public class TwitterActivity extends Activity {
   
   private void onSendBegin() {
     disableEntry();
-    updateStatus("Updating status...");
+    updateProgress("Updating status...");
   }  
 
   private void onSendSuccess() {
     mTweetEdit.setText("");
-    updateStatus("");
-    updateChars("");
+    updateProgress("");
+    updateCharsRemain("");
     enableEntry();    
     doRetrieve();
   }
 
   private void onSendFailure() {
-    updateStatus("Unable to update status");
+    updateProgress("Unable to update status");
     enableEntry();
   }
   
@@ -366,7 +373,7 @@ public class TwitterActivity extends Activity {
   }
      
   private void onRetrieveBegin() {
-    updateStatus("Refreshing...");
+    updateProgress("Refreshing...");
   }  
   
   private void onAuthFailure() {
@@ -408,7 +415,7 @@ public class TwitterActivity extends Activity {
         
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.parse(jsonObject);                           
+          tweet = Tweet.create(jsonObject);                           
           tweets.add(tweet);
         } catch (JSONException e) {
           e.printStackTrace();
@@ -419,11 +426,11 @@ public class TwitterActivity extends Activity {
           return RetrieveResult.CANCELLED;
         }
         
-        if (!Utils.isEmpty(tweet.imageUrl) &&
-            mImageManager.lookup(tweet.imageUrl) == null) {
-          // Download image to cache.
+        if (!Utils.isEmpty(tweet.profileImageUrl) &&
+            mImageManager.contains(tweet.profileImageUrl)) {
+          // Fetch image to cache.
           try {
-            mImageManager.fetch(tweet.imageUrl);
+            mImageManager.fetch(tweet.profileImageUrl);
           } catch (IOException e) {
             e.printStackTrace();            
           }
@@ -439,21 +446,17 @@ public class TwitterActivity extends Activity {
       return RetrieveResult.OK;
     }
 
-    @Override    
-    public void onProgressUpdate(Void... progress) {
-    }
-    
     @Override
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.AUTH_ERROR) { 
         onAuthFailure();
       } else if (result == RetrieveResult.OK) {
-        updateTweets();
+        update();
       } else {
         // Do nothing.
       }
       
-      updateStatus("");      
+      updateProgress("");      
     }
   }
   
@@ -520,7 +523,7 @@ public class TwitterActivity extends Activity {
     @Override
     public void afterTextChanged(Editable e) {
       int remaining = MAX_TWEET_LENGTH - e.length();            
-      updateChars(remaining + "");
+      updateCharsRemain(remaining + "");
     }
 
     @Override

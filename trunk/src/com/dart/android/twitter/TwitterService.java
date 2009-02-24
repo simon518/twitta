@@ -37,7 +37,7 @@ public class TwitterService extends Service {
   
   private NotificationManager mNotificationManager;
   
-  private ArrayList<Tweet> mTweets;           
+  private ArrayList<Tweet> mNewTweets;           
   
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   
@@ -69,25 +69,25 @@ public class TwitterService extends Service {
     mDb = new TwitterDbAdapter(this);
     mDb.open();                
     
-    mTweets = new ArrayList<Tweet>();           
+    mNewTweets = new ArrayList<Tweet>();           
     
     mRetrieveTask = new RetrieveTask().execute();            
   }
 
   private static final int NOTIFICATION_ID = 0;
   
-  private void notifyNew() {
-    int size = mTweets.size();
+  private void sendNotification() {
+    int size = mNewTweets.size();
     
     if (size <= 0) {
       return;
     }
     
-    Tweet latestTweet = mTweets.get(0);
+    Tweet latestTweet = mNewTweets.get(0);
            
     Notification notification = new Notification(
         android.R.drawable.stat_notify_chat,
-        latestTweet.message,
+        latestTweet.text,
         System.currentTimeMillis());
     
     String title;
@@ -95,20 +95,22 @@ public class TwitterService extends Service {
     
     if (size == 1) {
       title = latestTweet.screenName;
-      text = latestTweet.message;
+      text = latestTweet.text;
     } else {
-      title = size + " new tweets";
-      text = "";
+      title = "New Twitter updates";
+      text = size + " new tweets";
     }
     
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
         new Intent(this, LoginActivity.class), 0);
     
     notification.setLatestEventInfo(this, title, text, contentIntent);
+    
     notification.flags = 
         Notification.FLAG_AUTO_CANCEL |
         Notification.FLAG_ONLY_ALERT_ONCE |
-        Notification.FLAG_SHOW_LIGHTS;
+        Notification.FLAG_SHOW_LIGHTS;    
+    notification.defaults = Notification.DEFAULT_ALL;
     
     mNotificationManager.notify(NOTIFICATION_ID, notification);       
   }
@@ -165,7 +167,7 @@ public class TwitterService extends Service {
       JSONArray jsonArray;
       
       try {
-        jsonArray = mApi.getTimelineSinceId(0);
+        jsonArray = mApi.getTimelineSinceId(maxId);
       } catch (IOException e) {
         e.printStackTrace();
         return RetrieveResult.IO_ERROR;
@@ -183,13 +185,13 @@ public class TwitterService extends Service {
         
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.parse(jsonObject);
+          tweet = Tweet.create(jsonObject);
         } catch (JSONException e) {
           e.printStackTrace();
           return RetrieveResult.IO_ERROR;
         }
         
-        mTweets.add(tweet);
+        mNewTweets.add(tweet);
         
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
@@ -206,10 +208,10 @@ public class TwitterService extends Service {
     @Override
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.OK) {
-        notifyNew();
-        TwitterService.schedule(TwitterService.this);
+        sendNotification();
+        schedule(TwitterService.this);
       } else if (result == RetrieveResult.IO_ERROR) {
-        TwitterService.schedule(TwitterService.this);
+        schedule(TwitterService.this);
       }
       
       stopSelf();      

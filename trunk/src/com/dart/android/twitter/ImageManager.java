@@ -17,6 +17,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+/**
+ * <p>
+ * Retrieves and caches images in memory. Does not persist or store the images.
+ * TODO: persist and remove old images.
+ * </p> 
+ */
 public class ImageManager {
   private static final String TAG = "ImageManager";
   
@@ -78,6 +84,10 @@ public class ImageManager {
     synchronized(this) {            
       return mCache.get(url);
     }
+  }
+
+  public boolean contains(String url) {
+    return lookup(url) != null;
   }
   
 }
