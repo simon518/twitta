@@ -205,20 +205,15 @@ public class TwitterService extends Service {
 
     @Override
     public void onPostExecute(RetrieveResult result) {
-      boolean shouldSchedule = result == RetrieveResult.OK ||
-          result == RetrieveResult.IO_ERROR;      
-      onRetrieveFinished(shouldSchedule);
+      if (result == RetrieveResult.OK) {
+        notifyNew();
+        TwitterService.schedule(TwitterService.this);
+      } else if (result == RetrieveResult.IO_ERROR) {
+        TwitterService.schedule(TwitterService.this);
+      }
+      
+      stopSelf();      
     }
-  }
-  
-  private void onRetrieveFinished(boolean shouldSchedule) {
-    notifyNew();
-    
-    if (shouldSchedule) {
-      schedule(this);
-    }
-    
-    stopSelf();            
   }
   
 }
