@@ -63,14 +63,13 @@ public class TwitterActivity extends Activity {
   private UserTask<Void, String, SendResult> mSendTask;
   
   private void controlUpdateChecks() {
-    // If update checks are on.
     if (mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
       TwitterService.schedule(this);          
     } else {
       TwitterService.stop(this);
     }       
   }
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -121,6 +120,20 @@ public class TwitterActivity extends Activity {
     }
   }
 
+  @Override
+  protected void onPause() {
+    Log.i(TAG, "onPause.");
+    controlUpdateChecks();        
+    super.onPause();    
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    TwitterService.stop(this);    
+    Log.i(TAG, "onResume.");
+  }
+    
   private class NonConfigurationState {
     NonConfigurationState(ImageManager imageManager) {
       this.imageManager = imageManager;
@@ -151,6 +164,8 @@ public class TwitterActivity extends Activity {
   
   @Override
   protected void onDestroy() {
+    Log.i(TAG, "onDestroy.");
+    
     if (mSendTask != null &&
         mSendTask.getStatus() == UserTask.Status.RUNNING) {
       mSendTask.cancel(true);

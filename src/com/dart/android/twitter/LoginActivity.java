@@ -60,7 +60,7 @@ public class LoginActivity extends Activity {
     
     if (TwitterApi.isValidCredentials(username, password)) {
       launchTwitterActivity();
-      // the method above finishes the activity.
+      // The method above finishes the activity.
     }
     
     mApi = new TwitterApi();

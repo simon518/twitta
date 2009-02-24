@@ -8,5 +8,6 @@
     
     <string name="signout">Sign out</string>
     <string name="refresh">Refresh</string>
+    <string name="preferences">Preferences</string>
     
 </resources>
