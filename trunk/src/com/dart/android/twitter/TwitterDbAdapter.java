@@ -32,7 +32,7 @@ public class TwitterDbAdapter {
 
   private static final String DATABASE_NAME = "data";
   private static final String DATABASE_TABLE = "tweets";
-  private static final int DATABASE_VERSION = 2;
+  private static final int DATABASE_VERSION = 1;
   
   private static final String DATABASE_CREATE =
       "create table tweets (" +
@@ -107,7 +107,9 @@ public class TwitterDbAdapter {
     }
   }
 
-  public void addUnreadTweets(List<Tweet> tweets) {
+  public int addUnreadTweets(List<Tweet> tweets) {
+    int unreadCount = 0;
+    
     try {
       mDb.beginTransaction();
       
@@ -116,10 +118,13 @@ public class TwitterDbAdapter {
             tweet.profileImageUrl, true);
       }
       
+      unreadCount = fetchUnreadCount();      
       mDb.setTransactionSuccessful();
     } finally {      
       mDb.endTransaction();
     }
+    
+    return unreadCount;
   }
   
   public Cursor fetchAllTweets() {
@@ -149,7 +154,8 @@ public class TwitterDbAdapter {
   }  
 
   public int fetchUnreadCount() {
-    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM tweets WHERE is_unread = ?",
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM tweets " +
+        "WHERE is_unread = ?",
         new String[]{ "true" });
 
     int result = 0;

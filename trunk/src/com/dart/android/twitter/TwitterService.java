@@ -75,11 +75,8 @@ public class TwitterService extends Service {
 
   private static final int NOTIFICATION_ID = 0;
   
-  private void sendNotification() {
-    mDb.addUnreadTweets(mNewTweets);
-    
-    // Count new tweets.    
-    int count = mDb.fetchUnreadCount();
+  private void processNewTweets() {
+    int count = mDb.addUnreadTweets(mNewTweets);
     
     if (count <= 0) {
       return;
@@ -220,7 +217,7 @@ public class TwitterService extends Service {
     @Override
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.OK) {
-        sendNotification();
+        processNewTweets();
         schedule(TwitterService.this);
       } else if (result == RetrieveResult.IO_ERROR) {
         schedule(TwitterService.this);
