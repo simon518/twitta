@@ -427,7 +427,7 @@ public class TwitterActivity extends Activity {
         }
         
         if (!Utils.isEmpty(tweet.profileImageUrl) &&
-            mImageManager.contains(tweet.profileImageUrl)) {
+            !mImageManager.contains(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.fetch(tweet.profileImageUrl);
