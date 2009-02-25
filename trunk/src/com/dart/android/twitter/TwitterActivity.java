@@ -17,20 +17,24 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.Selection;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -204,8 +208,54 @@ public class TwitterActivity extends Activity {
     
     mTweetAdapter = new TweetAdapter(this, cursor);
     mTweetList.setAdapter(mTweetAdapter);
+    registerForContextMenu(mTweetList);    
   }
   
+  private static final int CONTEXT_REPLY_ID = 0;
+  
+  @Override
+  public void onCreateContextMenu(ContextMenu menu, View v,
+      ContextMenuInfo menuInfo) {
+    super.onCreateContextMenu(menu, v, menuInfo);
+    menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
+  }
+
+  @Override
+  public boolean onContextItemSelected(MenuItem item) {
+    AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+    Cursor cursor = (Cursor) mTweetAdapter.getItem(info.position);
+    
+    if (cursor == null) {
+      Log.w(TAG, "Selected item not available.");
+      return super.onContextItemSelected(item);     
+    }
+    
+    switch (item.getItemId()) {
+      case CONTEXT_REPLY_ID:
+        int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+        // TODO: this isn't quite perfect. Leaves empty spaces if you
+        // perform the reply action again.
+        String replyTo = "@" + cursor.getString(userIndex);                               
+        String text = mTweetEdit.getText().toString();
+        text = replyTo + " " + text.replace(replyTo, "");
+        mTweetEdit.setText(text);
+        Editable editable = mTweetEdit.getText();
+        int position = editable.length();
+        Selection.setSelection(editable, position);
+        
+        mTweetEdit.requestFocus();
+        
+        // TODO: why do we need to do this?
+        // Can't we detect the box is being set?
+        int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
+        updateCharsRemain(remaining + "");
+        
+        return true;
+      default:
+        return super.onContextItemSelected(item);
+    }
+  }
+
   private class TweetAdapter extends CursorAdapter {
 
     public TweetAdapter(Context context, Cursor cursor) {
@@ -275,16 +325,18 @@ public class TwitterActivity extends Activity {
   // Actions.
 
   private void logout() {
+    TwitterService.unschedule(this);
+    
     mDb.deleteAllTweets();
     
+    // It is very important to clear preferences,
+    // in particular the username and password, or else
+    // LoginActivity may launch TwitterActivity again because
+    // it thinks there are valid credentials.
     SharedPreferences.Editor editor = mPreferences.edit();
-    // It is very important to clear these out.
-    // Or else LoginActivity may launch TwitterActivity again because
-    // it thinks it has valid credentials. 
-    editor.putString(Preferences.USERNAME_KEY, "");
-    editor.putString(Preferences.PASSWORD_KEY, "");
+    editor.clear();
     editor.commit();
-    
+        
     Intent intent = new Intent(); 
     intent.setClass(this, LoginActivity.class); 
     startActivity(intent); 

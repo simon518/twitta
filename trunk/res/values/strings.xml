@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Twitter</string>
+    <string name="app_name">Twitta</string>
     
     <string name="username_label">Username:</string>    
     <string name="password_label">Password:</string>
@@ -21,5 +21,7 @@
     
     <string name="new_twitter_updates">New Twitter updates</string>
     <string name="x_new_tweets">{0} new tweets</string>    
+    
+    <string name="reply">Reply</string>
                 
 </resources>

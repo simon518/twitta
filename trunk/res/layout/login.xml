@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:paddingTop="40px"
+    android:paddingTop="12px"
     android:paddingBottom="13px"    	    
     android:paddingLeft="15px"
     android:paddingRight="15px"    
@@ -16,6 +16,7 @@
     <TextView
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
+    android:layout_marginTop="10px"
     android:textColor="@drawable/label_color"
     android:text="@string/username_label"
     />
@@ -62,13 +63,4 @@
     />       
     </LinearLayout>
     
-    <!-- Logo. -->
-    <ImageView
-    android:src="@drawable/logo"
-    android:paddingTop="6px"
-    android:paddingLeft="8px"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"    
-    />
-        	    
 </FrameLayout>

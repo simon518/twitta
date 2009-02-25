@@ -32,7 +32,7 @@ public class TwitterDbAdapter {
 
   private static final String DATABASE_NAME = "data";
   private static final String DATABASE_TABLE = "tweets";
-  private static final int DATABASE_VERSION = 1;
+  private static final int DATABASE_VERSION = 2;
   
   private static final String DATABASE_CREATE =
       "create table tweets (" +
@@ -107,7 +107,7 @@ public class TwitterDbAdapter {
     }
   }
 
-  public int addUnreadTweets(List<Tweet> tweets) {
+  public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
     int unreadCount = 0;
     
     try {
@@ -155,8 +155,7 @@ public class TwitterDbAdapter {
 
   public int fetchUnreadCount() {
     Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM tweets " +
-        "WHERE is_unread = ?",
-        new String[]{ "true" });
+        "WHERE is_unread = 1", null);
 
     int result = 0;
         
