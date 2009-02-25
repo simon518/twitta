@@ -76,9 +76,12 @@ public class TwitterService extends Service {
   private static final int NOTIFICATION_ID = 0;
   
   private void sendNotification() {
-    int size = mNewTweets.size();
+    mDb.addUnreadTweets(mNewTweets);
     
-    if (size <= 0) {
+    // Count new tweets.    
+    int count = mDb.fetchUnreadCount();
+    
+    if (count <= 0) {
       return;
     }
     
@@ -92,13 +95,13 @@ public class TwitterService extends Service {
     String title;
     String text;
     
-    if (size == 1) {
+    if (count == 1) {
       title = latestTweet.screenName;
       text = latestTweet.text;
     } else {
       title = getString(R.string.new_twitter_updates);
-      text = size + getString(R.string.x_new_tweets);
-      text = MessageFormat.format(text, size + "");      
+      text = getString(R.string.x_new_tweets);
+      text = MessageFormat.format(text, count);      
     }
     
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -176,7 +179,7 @@ public class TwitterService extends Service {
       JSONArray jsonArray;
       
       try {
-        jsonArray = mApi.getTimelineSinceId(0);
+        jsonArray = mApi.getTimelineSinceId(maxId);
       } catch (IOException e) {
         e.printStackTrace();
         return RetrieveResult.IO_ERROR;

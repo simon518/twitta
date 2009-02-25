@@ -17,12 +17,14 @@ public class TwitterDbAdapter {
   public static final String KEY_USER = "user";
   public static final String KEY_TEXT = "text";
   public static final String KEY_PROFILE_IMAGE_URL = "profile_image_url";
+  public static final String KEY_IS_UNREAD = "is_unread";
   
   public static final String [] COLUMNS = new String [] {
     KEY_ID,
     KEY_USER,
     KEY_TEXT,
-    KEY_PROFILE_IMAGE_URL
+    KEY_PROFILE_IMAGE_URL,
+    KEY_IS_UNREAD
   };
   
   private DatabaseHelper mDbHelper;
@@ -30,14 +32,15 @@ public class TwitterDbAdapter {
 
   private static final String DATABASE_NAME = "data";
   private static final String DATABASE_TABLE = "tweets";
-  private static final int DATABASE_VERSION = 1;
+  private static final int DATABASE_VERSION = 2;
   
   private static final String DATABASE_CREATE =
       "create table tweets (" +
           KEY_ID + " integer primary key on conflict replace, " +
           KEY_USER + " text not null, " +
           KEY_TEXT + " text not null, " +
-          KEY_PROFILE_IMAGE_URL + " text not null);";
+          KEY_PROFILE_IMAGE_URL + " text not null, " +
+          KEY_IS_UNREAD + " boolean not null)";
 
   private final Context mContext;
 
@@ -76,12 +79,13 @@ public class TwitterDbAdapter {
   }
 
   public long createTweet(String id, String user, String text,
-      String imageUrl) {
+      String imageUrl, boolean is_unread) {
     ContentValues initialValues = new ContentValues();
     initialValues.put(KEY_ID, id);
     initialValues.put(KEY_USER, user);      
     initialValues.put(KEY_TEXT, text);
     initialValues.put(KEY_PROFILE_IMAGE_URL, imageUrl);
+    initialValues.put(KEY_IS_UNREAD, is_unread);
 
     return mDb.insert(DATABASE_TABLE, null, initialValues);
   }
@@ -94,7 +98,22 @@ public class TwitterDbAdapter {
       
       for (Tweet tweet : tweets) {
         createTweet(tweet.id, tweet.screenName, tweet.text,
-            tweet.profileImageUrl);
+            tweet.profileImageUrl, false);
+      }
+      
+      mDb.setTransactionSuccessful();
+    } finally {      
+      mDb.endTransaction();
+    }
+  }
+
+  public void addUnreadTweets(List<Tweet> tweets) {
+    try {
+      mDb.beginTransaction();
+      
+      for (Tweet tweet : tweets) {
+        createTweet(tweet.id, tweet.screenName, tweet.text,
+            tweet.profileImageUrl, true);
       }
       
       mDb.setTransactionSuccessful();
@@ -129,4 +148,21 @@ public class TwitterDbAdapter {
     return result;
   }  
 
+  public int fetchUnreadCount() {
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM tweets WHERE is_unread = ?",
+        new String[]{ "true" });
+
+    int result = 0;
+        
+    if (mCursor == null) {
+      return result;
+    } 
+    
+    mCursor.moveToFirst();    
+    result = mCursor.getInt(0);
+    mCursor.close();
+    
+    return result;
+  }  
+  
 }
