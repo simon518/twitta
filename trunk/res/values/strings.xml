@@ -10,4 +10,13 @@
     <string name="refresh">Refresh</string>
     <string name="preferences">Preferences</string>
     
+    <string name="pref_check_updates_title">Run in background?</string>
+    <string name="pref_check_updates_summary">Check for new tweets when app is not running"</string>
+
+    <string name="pref_check_updates_interval_title">Update check interval</string>
+    <string name="pref_check_updates_interval_summary">How many minutes between update checks</string>
+    <string name="pref_check_updates_interval_dialog_title">Interval in minutes:"</string>
+    
+    <string name="pref_check_updates_interval_default">30</string>
+                
 </resources>
