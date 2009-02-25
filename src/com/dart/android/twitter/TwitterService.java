@@ -2,6 +2,7 @@ package com.dart.android.twitter;
 
 import java.io.IOException;
 import java.text.DateFormat;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -95,8 +96,9 @@ public class TwitterService extends Service {
       title = latestTweet.screenName;
       text = latestTweet.text;
     } else {
-      title = "New Twitter updates";
-      text = size + " new tweets";
+      title = getString(R.string.new_twitter_updates);
+      text = size + getString(R.string.x_new_tweets);
+      text = MessageFormat.format(text, size + "");      
     }
     
     PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
@@ -133,8 +135,8 @@ public class TwitterService extends Service {
     
     String intervalPref = preferences.getString(
         Preferences.CHECK_UPDATE_INTERVAL_KEY,
-        context.getText(
-            R.string.pref_check_updates_interval_default).toString());    
+        context.getString(
+            R.string.pref_check_updates_interval_default));    
     int interval = Integer.parseInt(intervalPref);
     
     Intent intent = new Intent(context, TwitterService.class);
@@ -174,7 +176,7 @@ public class TwitterService extends Service {
       JSONArray jsonArray;
       
       try {
-        jsonArray = mApi.getTimelineSinceId(maxId);
+        jsonArray = mApi.getTimelineSinceId(0);
       } catch (IOException e) {
         e.printStackTrace();
         return RetrieveResult.IO_ERROR;

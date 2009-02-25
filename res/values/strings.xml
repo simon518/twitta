@@ -18,5 +18,8 @@
     <string name="pref_check_updates_interval_dialog_title">Interval in minutes:"</string>
     
     <string name="pref_check_updates_interval_default">30</string>
+    
+    <string name="new_twitter_updates">New Twitter updates</string>
+    <string name="x_new_tweets">{0} new tweets</string>    
                 
 </resources>
