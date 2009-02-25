@@ -76,7 +76,13 @@ public class TwitterService extends Service {
   private static final int NOTIFICATION_ID = 0;
   
   private void processNewTweets() {
-    int count = mDb.addUnreadTweets(mNewTweets);
+    if (mNewTweets.size() <= 0) {
+      return;
+    }    
+
+    Log.i(TAG, mNewTweets.size() + " new tweets.");
+        
+    int count = mDb.addNewTweetsAndCountUnread(mNewTweets);
     
     if (count <= 0) {
       return;

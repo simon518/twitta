@@ -9,14 +9,14 @@
    	android:id="@+id/tweet_list"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:paddingTop="33px"
+    android:paddingTop="11px"    
     android:paddingBottom="55px"    	    
     android:paddingLeft="9px"
     android:paddingRight="12px"    
     android:fadingEdge="none"
-    android:cacheColorHint="#E0FF92"
+    android:cacheColorHint="#00000000"
     android:scrollbars="none"
-    android:listSelector="#00000000"
+    android:listSelector="@drawable/list_selector"
     />    	    
     
     <!-- Input area. -->    
@@ -78,13 +78,4 @@
     </LinearLayout>
     </LinearLayout>
     
-    <!-- Logo. -->
-    <ImageView
-    android:src="@drawable/logo"
-    android:paddingTop="6px"
-    android:paddingLeft="8px"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"    
-    />
-        	    
 </RelativeLayout>
