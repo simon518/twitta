@@ -163,10 +163,9 @@ public class TwitterApi {
       IOException, AuthException {
     Log.i(TAG, "Requesting friends timeline since id.");
 
-    ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-    params.add(new BasicNameValuePair("since_id", sinceId + ""));    
+    String url = FRIENDS_TIMELINE_URL + "?since_id" + sinceId;
     
-    InputStream data = requestData(FRIENDS_TIMELINE_URL, METHOD_GET, params);        
+    InputStream data = requestData(FRIENDS_TIMELINE_URL, METHOD_GET, null);        
     JSONArray json = null;
     
     try {

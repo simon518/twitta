@@ -29,8 +29,6 @@ import com.google.android.photostream.UserTask;
 public class TwitterService extends Service {
   private static final String TAG = "TwitterService";
   
-  private static final int REFRESH_INTERVAL_MS = 60 * 1000;
-
   private TwitterApi mApi;
   private TwitterDbAdapter mDb;
   private SharedPreferences mPreferences;  
@@ -129,12 +127,19 @@ public class TwitterService extends Service {
     super.onDestroy();
   }
         
-  static void schedule(Context context) {
+  
+  static void schedule(Context context) {    
+    SharedPreferences preferences = 
+        PreferenceManager.getDefaultSharedPreferences(context);    
+    String intervalPref = preferences.getString(
+        Preferences.CHECK_UPDATE_INTERVAL_KEY, "30");    
+    int interval = Integer.parseInt(intervalPref);
+    
     Intent intent = new Intent(context, TwitterService.class);
     PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
 
     Calendar c = new GregorianCalendar();
-    c.add(Calendar.SECOND, REFRESH_INTERVAL_MS / 1000);
+    c.add(Calendar.MINUTE, interval);
     
     DateFormat df = new SimpleDateFormat("h:mm a");
     Log.i(TAG, "Scheduling alarm at " + df.format(c.getTime()));

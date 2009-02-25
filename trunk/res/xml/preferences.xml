@@ -4,8 +4,19 @@
    <CheckBoxPreference  
             android:key="check_updates"  
             android:defaultValue="false"
-            android:title="Check for updates?"  
-            android:summary="Checks for updates in the background and notifies you of new activity"
+            android:title="Run in background?"  
+            android:summary="Check for new tweets when app is not running"
+            />  
+
+   <ListPreference  
+            android:key="check_update_interval"
+            android:dependency="check_updates"  
+            android:defaultValue="30"
+            android:title="Update check interval"  
+            android:summary="How many minutes between update checks"
+            android:entries="@array/check_intervals"
+            android:entryValues="@array/check_intervals"
+            android:dialogTitle="Interval in minutes:"
             />  
 
 </PreferenceScreen>
