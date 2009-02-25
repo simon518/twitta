@@ -126,13 +126,15 @@ public class TwitterService extends Service {
     
     super.onDestroy();
   }
-        
-  
+          
   static void schedule(Context context) {    
     SharedPreferences preferences = 
-        PreferenceManager.getDefaultSharedPreferences(context);    
+        PreferenceManager.getDefaultSharedPreferences(context);
+    
     String intervalPref = preferences.getString(
-        Preferences.CHECK_UPDATE_INTERVAL_KEY, "30");    
+        Preferences.CHECK_UPDATE_INTERVAL_KEY,
+        context.getText(
+            R.string.pref_check_updates_interval_default).toString());    
     int interval = Integer.parseInt(intervalPref);
     
     Intent intent = new Intent(context, TwitterService.class);

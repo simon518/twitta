@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 
 import org.apache.http.HttpResponse;
@@ -163,9 +164,10 @@ public class TwitterApi {
       IOException, AuthException {
     Log.i(TAG, "Requesting friends timeline since id.");
 
-    String url = FRIENDS_TIMELINE_URL + "?since_id" + sinceId;
+    String url = FRIENDS_TIMELINE_URL + "?since_id=" +
+        URLEncoder.encode(sinceId + "", HTTP.UTF_8);
     
-    InputStream data = requestData(FRIENDS_TIMELINE_URL, METHOD_GET, null);        
+    InputStream data = requestData(url, METHOD_GET, null);        
     JSONArray json = null;
     
     try {
