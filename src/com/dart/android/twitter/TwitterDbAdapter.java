@@ -1,5 +1,8 @@
 package com.dart.android.twitter;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -18,13 +21,15 @@ public class TwitterDbAdapter {
   public static final String KEY_TEXT = "text";
   public static final String KEY_PROFILE_IMAGE_URL = "profile_image_url";
   public static final String KEY_IS_UNREAD = "is_unread";
+  public static final String KEY_CREATED_AT = "created_at";
   
   public static final String [] COLUMNS = new String [] {
     KEY_ID,
     KEY_USER,
     KEY_TEXT,
     KEY_PROFILE_IMAGE_URL,
-    KEY_IS_UNREAD
+    KEY_IS_UNREAD,
+    KEY_CREATED_AT
   };
   
   private DatabaseHelper mDbHelper;
@@ -32,7 +37,7 @@ public class TwitterDbAdapter {
 
   private static final String DATABASE_NAME = "data";
   private static final String DATABASE_TABLE = "tweets";
-  private static final int DATABASE_VERSION = 2;
+  private static final int DATABASE_VERSION = 3;
   
   private static final String DATABASE_CREATE =
       "create table tweets (" +
@@ -40,7 +45,8 @@ public class TwitterDbAdapter {
           KEY_USER + " text not null, " +
           KEY_TEXT + " text not null, " +
           KEY_PROFILE_IMAGE_URL + " text not null, " +
-          KEY_IS_UNREAD + " boolean not null)";
+          KEY_IS_UNREAD + " boolean not null, " +
+          KEY_CREATED_AT + " date not null)";
 
   private final Context mContext;
 
@@ -78,14 +84,18 @@ public class TwitterDbAdapter {
     mDbHelper.close();
   }
 
+  public final static DateFormat DB_DATE_FORMATTER =
+      new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+  
   public long createTweet(String id, String user, String text,
-      String imageUrl, boolean is_unread) {
+      String imageUrl, boolean isUnread, Date createdAt) {
     ContentValues initialValues = new ContentValues();
     initialValues.put(KEY_ID, id);
     initialValues.put(KEY_USER, user);      
     initialValues.put(KEY_TEXT, text);
     initialValues.put(KEY_PROFILE_IMAGE_URL, imageUrl);
-    initialValues.put(KEY_IS_UNREAD, is_unread);
+    initialValues.put(KEY_IS_UNREAD, isUnread);
+    initialValues.put(KEY_CREATED_AT, DB_DATE_FORMATTER.format(createdAt));
 
     return mDb.insert(DATABASE_TABLE, null, initialValues);
   }
@@ -98,7 +108,7 @@ public class TwitterDbAdapter {
       
       for (Tweet tweet : tweets) {
         createTweet(tweet.id, tweet.screenName, tweet.text,
-            tweet.profileImageUrl, false);
+            tweet.profileImageUrl, false, tweet.createdAt);
       }
       
       mDb.setTransactionSuccessful();
@@ -115,7 +125,7 @@ public class TwitterDbAdapter {
       
       for (Tweet tweet : tweets) {
         createTweet(tweet.id, tweet.screenName, tweet.text,
-            tweet.profileImageUrl, true);
+            tweet.profileImageUrl, true, tweet.createdAt);
       }
       
       unreadCount = fetchUnreadCount();      

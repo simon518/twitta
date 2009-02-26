@@ -1,7 +1,9 @@
 package com.dart.android.twitter;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -276,10 +278,12 @@ public class TwitterActivity extends Activity {
       TextView tweetUserText;
       TextView tweetText;
       ImageView profileImage;
+      TextView metaText;
                   
       tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
       tweetText = (TextView) view.findViewById(R.id.tweet_text);
       profileImage = (ImageView) view.findViewById(R.id.profile_image);
+      metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       
       int userTextColumn = cursor.getColumnIndexOrThrow(
           TwitterDbAdapter.KEY_USER);
@@ -287,6 +291,8 @@ public class TwitterActivity extends Activity {
           TwitterDbAdapter.KEY_TEXT);
       int profileImageUrlColumn = cursor.getColumnIndexOrThrow(
           TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
+      int createdAtColumn = cursor.getColumnIndexOrThrow(
+          TwitterDbAdapter.KEY_CREATED_AT);
       
       tweetUserText.setText(cursor.getString(userTextColumn));
       tweetText.setText(cursor.getString(textColumn));
@@ -300,6 +306,21 @@ public class TwitterActivity extends Activity {
           profileImage.setImageBitmap(profileBitmap);        
         }         
       }      
+      
+      String meta = "";
+      
+      String createdAtString = cursor.getString(createdAtColumn);      
+      Date createdAt;
+      
+      try {
+        createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(
+            createdAtString);
+        meta += Tweet.getRelativeDate(createdAt) + " ";
+      } catch (ParseException e) {
+        Log.w(TAG, "Invalid created at data.");
+      }
+      
+      metaText.setText(meta);      
     }    
     
     public void refresh() {
