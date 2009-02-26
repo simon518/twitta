@@ -4,4 +4,5 @@
   <drawable name="status_color">#FFFF0000</drawable>
   <drawable name="tweet_user_color">#FF52991F</drawable>
   <drawable name="tweet_color">#FF000000</drawable>  
+  <drawable name="tweet_meta_color">#FF999999</drawable>
 </resources>
