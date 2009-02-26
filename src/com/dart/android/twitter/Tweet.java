@@ -8,12 +8,17 @@ import java.util.Date;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 public class Tweet {
+  private static final String TAG = "Tweet";
+  
   public String id;
   public String screenName;
   public String text;
   public String profileImageUrl;
   public Date createdAt;
+  public String source;
   
   public static Tweet create(JSONObject jsonObject) throws JSONException {
     Tweet tweet = new Tweet();
@@ -25,23 +30,25 @@ public class Tweet {
     JSONObject user = jsonObject.getJSONObject("user");
     tweet.screenName = Utils.decodeTwitterJson(user.getString("screen_name"));
     tweet.profileImageUrl = user.getString("profile_image_url");
+    tweet.source = Utils.decodeTwitterJson(jsonObject.getString("source")).
+        replaceAll("\\<.*?>", "");
     
     return tweet;
   }
   
-  public final static DateFormat TWITTER_DATE_FORMATTER =
+  public static final DateFormat TWITTER_DATE_FORMATTER =
       new SimpleDateFormat("E MMM d HH:mm:ss Z yyyy");
      
-  public final static Date parseDateTime(String dateString) {
+  public static final Date parseDateTime(String dateString) {
     try {
       return TWITTER_DATE_FORMATTER.parse(dateString);
     } catch (ParseException e) {
-      e.printStackTrace();
+      Log.w(TAG, "Could not parse Twitter date string: " + dateString);
       return null;
     }
   }  
 
-  public final static DateFormat AGO_FULL_DATE_FORMATTER =
+  public static final DateFormat AGO_FULL_DATE_FORMATTER =
     new SimpleDateFormat("h:mm a MMM d");
   
   public static String getRelativeDate(Date date) {

@@ -293,7 +293,9 @@ public class TwitterActivity extends Activity {
           TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
       int createdAtColumn = cursor.getColumnIndexOrThrow(
           TwitterDbAdapter.KEY_CREATED_AT);
-      
+      int sourceColumn = cursor.getColumnIndexOrThrow(
+          TwitterDbAdapter.KEY_SOURCE);
+
       tweetUserText.setText(cursor.getString(userTextColumn));
       tweetText.setText(cursor.getString(textColumn));
       
@@ -319,6 +321,8 @@ public class TwitterActivity extends Activity {
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
+      
+      meta += "from " + cursor.getString(sourceColumn);
       
       metaText.setText(meta);      
     }    
