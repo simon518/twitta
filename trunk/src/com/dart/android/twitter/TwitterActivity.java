@@ -85,7 +85,7 @@ public class TwitterActivity extends Activity {
     mApi = new TwitterApi();
     mDb = new TwitterDbAdapter(this);
     mDb.open();
-    mImageManager = new ImageManager();
+    mImageManager = new ImageManager(this);
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
      
@@ -116,7 +116,7 @@ public class TwitterActivity extends Activity {
     mApi.setCredentials(username, password);
   
     // Nice optimization which can preserve objects in an Activity 
-    // that the system wants to destroyed and recreated immediately.
+    // that is destroyed and recreated immediately by the system.
     // See Activity doc for more.
     Object data = getLastNonConfigurationInstance();
     
@@ -127,7 +127,11 @@ public class TwitterActivity extends Activity {
       mImageManager = ((NonConfigurationState) data).imageManager;
     }
     
-    setupAdapter();       
+    setupAdapter();
+    
+    mTweetEdit.requestFocus();
+    
+    mTweetList.setItemsCanFocus(true);
   }
 
   @Override
@@ -302,7 +306,7 @@ public class TwitterActivity extends Activity {
       String profileImageUrl = cursor.getString(profileImageUrlColumn);
       
       if (!Utils.isEmpty(profileImageUrl)) {
-        Bitmap profileBitmap = mImageManager.lookup(profileImageUrl);
+        Bitmap profileBitmap = mImageManager.get(profileImageUrl);
         
         if (profileBitmap != null) {
           profileImage.setImageBitmap(profileBitmap);        
@@ -507,7 +511,7 @@ public class TwitterActivity extends Activity {
             !mImageManager.contains(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.fetch(tweet.profileImageUrl);
+            mImageManager.put(tweet.profileImageUrl);
           } catch (IOException e) {
             e.printStackTrace();            
           }
@@ -616,7 +620,8 @@ public class TwitterActivity extends Activity {
   
   private View.OnKeyListener tweetEnterHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
-      if (keyCode == KeyEvent.KEYCODE_ENTER) {
+      if (keyCode == KeyEvent.KEYCODE_ENTER ||
+          keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
         if (event.getAction() == KeyEvent.ACTION_UP) {
           doSend();
         }

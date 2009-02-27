@@ -1,7 +1,12 @@
 package com.dart.android.twitter;
 
 import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,41 +18,76 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.HttpConnectionParams;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
-/**
- * <p>
- * Retrieves and caches images in memory. Does not persist or store the images.
- * TODO: persist and remove old images.
- * </p> 
- */
 public class ImageManager {
   private static final String TAG = "ImageManager";
-  
+
+  private Context mContext;  
   private Map<String, Bitmap> mCache;
   private HttpClient mClient;
-  
+  private MessageDigest mDigest;
+    
   private static final int CONNECTION_TIMEOUT_MS = 5 * 1000;
   private static final int SOCKET_TIMEOUT_MS = 5 * 1000;
   
-  ImageManager() {
+  ImageManager(Context context) {
+    mContext = context;
     mCache = new HashMap<String, Bitmap>();
     mClient = new DefaultHttpClient();
+    
+    try {
+      mDigest = MessageDigest.getInstance("MD5");
+    } catch (NoSuchAlgorithmException e) {
+      // This shouldn't happen.
+      throw new RuntimeException("No MD5 algorithm.");
+    }    
   }
 
-  public Bitmap get(String url) throws IOException {
-    if (lookup(url) == null) {
-      fetch(url);
+  private String getHash(MessageDigest digest) {
+    StringBuilder builder = new StringBuilder();
+    
+    for (byte b : digest.digest()) {
+      builder.append(Integer.toHexString((b >> 4) & 0xf));
+      builder.append(Integer.toHexString(b & 0xf));
     }
     
-    return lookup(url);
+    return builder.toString();
+  }
+
+  private String getMd5(String url) {
+    mDigest.update(url.getBytes());
+    
+    return getHash(mDigest);
+  }
+
+  private Bitmap lookupFile(String url) {
+    String hashedUrl = getMd5(url);    
+    FileInputStream fis = null;
+    
+    try {
+      fis = mContext.openFileInput(hashedUrl);
+      return BitmapFactory.decodeStream(fis);
+    } catch (FileNotFoundException e) {
+      // Not there.
+      return null;
+    } finally {
+      if (fis != null) {
+        try {
+          fis.close();
+        } catch (IOException e) {
+          // Ignore.
+        }
+      }
+    }           
   }
   
-  public void fetch(String url) throws IOException {
-    Log.i(TAG, "Fetching image: " + url);    
-    
+  public Bitmap put(String url) throws IOException {
+    Log.i(TAG, "Fetching image: " + url);
+            
     HttpGet get = new HttpGet(url);
     HttpConnectionParams.setConnectionTimeout(get.getParams(),
         CONNECTION_TIMEOUT_MS);
@@ -72,22 +112,73 @@ public class ImageManager {
     BufferedInputStream bis = new BufferedInputStream(entity.getContent(), 
         8 * 1024); 
     Bitmap bitmap = BitmapFactory.decodeStream(bis);
-    
-    synchronized(this) {        
+    bis.close();
+
+    synchronized(this) {            
       mCache.put(url, bitmap);
     }
     
-    bis.close();    
+    writeFile(url, bitmap);    
+    
+    return bitmap;    
   }
 
-  public Bitmap lookup(String url) {
-    synchronized(this) {            
-      return mCache.get(url);
+  private void writeFile(String url, Bitmap bitmap) {
+    String hashedUrl = getMd5(url);
+    
+    FileOutputStream fos;
+    
+    try {
+      fos = mContext.openFileOutput(hashedUrl,
+          Context.MODE_PRIVATE);
+    } catch (FileNotFoundException e) {
+      Log.w(TAG, "Error creating file.");
+      return;
     }
+    
+    Log.i(TAG, "Writing file: " + hashedUrl);
+    bitmap.compress(Bitmap.CompressFormat.PNG, 0, fos);
+    
+    try {
+      fos.close();
+    } catch (IOException e) {
+      // Ignore.
+    }                
+  }
+  
+  public Bitmap get(String url) {
+    Bitmap bitmap;
+    
+    synchronized(this) {            
+      bitmap = mCache.get(url);
+    }
+
+    if (bitmap != null) {
+      return bitmap;
+    }
+    
+    // Try file.
+    bitmap = lookupFile(url);
+    
+    if (bitmap != null) {
+      Log.i(TAG, "Image is in file cache.");
+      
+      synchronized(this) {            
+        mCache.put(url, bitmap);
+      }
+      
+      return bitmap;          
+    }
+
+    return null;    
+  }
+  
+  public boolean contains(String url) {
+    return get(url) != null;
   }
 
-  public boolean contains(String url) {
-    return lookup(url) != null;
+  public void cleanupFiles() {
+    // Remove stored files that aren't in the cache. 
   }
   
 }
