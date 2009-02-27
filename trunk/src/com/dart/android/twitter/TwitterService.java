@@ -123,7 +123,13 @@ public class TwitterService extends Service {
         Notification.FLAG_AUTO_CANCEL |
         Notification.FLAG_ONLY_ALERT_ONCE |
         Notification.FLAG_SHOW_LIGHTS;    
-    notification.defaults = Notification.DEFAULT_ALL;
+    
+    if (mPreferences.getBoolean(Preferences.VIBRATE_KEY, false)) {    
+      notification.defaults = Notification.DEFAULT_ALL;
+    } else {
+      notification.defaults = Notification.DEFAULT_SOUND |
+          Notification.DEFAULT_LIGHTS;
+    }
     
     mNotificationManager.notify(NOTIFICATION_ID, notification);       
   }

@@ -51,6 +51,8 @@ public class LoginActivity extends Activity {
   // Tasks.
   private UserTask<Void, String, Boolean> mLoginTask;
   
+  private static final String SIS_RUNNING_KEY = "running";
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -77,12 +79,21 @@ public class LoginActivity extends Activity {
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mProgressText.setFreezesText(true);
            
+    if (savedInstanceState != null) {
+      if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
+        if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+          Log.i(TAG, "Was previously logging in. Restart action.");
+          doLogin();
+        }
+      }
+    }    
+    
     mSigninButton = (Button) findViewById(R.id.signin_button);    
     mSigninButton.setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         doLogin();
       }
-    });    
+    });        
   }
 
   @Override  
@@ -103,8 +114,13 @@ public class LoginActivity extends Activity {
   }
   
   @Override
-  protected void onSaveInstanceState(Bundle outState) {
+  protected void onSaveInstanceState(Bundle outState) {    
     super.onSaveInstanceState(outState);  
+        
+    if (mLoginTask != null &&
+        mLoginTask.getStatus() == UserTask.Status.RUNNING) {
+      outState.putBoolean(SIS_RUNNING_KEY, true);
+    }   
   }
   
   // UI helpers.
