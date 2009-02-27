@@ -193,7 +193,9 @@ public class TwitterActivity extends Activity {
       mRetrieveTask.cancel(true);
     }
 
-    mDb.close();        
+    mDb.close();
+    
+    mImageManager.cleanup();
     
     super.onDestroy();    
   }
@@ -366,6 +368,9 @@ public class TwitterActivity extends Activity {
     editor.clear();
     editor.commit();
         
+    // Let's cleanup files while we're at it. 
+    mImageManager.clear();
+    
     Intent intent = new Intent(); 
     intent.setClass(this, LoginActivity.class); 
     startActivity(intent); 
@@ -575,6 +580,7 @@ public class TwitterActivity extends Activity {
         logout();
         return true;
       case OPTIONS_MENU_ID_REFRESH:
+        mImageManager.clear();
         doRetrieve();
         return true;       
       case OPTIONS_MENU_ID_PREFERENCES:

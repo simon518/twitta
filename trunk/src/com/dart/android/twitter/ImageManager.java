@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -137,12 +138,12 @@ public class ImageManager {
     }
     
     Log.i(TAG, "Writing file: " + hashedUrl);
-    bitmap.compress(Bitmap.CompressFormat.PNG, 0, fos);
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos);
     
     try {
       fos.close();
     } catch (IOException e) {
-      // Ignore.
+      Log.w(TAG, "Could not close file.");
     }                
   }
   
@@ -161,8 +162,6 @@ public class ImageManager {
     bitmap = lookupFile(url);
     
     if (bitmap != null) {
-      Log.i(TAG, "Image is in file cache.");
-      
       synchronized(this) {            
         mCache.put(url, bitmap);
       }
@@ -170,6 +169,7 @@ public class ImageManager {
       return bitmap;          
     }
 
+    Log.i(TAG, "Image is missing.");
     return null;    
   }
   
@@ -177,8 +177,35 @@ public class ImageManager {
     return get(url) != null;
   }
 
-  public void cleanupFiles() {
-    // Remove stored files that aren't in the cache. 
+  public void clear() {
+    String [] files = mContext.fileList();
+    
+    for (String file : files) {
+      mContext.deleteFile(file);
+    }          
+    
+    synchronized(this) {
+      mCache.clear();
+    }
+  }
+
+  // Deletes files not in the memory cache.
+  public void cleanup() {
+    String [] files = mContext.fileList();
+    ArrayList<String> hashedUrls = new ArrayList<String>();
+
+    synchronized(this) {    
+      for (String key : mCache.keySet()) {
+        hashedUrls.add(getMd5(key));
+      }
+    }    
+    
+    for (String file : files) {
+      if (!hashedUrls.contains(file)) {
+        Log.i(TAG, "Deleting unused file: " + file);
+        mContext.deleteFile(file);
+      }
+    }          
   }
   
 }
