@@ -49,7 +49,7 @@ public class Tweet {
   }  
 
   public static final DateFormat AGO_FULL_DATE_FORMATTER =
-    new SimpleDateFormat("h:mm a MMM d");
+      new SimpleDateFormat("h:mm a MMM d");
   
   public static String getRelativeDate(Date date) {
     Date now = new Date();

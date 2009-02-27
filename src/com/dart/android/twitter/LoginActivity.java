@@ -31,7 +31,8 @@ public class LoginActivity extends Activity {
   
   private View.OnKeyListener enterKeyHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
-      if (keyCode == KeyEvent.KEYCODE_ENTER) {
+      if (keyCode == KeyEvent.KEYCODE_ENTER ||
+          keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
         if (event.getAction() == KeyEvent.ACTION_UP) {
           doLogin();
         }

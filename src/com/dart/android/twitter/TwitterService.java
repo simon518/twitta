@@ -50,8 +50,15 @@ public class TwitterService extends Service {
     super.onCreate();
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    
+    if (!mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
+      Log.i(TAG, "Check update preference is false.");
+      stopSelf();      
+      return;
+    }        
+        
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");    
+    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
         
     if (!TwitterApi.isValidCredentials(username, password)) {
       Log.i(TAG, "No credentials.");
@@ -130,7 +137,9 @@ public class TwitterService extends Service {
       mRetrieveTask.cancel(true);
     }    
     
-    mDb.close();
+    if (mDb != null) {
+      mDb.close();
+    }
     
     super.onDestroy();
   }

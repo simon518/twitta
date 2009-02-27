@@ -107,7 +107,8 @@ public class TwitterApi {
       method = new HttpGet(uri);            
     }
     
-    HttpConnectionParams.setConnectionTimeout(method.getParams(), CONNECTION_TIMEOUT_MS);
+    HttpConnectionParams.setConnectionTimeout(method.getParams(),
+        CONNECTION_TIMEOUT_MS);
     HttpConnectionParams.setSoTimeout(method.getParams(), SOCKET_TIMEOUT_MS);    
     
     HttpResponse response;
