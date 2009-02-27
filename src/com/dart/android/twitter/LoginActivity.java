@@ -79,6 +79,8 @@ public class LoginActivity extends Activity {
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mProgressText.setFreezesText(true);
            
+    mSigninButton = (Button) findViewById(R.id.signin_button);
+    
     if (savedInstanceState != null) {
       if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
         if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
@@ -87,8 +89,7 @@ public class LoginActivity extends Activity {
         }
       }
     }    
-    
-    mSigninButton = (Button) findViewById(R.id.signin_button);    
+        
     mSigninButton.setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         doLogin();
@@ -211,6 +212,10 @@ public class LoginActivity extends Activity {
     
     @Override
     public void onPostExecute(Boolean result) {
+      if (isCancelled()) {
+        return;
+      }      
+            
       if (result) { 
         onLoginSuccess();
       } else {

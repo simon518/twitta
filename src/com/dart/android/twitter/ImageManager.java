@@ -49,9 +49,6 @@ public class ImageManager {
   }
   
   public void setContext(Context context) {
-    Log.i(TAG, context.toString());
-    Log.i(TAG, mContext.toString());
-    
     mContext = context;
   }
 

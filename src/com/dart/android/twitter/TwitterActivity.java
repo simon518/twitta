@@ -120,6 +120,16 @@ public class TwitterActivity extends Activity {
     // See Activity doc for more.
     Object data = getLastNonConfigurationInstance();
     
+    boolean wasRunning = false;
+    
+    if (savedInstanceState != null) {
+      if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
+        if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+          wasRunning = true;
+        }
+      }
+    }    
+    
     if (data == null) {    
       doRetrieve();
     } else {
@@ -127,6 +137,14 @@ public class TwitterActivity extends Activity {
       mImageManager = ((NonConfigurationState) data).imageManager;
       // Set context to this activity. The old one is of no use. 
       mImageManager.setContext(this);
+      
+      if (wasRunning) {
+        // TODO: This isn't quite perfect. In the case of the SendTask,
+        // it might be better to allow the task to finish and set a
+        // member callback or listener task to signal completion.
+        Log.i(TAG, "Was running a retrieve or send task. Let's refresh.");
+        doRetrieve();
+      }
     }
     
     setupAdapter();
@@ -164,11 +182,21 @@ public class TwitterActivity extends Activity {
     TwitterService.unschedule(this);    
   }
     
+  private static final String SIS_RUNNING_KEY = "running";
+  
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
     
-    // TODO: save state of threads and restart later if possible. 
+    if (mRetrieveTask != null &&
+        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      outState.putBoolean(SIS_RUNNING_KEY, true);
+    }
+
+    if (mSendTask != null &&
+        mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      outState.putBoolean(SIS_RUNNING_KEY, true);
+    }
   }
   
   @Override
@@ -187,6 +215,7 @@ public class TwitterActivity extends Activity {
     
     if (mSendTask != null &&
         mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      // Doesn't really cancel execution. See the class for more details.
       mSendTask.cancel(true);
     }
 
@@ -420,6 +449,13 @@ public class TwitterActivity extends Activity {
     
     @Override
     public void onPostExecute(SendResult result) {
+      if (isCancelled()) {
+        // Canceled doesn't really mean "canceled" in this task.
+        // We want the request to complete, but don't wait to update the
+        // activity (it's probably dead).
+        return;
+      }            
+      
       if (result == SendResult.AUTH_ERROR) { 
         onAuthFailure();
       } else if (result == SendResult.OK) {
@@ -530,6 +566,10 @@ public class TwitterActivity extends Activity {
       }
       
       mDb.syncTweets(tweets);
+
+      if (isCancelled()) {
+        return RetrieveResult.CANCELLED;
+      }
       
       return RetrieveResult.OK;
     }

@@ -417,7 +417,7 @@ public abstract class UserTask<Params, Progress, Result> {
 
     private void finish(Result result) {
         onPostExecute(result);
-        mStatus = Status.FINISHED;
+        mStatus = Status.FINISHED;       
     }
 
     private static class InternalHandler extends Handler {
