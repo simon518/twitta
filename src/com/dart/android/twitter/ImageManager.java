@@ -47,6 +47,13 @@ public class ImageManager {
       throw new RuntimeException("No MD5 algorithm.");
     }    
   }
+  
+  public void setContext(Context context) {
+    Log.i(TAG, context.toString());
+    Log.i(TAG, mContext.toString());
+    
+    mContext = context;
+  }
 
   private String getHash(MessageDigest digest) {
     StringBuilder builder = new StringBuilder();
@@ -138,7 +145,7 @@ public class ImageManager {
     }
     
     Log.i(TAG, "Writing file: " + hashedUrl);
-    bitmap.compress(Bitmap.CompressFormat.JPEG, 50, fos);
+    bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
     
     try {
       fos.close();

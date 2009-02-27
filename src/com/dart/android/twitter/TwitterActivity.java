@@ -125,11 +125,11 @@ public class TwitterActivity extends Activity {
     } else {
       // Use the ImageManager from previous Activity instance.
       mImageManager = ((NonConfigurationState) data).imageManager;
+      // Set context to this activity. The old one is of no use. 
+      mImageManager.setContext(this);
     }
     
     setupAdapter();
-    
-    mTweetEdit.requestFocus();
     
     mTweetList.setItemsCanFocus(true);
   }
@@ -166,7 +166,9 @@ public class TwitterActivity extends Activity {
     
   @Override
   protected void onSaveInstanceState(Bundle outState) {
-    super.onSaveInstanceState(outState);  
+    super.onSaveInstanceState(outState);
+    
+    // TODO: save state of threads and restart later if possible. 
   }
   
   @Override
