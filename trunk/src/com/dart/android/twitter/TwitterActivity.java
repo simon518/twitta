@@ -140,8 +140,8 @@ public class TwitterActivity extends Activity {
       
       if (wasRunning) {
         // TODO: This isn't quite perfect. In the case of the SendTask,
-        // it might be better to allow the task to finish and set a
-        // member callback or listener task to signal completion.
+        // it might be better to allow the task to finish and call a
+        // member callback or listener to signal completion.
         Log.i(TAG, "Was running a retrieve or send task. Let's refresh.");
         doRetrieve();
       }
@@ -451,7 +451,7 @@ public class TwitterActivity extends Activity {
     public void onPostExecute(SendResult result) {
       if (isCancelled()) {
         // Canceled doesn't really mean "canceled" in this task.
-        // We want the request to complete, but don't wait to update the
+        // We want the request to complete, but don't want to update the
         // activity (it's probably dead).
         return;
       }            
