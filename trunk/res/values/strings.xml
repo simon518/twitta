@@ -11,8 +11,8 @@
     <string name="preferences">Preferences</string>
     <string name="about">About</string>
            
-    <string name="pref_check_updates_title">Run in background?</string>
-    <string name="pref_check_updates_summary">Check for new tweets when app is not running</string>
+    <string name="pref_check_updates_title">Check in background?</string>
+    <string name="pref_check_updates_summary">Check for new tweets when app is not running and create a status bar notification</string>
 
     <string name="pref_check_updates_interval_title">Update check interval</string>
     <string name="pref_check_updates_interval_summary">How many minutes between update checks</string>
@@ -25,7 +25,7 @@
     
     <string name="reply">Reply</string>
                 
-    <string name="vibrate_title">Vibrate notification?</string>
+    <string name="vibrate_title">Vibrate?</string>
     <string name="vibrate_summary">Vibrate the phone when notified of new tweets?</string>
 
     <string name="about_title">About Twitta</string>
