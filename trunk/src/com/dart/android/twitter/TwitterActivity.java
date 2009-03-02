@@ -593,6 +593,7 @@ public class TwitterActivity extends Activity {
   private static final int OPTIONS_MENU_ID_LOGOUT = 1;
   private static final int OPTIONS_MENU_ID_REFRESH = 2;
   private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
+  private static final int OPTIONS_MENU_ID_ABOUT = 4;
   
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -610,6 +611,10 @@ public class TwitterActivity extends Activity {
         R.string.refresh);           
     item.setIcon(android.R.drawable.stat_notify_sync);    
 
+    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0,
+        R.string.about);           
+    item.setIcon(android.R.drawable.ic_menu_info_details);    
+    
     return true;
   }    
 
@@ -630,6 +635,9 @@ public class TwitterActivity extends Activity {
           new Intent().setClass(this, PreferencesActivity.class);          
         startActivityForResult(launchPreferencesIntent,
           REQUEST_CODE_PREFERENCES);
+      case OPTIONS_MENU_ID_ABOUT:
+        AboutDialog.show(this);
+        return true;        
     }
 
     return super.onOptionsItemSelected(item);

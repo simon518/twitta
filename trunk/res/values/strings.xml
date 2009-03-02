@@ -9,7 +9,8 @@
     <string name="signout">Sign out</string>
     <string name="refresh">Refresh</string>
     <string name="preferences">Preferences</string>
-    
+    <string name="about">About</string>
+           
     <string name="pref_check_updates_title">Run in background?</string>
     <string name="pref_check_updates_summary">Check for new tweets when app is not running</string>
 
@@ -27,4 +28,11 @@
     <string name="vibrate_title">Vibrate notification?</string>
     <string name="vibrate_summary">Vibrate the phone when notified of new tweets?</string>
 
+    <string name="about_title">About Twitta</string>
+    <string name="about_message">Twitta is not endorsed by Twitter.
+    \n\nTwitta is open sourced under the Apache 2.0 license. 
+    \n\nPlease visit the project page at http://code.google.com/p/twitta/ to contribute code or report issues.
+    </string>
+
+    <string name="cool">Cool</string>
 </resources>
