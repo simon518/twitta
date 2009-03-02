@@ -57,6 +57,10 @@ public class Tweet {
     // Seconds.
     long diff = (now.getTime() - date.getTime()) / 1000;
 
+    if (diff < 0) {
+      diff = 0;
+    }
+    
     if (diff < 60) {
       return diff + " seconds ago";
     } 

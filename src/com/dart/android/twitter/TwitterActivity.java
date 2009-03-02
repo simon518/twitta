@@ -435,13 +435,18 @@ public class TwitterActivity extends Activity {
     public SendResult doInBackground(Void... params) {      
       try {
         String status = mTweetEdit.getText().toString();
-        mApi.update(status);
+        JSONObject jsonObject = mApi.update(status);
+        Tweet tweet = Tweet.create(jsonObject);
+        mDb.createTweet(tweet, false);
       } catch (IOException e) {
         e.printStackTrace();
         return SendResult.IO_ERROR;
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
         return SendResult.AUTH_ERROR;
+      } catch (JSONException e) {
+        Log.w(TAG, "Could not parse JSON after sending update.");
+        return SendResult.IO_ERROR;
       }
       
       return SendResult.OK;
@@ -476,7 +481,7 @@ public class TwitterActivity extends Activity {
     updateProgress("");
     updateCharsRemain("");
     enableEntry();    
-    doRetrieve();
+    update();
   }
 
   private void onSendFailure() {
@@ -539,7 +544,7 @@ public class TwitterActivity extends Activity {
         
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.create(jsonObject);                           
+          tweet = Tweet.create(jsonObject); 
           tweets.add(tweet);
         } catch (JSONException e) {
           e.printStackTrace();
@@ -635,6 +640,7 @@ public class TwitterActivity extends Activity {
           new Intent().setClass(this, PreferencesActivity.class);          
         startActivityForResult(launchPreferencesIntent,
           REQUEST_CODE_PREFERENCES);
+        return true;
       case OPTIONS_MENU_ID_ABOUT:
         AboutDialog.show(this);
         return true;        
