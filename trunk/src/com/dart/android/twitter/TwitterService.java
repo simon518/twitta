@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.dart.android.twitter;
 
 import java.io.IOException;
@@ -172,7 +188,7 @@ public class TwitterService extends Service {
     AlarmManager alarm =
         (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
     alarm.cancel(pending);
-    alarm.set(AlarmManager.RTC, c.getTimeInMillis(), pending);
+    alarm.set(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pending);
   }
   
   static void unschedule(Context context) {
@@ -199,7 +215,7 @@ public class TwitterService extends Service {
       try {
         jsonArray = mApi.getTimelineSinceId(maxId);
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
@@ -217,7 +233,7 @@ public class TwitterService extends Service {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           tweet = Tweet.create(jsonObject);
         } catch (JSONException e) {
-          e.printStackTrace();
+          Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;
         }
         
