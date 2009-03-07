@@ -3,7 +3,7 @@
 
    <CheckBoxPreference  
             android:key="check_updates"  
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:title="@string/pref_check_updates_title"
             android:summary="@string/pref_check_updates_summary"
             />  
@@ -22,7 +22,7 @@
    <CheckBoxPreference  
             android:key="vibrate"
             android:dependency="check_updates"  
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:title="@string/vibrate_title"
             android:summary="@string/vibrate_summary"
             />  
