@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.dart.android.twitter;
 
 import java.io.IOException;
@@ -43,135 +59,141 @@ import com.google.android.photostream.UserTask;
 
 public class TwitterActivity extends Activity {
   private static final String TAG = "TwitterActivity";
-  
-  private static final int MAX_TWEET_LENGTH = 140; 
-    
+
+  private static final int MAX_TWEET_LENGTH = 140;
+  private static final int MAX_TWEET_INPUT_LENGTH = 400;
+
   // Views.
   private ListView mTweetList;
   private TweetAdapter mTweetAdapter;
-  
+
   private EditText mTweetEdit;
   private ImageButton mSendButton;
-  
-  private TextView mCharsRemainText;  
+
+  private TextView mCharsRemainText;
   private TextView mProgressText;
-    
+
   // Sources.
   private TwitterApi mApi;
   private TwitterDbAdapter mDb;
   private ImageManager mImageManager;
-  
+
   // Preferences.
   private SharedPreferences mPreferences;
- 
+
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
 
   private void controlUpdateChecks() {
+    // Controls scheduling of the new tweet checker depending on user preference
     if (mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
-      TwitterService.schedule(this);          
+      TwitterService.schedule(this);
     } else {
       TwitterService.unschedule(this);
-    }       
+    }
   }
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-    
-    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);        
-        
+
+    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
     mApi = new TwitterApi();
     mDb = new TwitterDbAdapter(this);
     mDb.open();
     mImageManager = new ImageManager(this);
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-     
+
     controlUpdateChecks();
-    
+
     setContentView(R.layout.main);
-            
+
     mTweetList = (ListView) findViewById(R.id.tweet_list);
-    
+
     mTweetEdit = (EditText) findViewById(R.id.tweet_edit);
     mTweetEdit.addTextChangedListener(mTextWatcher);
-    mTweetEdit.setFilters(new InputFilter [] {
-        new InputFilter.LengthFilter(MAX_TWEET_LENGTH) });
+    mTweetEdit.setFilters(new InputFilter[] { new InputFilter.LengthFilter(
+        MAX_TWEET_INPUT_LENGTH) });
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
-    
+
     mCharsRemainText = (TextView) findViewById(R.id.chars_text);
     mProgressText = (TextView) findViewById(R.id.progress_text);
-       
-    mSendButton = (ImageButton) findViewById(R.id.send_button);    
+
+    mSendButton = (ImageButton) findViewById(R.id.send_button);
     mSendButton.setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         doSend();
       }
     });
-    
+
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
     mApi.setCredentials(username, password);
-  
-    // Nice optimization which can preserve objects in an Activity 
-    // that is destroyed and recreated immediately by the system.
+
+    // Nice optimization which can preserve objects in an Activity
+    // that is going to be destroyed and recreated immediately by the system.
     // See Activity doc for more.
     Object data = getLastNonConfigurationInstance();
-    
-    boolean wasRunning = false;
-    
-    if (savedInstanceState != null) {
-      if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
-        if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
-          wasRunning = true;
-        }
-      }
-    }    
-    
-    if (data == null) {    
-      doRetrieve();
-    } else {
+
+    if (data != null) {
+      // Non configuration instance.
       // Use the ImageManager from previous Activity instance.
       mImageManager = ((NonConfigurationState) data).imageManager;
-      // Set context to this activity. The old one is of no use. 
+      // Set context to this activity. The old one is of no use.
       mImageManager.setContext(this);
+
+      // Check to see if it was running a send or retrieve task.
+      // It makes no sense to resend the send request (don't want dupes)
+      // so we instead retrieve (refresh) to see if the message has posted.
+      boolean wasRunning = false;
+
+      if (savedInstanceState != null) {
+        if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
+          if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+            wasRunning = true;
+          }
+        }
+      }
       
       if (wasRunning) {
-        // TODO: This isn't quite perfect. In the case of the SendTask,
-        // it might be better to allow the task to finish and call a
-        // member callback or listener to signal completion.
-        Log.i(TAG, "Was running a retrieve or send task. Let's refresh.");
+        Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
         doRetrieve();
-      }
+      }      
+    } else {
+      // We want to refresh.        
+      doRetrieve();
     }
-    
+                
     setupAdapter();
-    
+
+    // Want to be able to focus on the items with the trackball.
+    // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
   }
 
   @Override
   public Object onRetainNonConfigurationInstance() {
-    // Save ImageManager for new Activity instance.
-    return new NonConfigurationState(mImageManager);  
+    // Save ImageManager for the subsequent Activity instance.
+    return new NonConfigurationState(mImageManager);
   }
-    
+
   private class NonConfigurationState {
     public ImageManager imageManager;
 
     NonConfigurationState(ImageManager imageManager) {
       this.imageManager = imageManager;
-    }    
+    }
   }
-    
+
   @Override
   protected void onPause() {
     Log.i(TAG, "onPause.");
-    // Update checker should be active when Activity is paused. 
-    controlUpdateChecks();        
-    super.onPause();    
+    // Update checker should be active when Activity is paused.
+    controlUpdateChecks();
+    super.onPause();
   }
 
   @Override
@@ -179,26 +201,24 @@ public class TwitterActivity extends Activity {
     Log.i(TAG, "onResume.");
     super.onResume();
     // Try to prevent update checks while activity is visible.
-    TwitterService.unschedule(this);    
+    TwitterService.unschedule(this);
   }
-    
+
   private static final String SIS_RUNNING_KEY = "running";
-  
+
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-    
-    if (mRetrieveTask != null &&
-        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
-      outState.putBoolean(SIS_RUNNING_KEY, true);
-    }
 
-    if (mSendTask != null &&
-        mSendTask.getStatus() == UserTask.Status.RUNNING) {
+    if (mRetrieveTask != null
+        && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      outState.putBoolean(SIS_RUNNING_KEY, true);
+    } else if (mSendTask != null &&
+               mSendTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
     }
   }
-  
+
   @Override
   protected void onRestoreInstanceState(Bundle bundle) {
     super.onRestoreInstanceState(bundle);
@@ -207,36 +227,36 @@ public class TwitterActivity extends Activity {
     // Update the char remaining message.
     int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
     updateCharsRemain(remaining + "");
-  } 
-  
+  }
+
   @Override
   protected void onDestroy() {
     Log.i(TAG, "onDestroy.");
-    
-    if (mSendTask != null &&
-        mSendTask.getStatus() == UserTask.Status.RUNNING) {
-      // Doesn't really cancel execution. See the class for more details.
+
+    if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      // Doesn't really cancel execution (we let it continue running).
+      // See the SendTask code for more details.
       mSendTask.cancel(true);
     }
 
-    if (mRetrieveTask != null &&
-        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+    if (mRetrieveTask != null
+        && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
     }
 
     mDb.close();
-    
+
     mImageManager.cleanup();
-    
-    super.onDestroy();    
+
+    super.onDestroy();
   }
-    
+
   // UI helpers.
 
   private void updateProgress(String progress) {
     mProgressText.setText(progress);
   }
-  
+
   private void updateCharsRemain(String remaining) {
     mCharsRemainText.setText(remaining);
   }
@@ -244,14 +264,14 @@ public class TwitterActivity extends Activity {
   private void setupAdapter() {
     Cursor cursor = mDb.fetchAllTweets();
     startManagingCursor(cursor);
-    
+
     mTweetAdapter = new TweetAdapter(this, cursor);
     mTweetList.setAdapter(mTweetAdapter);
-    registerForContextMenu(mTweetList);    
+    registerForContextMenu(mTweetList);
   }
-  
+
   private static final int CONTEXT_REPLY_ID = 0;
-  
+
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v,
       ContextMenuInfo menuInfo) {
@@ -263,35 +283,35 @@ public class TwitterActivity extends Activity {
   public boolean onContextItemSelected(MenuItem item) {
     AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
     Cursor cursor = (Cursor) mTweetAdapter.getItem(info.position);
-    
+
     if (cursor == null) {
       Log.w(TAG, "Selected item not available.");
-      return super.onContextItemSelected(item);     
+      return super.onContextItemSelected(item);
     }
-    
+
     switch (item.getItemId()) {
-      case CONTEXT_REPLY_ID:
-        int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
-        // TODO: this isn't quite perfect. Leaves empty spaces if you
-        // perform the reply action again.
-        String replyTo = "@" + cursor.getString(userIndex);                               
-        String text = mTweetEdit.getText().toString();
-        text = replyTo + " " + text.replace(replyTo, "");
-        mTweetEdit.setText(text);
-        Editable editable = mTweetEdit.getText();
-        int position = editable.length();
-        Selection.setSelection(editable, position);
-        
-        mTweetEdit.requestFocus();
-        
-        // TODO: why do we need to do this?
-        // Can't we detect the box is being set?
-        int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
-        updateCharsRemain(remaining + "");
-        
-        return true;
-      default:
-        return super.onContextItemSelected(item);
+    case CONTEXT_REPLY_ID:
+      int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+      // TODO: this isn't quite perfect. It leaves extra empty spaces if you
+      // perform the reply action again.
+      String replyTo = "@" + cursor.getString(userIndex);
+      String text = mTweetEdit.getText().toString();
+      text = replyTo + " " + text.replace(replyTo, "");
+      mTweetEdit.setText(text);
+      Editable editable = mTweetEdit.getText();
+      int position = editable.length();
+      Selection.setSelection(editable, position);
+
+      mTweetEdit.requestFocus();
+
+      // TODO: why do we need to do this?
+      // Can't we detect the box is being set?
+      int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
+      updateCharsRemain(remaining + "");
+
+      return true;
+    default:
+      return super.onContextItemSelected(item);
     }
   }
 
@@ -299,81 +319,80 @@ public class TwitterActivity extends Activity {
 
     public TweetAdapter(Context context, Cursor cursor) {
       super(context, cursor);
-      
-      mInflater = LayoutInflater.from(context);                  
+
+      mInflater = LayoutInflater.from(context);
     }
 
     private LayoutInflater mInflater;
-    
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
       return mInflater.inflate(R.layout.tweet, parent, false);
     }
-    
+
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
       TextView tweetUserText;
       TextView tweetText;
       ImageView profileImage;
       TextView metaText;
-                  
+
       tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
       tweetText = (TextView) view.findViewById(R.id.tweet_text);
       profileImage = (ImageView) view.findViewById(R.id.profile_image);
       metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
-      
-      int userTextColumn = cursor.getColumnIndexOrThrow(
-          TwitterDbAdapter.KEY_USER);
-      int textColumn = cursor.getColumnIndexOrThrow(
-          TwitterDbAdapter.KEY_TEXT);
-      int profileImageUrlColumn = cursor.getColumnIndexOrThrow(
-          TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
-      int createdAtColumn = cursor.getColumnIndexOrThrow(
-          TwitterDbAdapter.KEY_CREATED_AT);
-      int sourceColumn = cursor.getColumnIndexOrThrow(
-          TwitterDbAdapter.KEY_SOURCE);
+
+      int userTextColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+      int textColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT);
+      int profileImageUrlColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
+      int createdAtColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
+      int sourceColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_SOURCE);
 
       tweetUserText.setText(cursor.getString(userTextColumn));
       tweetText.setText(cursor.getString(textColumn));
-      
+
       String profileImageUrl = cursor.getString(profileImageUrlColumn);
-      
+
       if (!Utils.isEmpty(profileImageUrl)) {
         Bitmap profileBitmap = mImageManager.get(profileImageUrl);
-        
+
         if (profileBitmap != null) {
-          profileImage.setImageBitmap(profileBitmap);        
-        }         
-      }      
-      
+          profileImage.setImageBitmap(profileBitmap);
+        }
+      }
+
       String meta = "";
-      
-      String createdAtString = cursor.getString(createdAtColumn);      
+
+      String createdAtString = cursor.getString(createdAtColumn);
       Date createdAt;
-      
+
       try {
-        createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(
-            createdAtString);
+        createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(createdAtString);
         meta += Tweet.getRelativeDate(createdAt) + " ";
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
-      
+
       meta += "from " + cursor.getString(sourceColumn);
-      
-      metaText.setText(meta);      
-    }    
-    
+
+      metaText.setText(meta);
+    }
+
     public void refresh() {
       getCursor().requery();
     }
-    
+
   }
-    
+
   private void update() {
     mTweetAdapter.refresh();
+    mTweetList.setSelection(0);
   }
-  
+
   private void enableEntry() {
     mTweetEdit.setEnabled(true);
     mSendButton.setEnabled(true);
@@ -383,14 +402,14 @@ public class TwitterActivity extends Activity {
     mTweetEdit.setEnabled(false);
     mSendButton.setEnabled(false);
   }
-  
+
   // Actions.
 
   private void logout() {
     TwitterService.unschedule(this);
-    
+
     mDb.deleteAllTweets();
-    
+
     // It is very important to clear preferences,
     // in particular the username and password, or else
     // LoginActivity may launch TwitterActivity again because
@@ -398,23 +417,22 @@ public class TwitterActivity extends Activity {
     SharedPreferences.Editor editor = mPreferences.edit();
     editor.clear();
     editor.commit();
-        
-    // Let's cleanup files while we're at it. 
+
+    // Let's cleanup files while we're at it.
     mImageManager.clear();
-    
-    Intent intent = new Intent(); 
-    intent.setClass(this, LoginActivity.class); 
-    startActivity(intent); 
-    finish();           
+
+    Intent intent = new Intent();
+    intent.setClass(this, LoginActivity.class);
+    startActivity(intent);
+    finish();
   }
-  
+
   private void doSend() {
-    if (mSendTask != null &&
-        mSendTask.getStatus() == UserTask.Status.RUNNING) {
-      Log.w(TAG, "Already sending.");      
+    if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already sending.");
     } else {
       String status = mTweetEdit.getText().toString();
-      
+
       if (!Utils.isEmpty(status)) {
         mSendTask = new SendTask().execute();
       }
@@ -424,22 +442,22 @@ public class TwitterActivity extends Activity {
   private enum SendResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
-  
+
   private class SendTask extends UserTask<Void, String, SendResult> {
     @Override
     public void onPreExecute() {
-      onSendBegin();      
+      onSendBegin();
     }
-    
+
     @Override
-    public SendResult doInBackground(Void... params) {      
+    public SendResult doInBackground(Void... params) {
       try {
         String status = mTweetEdit.getText().toString();
         JSONObject jsonObject = mApi.update(status);
         Tweet tweet = Tweet.create(jsonObject);
         mDb.createTweet(tweet, false);
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG, e.getMessage(), e);
         return SendResult.IO_ERROR;
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
@@ -448,10 +466,10 @@ public class TwitterActivity extends Activity {
         Log.w(TAG, "Could not parse JSON after sending update.");
         return SendResult.IO_ERROR;
       }
-      
+
       return SendResult.OK;
     }
-    
+
     @Override
     public void onPostExecute(SendResult result) {
       if (isCancelled()) {
@@ -459,9 +477,9 @@ public class TwitterActivity extends Activity {
         // We want the request to complete, but don't want to update the
         // activity (it's probably dead).
         return;
-      }            
-      
-      if (result == SendResult.AUTH_ERROR) { 
+      }
+
+      if (result == SendResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == SendResult.OK) {
         onSendSuccess();
@@ -470,17 +488,17 @@ public class TwitterActivity extends Activity {
       }
     }
   }
-  
+
   private void onSendBegin() {
     disableEntry();
     updateProgress("Updating status...");
-  }  
+  }
 
   private void onSendSuccess() {
     mTweetEdit.setText("");
     updateProgress("");
     updateCharsRemain("");
-    enableEntry();    
+    enableEntry();
     update();
   }
 
@@ -488,184 +506,176 @@ public class TwitterActivity extends Activity {
     updateProgress("Unable to update status");
     enableEntry();
   }
-  
-  
+
   private void doRetrieve() {
     Log.i(TAG, "Attempting retrieve.");
-   
-    if (mRetrieveTask != null &&
-        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
-      Log.w(TAG, "Already retrieving.");      
+
+    if (mRetrieveTask != null
+        && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already retrieving.");
     } else {
       mRetrieveTask = new RetrieveTask().execute();
     }
   }
-     
+
   private void onRetrieveBegin() {
     updateProgress("Refreshing...");
-  }  
-  
+  }
+
   private void onAuthFailure() {
     logout();
   }
-    
+
   private enum RetrieveResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
-  
+
   private class RetrieveTask extends UserTask<Void, Void, RetrieveResult> {
     @Override
     public void onPreExecute() {
-      onRetrieveBegin();      
+      onRetrieveBegin();
     }
-    
+
     @Override
     public RetrieveResult doInBackground(Void... params) {
       JSONArray jsonArray;
-      
+
       try {
         jsonArray = mApi.getTimeline();
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
         return RetrieveResult.AUTH_ERROR;
       }
-      
-      ArrayList<Tweet> tweets = new ArrayList<Tweet>(); 
-      
+
+      ArrayList<Tweet> tweets = new ArrayList<Tweet>();
+
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
         }
-        
+
         Tweet tweet;
-        
+
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.create(jsonObject); 
+          tweet = Tweet.create(jsonObject);
           tweets.add(tweet);
         } catch (JSONException e) {
-          e.printStackTrace();
+          Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;
-        }      
-          
+        }
+
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
         }
-        
-        if (!Utils.isEmpty(tweet.profileImageUrl) &&
-            !mImageManager.contains(tweet.profileImageUrl)) {
+
+        if (!Utils.isEmpty(tweet.profileImageUrl)
+            && !mImageManager.contains(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.put(tweet.profileImageUrl);
           } catch (IOException e) {
-            e.printStackTrace();            
+            Log.e(TAG, e.getMessage(), e);
           }
-        }          
-      }      
-      
+        }
+      }
+
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
       }
-      
+
       mDb.syncTweets(tweets);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
       }
-      
+
       return RetrieveResult.OK;
     }
 
     @Override
     public void onPostExecute(RetrieveResult result) {
-      if (result == RetrieveResult.AUTH_ERROR) { 
+      if (result == RetrieveResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == RetrieveResult.OK) {
         update();
       } else {
         // Do nothing.
       }
-      
-      updateProgress("");      
+
+      updateProgress("");
     }
   }
-  
+
   // Menu.
-  
+
   private static final int OPTIONS_MENU_ID_LOGOUT = 1;
   private static final int OPTIONS_MENU_ID_REFRESH = 2;
   private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
   private static final int OPTIONS_MENU_ID_ABOUT = 4;
-  
+
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
 
-    MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0,
-        R.string.signout);           
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);
     item.setIcon(android.R.drawable.ic_menu_revert);
 
-    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0,
-        R.string.preferences);
-    item.setIcon(android.R.drawable.ic_menu_preferences);    
-        
-    item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0,
-        R.string.refresh);           
-    item.setIcon(android.R.drawable.stat_notify_sync);    
+    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.preferences);
+    item.setIcon(android.R.drawable.ic_menu_preferences);
 
-    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0,
-        R.string.about);           
-    item.setIcon(android.R.drawable.ic_menu_info_details);    
-    
+    item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
+    item.setIcon(android.R.drawable.stat_notify_sync);
+
+    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
+    item.setIcon(android.R.drawable.ic_menu_info_details);
+
     return true;
-  }    
+  }
 
   private static final int REQUEST_CODE_PREFERENCES = 1;
-  
+
   @Override
-  public boolean onOptionsItemSelected(MenuItem item){
+  public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-      case OPTIONS_MENU_ID_LOGOUT:
-        logout();
-        return true;
-      case OPTIONS_MENU_ID_REFRESH:
-        mImageManager.clear();
-        doRetrieve();
-        return true;       
-      case OPTIONS_MENU_ID_PREFERENCES:
-        Intent launchPreferencesIntent =
-          new Intent().setClass(this, PreferencesActivity.class);          
-        startActivityForResult(launchPreferencesIntent,
-          REQUEST_CODE_PREFERENCES);
-        return true;
-      case OPTIONS_MENU_ID_ABOUT:
-        AboutDialog.show(this);
-        return true;        
+    case OPTIONS_MENU_ID_LOGOUT:
+      logout();
+      return true;
+    case OPTIONS_MENU_ID_REFRESH:
+      mImageManager.clear();
+      doRetrieve();
+      return true;
+    case OPTIONS_MENU_ID_PREFERENCES:
+      Intent launchPreferencesIntent = new Intent().setClass(this,
+          PreferencesActivity.class);
+      startActivityForResult(launchPreferencesIntent, REQUEST_CODE_PREFERENCES);
+      return true;
+    case OPTIONS_MENU_ID_ABOUT:
+      AboutDialog.show(this);
+      return true;
     }
 
     return super.onOptionsItemSelected(item);
   }
-  
+
   @Override
-  protected void onActivityResult(int requestCode, int resultCode,
-      Intent data) {
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
-    if (requestCode == REQUEST_CODE_PREFERENCES &&
-        resultCode == RESULT_OK) {
+    if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
       controlUpdateChecks();
     }
-  }  
- 
-  // Various handlers.  
- 
+  }
+
+  // Various handlers.
+
   private TextWatcher mTextWatcher = new TextWatcher() {
     @Override
     public void afterTextChanged(Editable e) {
-      int remaining = MAX_TWEET_LENGTH - e.length();            
+      int remaining = MAX_TWEET_LENGTH - e.length();
       updateCharsRemain(remaining + "");
     }
 
@@ -675,22 +685,21 @@ public class TwitterActivity extends Activity {
     }
 
     @Override
-    public void onTextChanged(CharSequence s, int start, int before,
-        int count) {      
-    }    
+    public void onTextChanged(CharSequence s, int start, int before, int count) {
+    }
   };
-  
+
   private View.OnKeyListener tweetEnterHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
-      if (keyCode == KeyEvent.KEYCODE_ENTER ||
-          keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+      if (keyCode == KeyEvent.KEYCODE_ENTER
+          || keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
         if (event.getAction() == KeyEvent.ACTION_UP) {
           doSend();
         }
         return true;
-      }      
+      }
       return false;
     }
   };
-    
+
 }

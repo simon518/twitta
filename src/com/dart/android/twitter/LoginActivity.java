@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.dart.android.twitter;
 
 import java.io.IOException;
@@ -63,8 +79,9 @@ public class LoginActivity extends Activity {
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
     
     if (TwitterApi.isValidCredentials(username, password)) {
+      // User has logged in.
       launchTwitterActivity();
-      // The method above finishes the activity.
+      // The method above finishes this activity.
     }
     
     mApi = new TwitterApi();
@@ -120,6 +137,10 @@ public class LoginActivity extends Activity {
         
     if (mLoginTask != null &&
         mLoginTask.getStatus() == UserTask.Status.RUNNING) {
+      // If the task was running, want to start it anew when the 
+      // Activity restarts.
+      // This addresses the case where you user changes orientation
+      // in the middle of execution.
       outState.putBoolean(SIS_RUNNING_KEY, true);
     }   
   }
@@ -194,7 +215,7 @@ public class LoginActivity extends Activity {
       try {
         mApi.login(username, password);
       } catch (IOException e) {
-        e.printStackTrace();
+        Log.e(TAG, e.getMessage(), e);
         publishProgress("Network or connection error");
         return false;
       } catch (AuthException e) {

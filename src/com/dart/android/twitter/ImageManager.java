@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2009 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.dart.android.twitter;
 
 import java.io.BufferedInputStream;
@@ -24,16 +40,25 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
+/**
+ * Manages retrieval and storage of icon images.
+ * Use the put method to download and store images.
+ * Use the get method to retrieve images from the manager.
+ */
 public class ImageManager {
   private static final String TAG = "ImageManager";
 
   private Context mContext;  
+  // In memory cache.
   private Map<String, Bitmap> mCache;
   private HttpClient mClient;
+  // MD5 hasher.
   private MessageDigest mDigest;
     
-  private static final int CONNECTION_TIMEOUT_MS = 5 * 1000;
-  private static final int SOCKET_TIMEOUT_MS = 5 * 1000;
+  // We want the requests to timeout quickly.
+  // Tweets are processed in a batch and we don't want to stay on one too long.
+  private static final int CONNECTION_TIMEOUT_MS = 10 * 1000;
+  private static final int SOCKET_TIMEOUT_MS = 10 * 1000;
   
   ImageManager(Context context) {
     mContext = context;
@@ -52,7 +77,7 @@ public class ImageManager {
     mContext = context;
   }
 
-  private String getHash(MessageDigest digest) {
+  private String getHashString(MessageDigest digest) {
     StringBuilder builder = new StringBuilder();
     
     for (byte b : digest.digest()) {
@@ -63,12 +88,14 @@ public class ImageManager {
     return builder.toString();
   }
 
+  // MD5 hases are used to generate filenames based off a URL.
   private String getMd5(String url) {
     mDigest.update(url.getBytes());
     
-    return getHash(mDigest);
+    return getHashString(mDigest);
   }
 
+  // Looks to see if an image is in the file system.
   private Bitmap lookupFile(String url) {
     String hashedUrl = getMd5(url);    
     FileInputStream fis = null;
@@ -90,6 +117,7 @@ public class ImageManager {
     }           
   }
   
+  // Downloads and stores an image to disk.
   public Bitmap put(String url) throws IOException {
     Log.i(TAG, "Fetching image: " + url);
             
@@ -104,7 +132,7 @@ public class ImageManager {
     try {
       response = mClient.execute(get);
     } catch (ClientProtocolException e) {
-      e.printStackTrace();
+      Log.e(TAG, e.getMessage(), e);
       throw new IOException("Invalid client protocol.");
     }
     
@@ -154,6 +182,7 @@ public class ImageManager {
   public Bitmap get(String url) {
     Bitmap bitmap;
     
+    // Look in memory first.
     synchronized(this) {            
       bitmap = mCache.get(url);
     }
@@ -162,7 +191,7 @@ public class ImageManager {
       return bitmap;
     }
     
-    // Try file.
+    // Now try file.
     bitmap = lookupFile(url);
     
     if (bitmap != null) {
@@ -193,7 +222,7 @@ public class ImageManager {
     }
   }
 
-  // Deletes files not in the memory cache.
+  // Deletes files not currently in the memory cache.
   public void cleanup() {
     String [] files = mContext.fileList();
     ArrayList<String> hashedUrls = new ArrayList<String>();

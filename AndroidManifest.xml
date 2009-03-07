@@ -18,14 +18,14 @@
                   android:label="@string/app_name" />
                                     
         <service android:name=".TwitterService" />
+        
+		    <receiver android:name=".BootReceiver">
+		        <intent-filter>
+		            <action android:name="android.intent.action.BOOT_COMPLETED" />
+		        </intent-filter>
+		    </receiver>        
     </application>
-    
-    <receiver android:name=".BootReceiver">
-        <intent-filter>
-            <action android:name="android.intent.action.BOOT_COMPLETED" />
-        </intent-filter>
-    </receiver>
-    
+        
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>    
