@@ -36,6 +36,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -138,13 +139,22 @@ public class TwitterService extends Service {
     notification.flags = 
         Notification.FLAG_AUTO_CANCEL |
         Notification.FLAG_ONLY_ALERT_ONCE |
-        Notification.FLAG_SHOW_LIGHTS;    
+        Notification.FLAG_SHOW_LIGHTS;
+    
+    notification.ledARGB = 0xFF84E4FA; 
+    notification.ledOnMS = 100; 
+    notification.ledOffMS = 100;     
+    
+    String ringtoneUri = mPreferences.getString(Preferences.RINGTONE_KEY, null);
+    
+    if (ringtoneUri == null) {
+      notification.defaults |= Notification.DEFAULT_SOUND;
+    } else {
+      notification.sound = Uri.parse(ringtoneUri);
+    }    
     
     if (mPreferences.getBoolean(Preferences.VIBRATE_KEY, false)) {    
-      notification.defaults = Notification.DEFAULT_ALL;
-    } else {
-      notification.defaults = Notification.DEFAULT_SOUND |
-          Notification.DEFAULT_LIGHTS;
+      notification.defaults |= Notification.DEFAULT_VIBRATE;
     }
     
     mNotificationManager.notify(NOTIFICATION_ID, notification);       
