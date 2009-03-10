@@ -147,10 +147,12 @@ public class ImageManager {
     Bitmap bitmap = BitmapFactory.decodeStream(bis);
     bis.close();
 
-    synchronized(this) {            
-      mCache.put(url, bitmap);
-    }
+    String hashedUrl = getMd5(url);
     
+    synchronized(this) {            
+      mCache.put(hashedUrl, bitmap);
+    }
+            
     writeFile(url, bitmap);    
     
     return bitmap;    
@@ -182,9 +184,11 @@ public class ImageManager {
   public Bitmap get(String url) {
     Bitmap bitmap;
     
+    String hashedUrl = getMd5(url);
+    
     // Look in memory first.
     synchronized(this) {            
-      bitmap = mCache.get(url);
+      bitmap = mCache.get(hashedUrl);
     }
 
     if (bitmap != null) {
@@ -196,13 +200,13 @@ public class ImageManager {
     
     if (bitmap != null) {
       synchronized(this) {            
-        mCache.put(url, bitmap);
+        mCache.put(hashedUrl, bitmap);
       }
       
       return bitmap;          
     }
 
-    Log.i(TAG, "Image is missing.");
+    Log.i(TAG, "Image is missing: " + url);
     return null;    
   }
   
@@ -229,7 +233,7 @@ public class ImageManager {
 
     synchronized(this) {    
       for (String key : mCache.keySet()) {
-        hashedUrls.add(getMd5(key));
+        hashedUrls.add(key);
       }
     }    
     
