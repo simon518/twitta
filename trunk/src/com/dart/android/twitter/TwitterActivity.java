@@ -358,11 +358,7 @@ public class TwitterActivity extends Activity {
       String profileImageUrl = cursor.getString(profileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        Bitmap profileBitmap = mImageManager.get(profileImageUrl);
-
-        if (profileBitmap != null) {
-          profileImage.setImageBitmap(profileBitmap);
-        }
+        profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
       }
 
       String meta = "";

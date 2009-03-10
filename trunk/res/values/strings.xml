@@ -11,11 +11,11 @@
     <string name="preferences">Preferences</string>
     <string name="about">About</string>
            
-    <string name="pref_check_updates_title">Check in background?</string>
+    <string name="pref_check_updates_title">Enable notifications?</string>
     <string name="pref_check_updates_summary">Check for new tweets when application is not running</string>
 
     <string name="pref_check_updates_interval_title">Update check interval</string>
-    <string name="pref_check_updates_interval_summary">How many minutes between update checks</string>
+    <string name="pref_check_updates_interval_summary">Minutes between checks for new tweets</string>
         
     <string name="pref_check_updates_interval_dialog_title">Interval in minutes:</string>
     
@@ -27,9 +27,9 @@
     <string name="reply">Reply</string>
                 
     <string name="vibrate_title">Vibrate?</string>
-    <string name="vibrate_summary">Vibrate the phone when notified of new tweets?</string>
+    <string name="vibrate_summary">Vibrate the phone when notified of new tweets</string>
 
-    <string name="pref_ringtone_title">Notification ringtone</string>
+    <string name="pref_ringtone_title">Choose notification ringtone</string>
     <string name="pref_ringtone_summary"></string>
     
     <string name="about_title">About Twitta</string>
@@ -39,4 +39,7 @@
     </string>
 
     <string name="cool">Cool</string>
+    
+    <string name="preferences_notifications">Notifications</string>
+    
 </resources>
