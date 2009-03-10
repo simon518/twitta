@@ -52,7 +52,7 @@ public class TwitterApi {
   private static final String UPDATE_URL =
     "http://twitter.com/statuses/update.json";
   private static final String VERIFY_CREDENTIALS_URL =
-    "https://twitter.com/account/verify_credentials.json?count=50";
+    "https://twitter.com/account/verify_credentials.json";
   private static final String FRIENDS_TIMELINE_URL =
     "http://twitter.com/statuses/friends_timeline.json";
 
@@ -161,8 +161,11 @@ public class TwitterApi {
 
   public JSONArray getTimeline() throws IOException, AuthException {
     Log.i(TAG, "Requesting friends timeline.");
-    
-    InputStream data = requestData(FRIENDS_TIMELINE_URL, METHOD_GET, null);        
+
+    String url = FRIENDS_TIMELINE_URL + "?count=" +
+        URLEncoder.encode(50 + "", HTTP.UTF_8);
+
+    InputStream data = requestData(url, METHOD_GET, null);        
     JSONArray json = null;
     
     try {

@@ -150,8 +150,8 @@ public class TwitterService extends Service {
         Notification.FLAG_SHOW_LIGHTS;
     
     notification.ledARGB = 0xFF84E4FA; 
-    notification.ledOnMS = 100; 
-    notification.ledOffMS = 100;     
+    notification.ledOnMS = 5000; 
+    notification.ledOffMS = 5000;     
     
     String ringtoneUri = mPreferences.getString(Preferences.RINGTONE_KEY, null);
     

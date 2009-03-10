@@ -50,7 +50,15 @@
     android:layout_height="wrap_content"
     android:textColor="@drawable/label_color"
     android:text="@string/signin"
-    />
+    />    
+    <TextView
+    android:layout_marginTop="10px"            
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:textColor="@drawable/tweet_color"
+    android:autoLink="web"        
+    android:text="New to Twitter? Create an account at https://twitter.com/signup"
+    />    
     <TextView
     android:id="@+id/progress_text"
     android:layout_width="wrap_content"
