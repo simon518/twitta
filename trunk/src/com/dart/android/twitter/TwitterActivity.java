@@ -30,7 +30,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.text.Editable;
@@ -624,7 +623,7 @@ public class TwitterActivity extends Activity {
     item.setIcon(android.R.drawable.ic_menu_preferences);
 
     item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
-    item.setIcon(android.R.drawable.stat_notify_sync);
+    item.setIcon(R.drawable.refresh);
 
     item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
     item.setIcon(android.R.drawable.ic_menu_info_details);
