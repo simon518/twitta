@@ -1,0 +1,18 @@
+#summary Release Notes
+
+= Release Notes =
+
+== Version 2 ==
+
+  * Cleared out profile image if image is broken. Was somehow using other images before.
+  * Added link to signup page from login screen.
+  * Wake lock in update check service. Hopefully resolves inconsistent firing of update checks when phone is asleep.
+  * Stole a nice looking icon for Refresh menu item ;)
+  * Increased tweet retrieve/display max to 50 from 20.
+  * Added a LED notification.
+  * Tweaked preference menu language and layout.
+  * Selectable ringtone notification.
+
+== Version 1 ==
+
+  * Initial release.
