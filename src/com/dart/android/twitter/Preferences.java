@@ -25,5 +25,6 @@ public class Preferences {
   public static final String VIBRATE_KEY = "vibrate";
   
   public static String RINGTONE_KEY = "ringtone";
-  public static final String RINGTONE_DEFAULT_KEY = "content://settings/system/notification_sound";  
+  public static final String RINGTONE_DEFAULT_KEY =
+      "content://settings/system/notification_sound";  
 }

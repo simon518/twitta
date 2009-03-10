@@ -38,6 +38,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -56,6 +58,8 @@ public class TwitterService extends Service {
   private ArrayList<Tweet> mNewTweets;           
   
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
+
+  private WakeLock mWakeLock;
   
   @Override
   public IBinder onBind(Intent intent) {
@@ -65,7 +69,11 @@ public class TwitterService extends Service {
   @Override
   public void onCreate() {
     super.onCreate();
-
+        
+    PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
+    mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);    
+    mWakeLock.acquire();
+    
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     
     if (!mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
@@ -173,6 +181,8 @@ public class TwitterService extends Service {
       mDb.close();
     }
     
+    mWakeLock.release();
+        
     super.onDestroy();
   }
           
