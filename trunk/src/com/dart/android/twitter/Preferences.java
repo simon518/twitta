@@ -22,5 +22,8 @@ public class Preferences {
   public static final String CHECK_UPDATES_KEY = "check_updates";
   public static final String CHECK_UPDATE_INTERVAL_KEY =
       "check_update_interval";
-  public static final String VIBRATE_KEY = "vibrate";  
+  public static final String VIBRATE_KEY = "vibrate";
+  
+  public static String RINGTONE_KEY = "ringtone";
+  public static final String RINGTONE_DEFAULT_KEY = "content://settings/system/notification_sound";  
 }

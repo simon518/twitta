@@ -16,7 +16,7 @@
 
     <string name="pref_check_updates_interval_title">Update check interval</string>
     <string name="pref_check_updates_interval_summary">How many minutes between update checks</string>
-    
+        
     <string name="pref_check_updates_interval_dialog_title">Interval in minutes:</string>
     
     <string name="pref_check_updates_interval_default">60</string>
@@ -29,6 +29,9 @@
     <string name="vibrate_title">Vibrate?</string>
     <string name="vibrate_summary">Vibrate the phone when notified of new tweets?</string>
 
+    <string name="pref_ringtone_title">Notification ringtone</string>
+    <string name="pref_ringtone_summary"></string>
+    
     <string name="about_title">About Twitta</string>
     <string name="about_message">Twitta is not endorsed by Twitter.
     \n\nTwitta is open sourced under the Apache 2.0 license. 

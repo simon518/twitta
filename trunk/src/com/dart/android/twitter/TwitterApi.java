@@ -52,7 +52,7 @@ public class TwitterApi {
   private static final String UPDATE_URL =
     "http://twitter.com/statuses/update.json";
   private static final String VERIFY_CREDENTIALS_URL =
-    "https://twitter.com/account/verify_credentials.json";
+    "https://twitter.com/account/verify_credentials.json?count=50";
   private static final String FRIENDS_TIMELINE_URL =
     "http://twitter.com/statuses/friends_timeline.json";
 
