@@ -96,6 +96,8 @@ public class TwitterApi {
         new UsernamePasswordCredentials(username, password));         
   }
    
+  // TODO: return a custom object that has a finish method
+  // that calls finish on the HttpEntity and stream.
   private InputStream requestData(String url, String httpMethod,
       ArrayList<NameValuePair> params) throws IOException, AuthException {
     Log.i(TAG, "Sending " + httpMethod + " request to " + url);
