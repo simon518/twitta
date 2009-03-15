@@ -271,12 +271,14 @@ public class TwitterActivity extends Activity {
   }
 
   private static final int CONTEXT_REPLY_ID = 0;
+  private static final int CONTEXT_RETWEET_ID = 1;
 
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v,
       ContextMenuInfo menuInfo) {
     super.onCreateContextMenu(menu, v, menuInfo);
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
+    menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
   }
 
   @Override
@@ -290,29 +292,38 @@ public class TwitterActivity extends Activity {
     }
 
     switch (item.getItemId()) {
-    case CONTEXT_REPLY_ID:
-      int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
-      // TODO: this isn't quite perfect. It leaves extra empty spaces if you
-      // perform the reply action again.
-      String replyTo = "@" + cursor.getString(userIndex);
-      String text = mTweetEdit.getText().toString();
-      text = replyTo + " " + text.replace(replyTo, "");
-      mTweetEdit.setText(text);
-      Editable editable = mTweetEdit.getText();
-      int position = editable.length();
-      Selection.setSelection(editable, position);
-
-      mTweetEdit.requestFocus();
-
-      // TODO: why do we need to do this?
-      // Can't we detect the box is being set?
-      int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
-      updateCharsRemain(remaining + "");
-
-      return true;
-    default:
-      return super.onContextItemSelected(item);
+      case CONTEXT_REPLY_ID:
+        int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+        // TODO: this isn't quite perfect. It leaves extra empty spaces if you
+        // perform the reply action again.
+        String replyTo = "@" + cursor.getString(userIndex);
+        String text = mTweetEdit.getText().toString();
+        text = replyTo + " " + text.replace(replyTo, "");
+        setAndFocusTweetInput(text);
+  
+        return true;
+      case CONTEXT_RETWEET_ID:
+        String retweet = "RT @" +
+            cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER)) +
+            " " +
+            cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT));
+        setAndFocusTweetInput(retweet);
+  
+        return true;        
+      default:
+        return super.onContextItemSelected(item);
     }
+  }
+  
+  private void setAndFocusTweetInput(String text) {
+    mTweetEdit.setText(text);
+    Editable editable = mTweetEdit.getText();
+    Selection.setSelection(editable, editable.length());
+    mTweetEdit.requestFocus();    
+    // TODO: why do we need to do this?
+    // Can't we detect the box is being set?
+    int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
+    updateCharsRemain(remaining + "");    
   }
 
   private class TweetAdapter extends CursorAdapter {
