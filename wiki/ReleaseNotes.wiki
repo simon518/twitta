@@ -6,7 +6,7 @@
 
   * Automatically mark all as read when app is opened.
   * Optimized ListView adapter. Scrolling should be faster.
-  * 
+  * ReTweet command.
 
 == Version 2 ==
 
