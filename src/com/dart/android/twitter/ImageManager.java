@@ -147,10 +147,8 @@ public class ImageManager {
     Bitmap bitmap = BitmapFactory.decodeStream(bis);
     bis.close();
 
-    String hashedUrl = getMd5(url);
-    
     synchronized(this) {            
-      mCache.put(hashedUrl, bitmap);
+      mCache.put(url, bitmap);
     }
             
     writeFile(url, bitmap);    
@@ -184,11 +182,9 @@ public class ImageManager {
   public Bitmap get(String url) {
     Bitmap bitmap;
     
-    String hashedUrl = getMd5(url);
-    
     // Look in memory first.
     synchronized(this) {            
-      bitmap = mCache.get(hashedUrl);
+      bitmap = mCache.get(url);
     }
 
     if (bitmap != null) {
@@ -200,7 +196,7 @@ public class ImageManager {
     
     if (bitmap != null) {
       synchronized(this) {            
-        mCache.put(hashedUrl, bitmap);
+        mCache.put(url, bitmap);
       }
       
       return bitmap;          

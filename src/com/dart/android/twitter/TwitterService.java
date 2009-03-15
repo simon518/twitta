@@ -190,6 +190,11 @@ public class TwitterService extends Service {
     SharedPreferences preferences = 
         PreferenceManager.getDefaultSharedPreferences(context);
     
+    if (!preferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
+      Log.i(TAG, "Check update preference is false.");
+      return;
+    }        
+    
     String intervalPref = preferences.getString(
         Preferences.CHECK_UPDATE_INTERVAL_KEY,
         context.getString(

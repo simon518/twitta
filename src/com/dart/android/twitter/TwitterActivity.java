@@ -19,7 +19,6 @@ package com.dart.android.twitter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -162,7 +161,9 @@ public class TwitterActivity extends Activity {
         doRetrieve();
       }      
     } else {
-      // We want to refresh.        
+      // Mark all as read.
+      mDb.markAllRead();     
+      // We want to refresh.     
       doRetrieve();
     }
                 
@@ -318,63 +319,81 @@ public class TwitterActivity extends Activity {
 
     public TweetAdapter(Context context, Cursor cursor) {
       super(context, cursor);
-
+      
       mInflater = LayoutInflater.from(context);
+      
+      mUserTextColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+      mTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT);
+      mProfileImageUrlColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
+      mCreatedAtColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
+      mSourceColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_SOURCE);
+      
+      mMetaBuilder = new StringBuilder();
     }
 
     private LayoutInflater mInflater;
-
+    
+    private int mUserTextColumn; 
+    private int mTextColumn;
+    private int mProfileImageUrlColumn;
+    private int mCreatedAtColumn;
+    private int mSourceColumn;
+    
+    private StringBuilder mMetaBuilder;
+    
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
-      return mInflater.inflate(R.layout.tweet, parent, false);
+      View view = mInflater.inflate(R.layout.tweet, parent, false);
+      
+      ViewHolder holder = new ViewHolder();      
+      holder.tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
+      holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
+      holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
+      holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);      
+      view.setTag(holder);
+      
+      return view;
     }
 
+    class ViewHolder {
+      public TextView tweetUserText;
+      public TextView tweetText;
+      public ImageView profileImage;
+      public TextView metaText;      
+    }
+    
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
-      TextView tweetUserText;
-      TextView tweetText;
-      ImageView profileImage;
-      TextView metaText;
+      ViewHolder holder = (ViewHolder) view.getTag();
 
-      tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
-      tweetText = (TextView) view.findViewById(R.id.tweet_text);
-      profileImage = (ImageView) view.findViewById(R.id.profile_image);
-      metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
+      holder.tweetUserText.setText(cursor.getString(mUserTextColumn));
+      holder.tweetText.setText(cursor.getString(mTextColumn));
 
-      int userTextColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
-      int textColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT);
-      int profileImageUrlColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
-      int createdAtColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
-      int sourceColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_SOURCE);
-
-      tweetUserText.setText(cursor.getString(userTextColumn));
-      tweetText.setText(cursor.getString(textColumn));
-
-      String profileImageUrl = cursor.getString(profileImageUrlColumn);
+      String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
+        holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
       }
 
-      String meta = "";
-
-      String createdAtString = cursor.getString(createdAtColumn);
-      Date createdAt;
+      mMetaBuilder.setLength(0);
 
       try {
-        createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(createdAtString);
-        meta += Tweet.getRelativeDate(createdAt) + " ";
+        mMetaBuilder.append(Tweet.getRelativeDate(
+            TwitterDbAdapter.DB_DATE_FORMATTER.parse(
+                cursor.getString(mCreatedAtColumn))));
+        mMetaBuilder.append(" ");
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
 
-      meta += "from " + cursor.getString(sourceColumn);
+      mMetaBuilder.append("from ");
+      mMetaBuilder.append(cursor.getString(mSourceColumn));
 
-      metaText.setText(meta);
+      holder.metaText.setText(mMetaBuilder.toString());
     }
 
     public void refresh() {

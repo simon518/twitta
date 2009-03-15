@@ -166,6 +166,12 @@ public class TwitterDbAdapter {
     return mDb.delete(DATABASE_TABLE, null, null) > 0;
   }  
 
+  public void markAllRead() {
+    ContentValues values = new ContentValues();
+    values.put(KEY_IS_UNREAD, 0);    
+    mDb.update(DATABASE_TABLE, values, null, null);
+  }
+  
   public int fetchMaxId() {
     Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM tweets",
         null);
