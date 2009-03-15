@@ -2,6 +2,12 @@
 
 = Release Notes =
 
+== Version 3 ==
+
+  * Automatically mark all as read when app is opened.
+  * Optimized ListView adapter. Scrolling should be faster.
+  * 
+
 == Version 2 ==
 
   * Cleared out profile image if image is broken. Was somehow using other images before.
