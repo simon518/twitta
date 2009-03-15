@@ -25,6 +25,7 @@
     <string name="x_new_tweets">{0} new tweets</string>    
     
     <string name="reply">Reply</string>
+    <string name="retweet">Retweet</string>
                 
     <string name="vibrate_title">Vibrate?</string>
     <string name="vibrate_summary">Vibrate the phone when notified of new tweets</string>
