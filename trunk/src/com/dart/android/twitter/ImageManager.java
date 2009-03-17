@@ -147,16 +147,25 @@ public class ImageManager {
     Bitmap bitmap = BitmapFactory.decodeStream(bis);
     bis.close();
 
-    synchronized(this) {            
-      mCache.put(url, bitmap);
+    if (bitmap == null) {
+      Log.w(TAG, "Retrieved bitmap is null.");
+    } else {    
+      synchronized(this) {            
+        mCache.put(url, bitmap);
+      }
+              
+      writeFile(url, bitmap);    
     }
-            
-    writeFile(url, bitmap);    
     
     return bitmap;    
   }
 
   private void writeFile(String url, Bitmap bitmap) {
+    if (bitmap == null) {
+      Log.w(TAG, "Can't write file. Bitmap is null.");
+      return;
+    }
+    
     String hashedUrl = getMd5(url);
     
     FileOutputStream fos;
@@ -229,7 +238,7 @@ public class ImageManager {
 
     synchronized(this) {    
       for (String key : mCache.keySet()) {
-        hashedUrls.add(key);
+        hashedUrls.add(getMd5(key));
       }
     }    
     
