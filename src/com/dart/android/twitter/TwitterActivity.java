@@ -98,6 +98,9 @@ public class TwitterActivity extends Activity {
 
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
 
+    // TODO:
+    // int mode = getExtra(INTENT_MODE);
+    
     mApi = new TwitterApi();
     mDb = new TwitterDbAdapter(this);
     mDb.open();
@@ -641,6 +644,8 @@ public class TwitterActivity extends Activity {
   private static final int OPTIONS_MENU_ID_REFRESH = 2;
   private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
   private static final int OPTIONS_MENU_ID_ABOUT = 4;
+  private static final int OPTIONS_MENU_ID_REPLIES = 5;  
+  private static final int OPTIONS_MENU_ID_DM = 6;
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
@@ -658,9 +663,19 @@ public class TwitterActivity extends Activity {
     item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
     item.setIcon(android.R.drawable.ic_menu_info_details);
 
+    // TODO:
+    /*
+    item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
+    item.setIcon(android.R.drawable.ic_menu_send);
+    */
+    
     return true;
   }
 
+  private static final String INTENT_MODE = "mode";
+  
+  private static final int MODE_REPLIES = 1;
+  
   private static final int REQUEST_CODE_PREFERENCES = 1;
 
   @Override
@@ -681,6 +696,15 @@ public class TwitterActivity extends Activity {
     case OPTIONS_MENU_ID_ABOUT:
       AboutDialog.show(this);
       return true;
+    case OPTIONS_MENU_ID_REPLIES:
+      Intent repliesIntent = new Intent(this, TwitterActivity.class);
+      repliesIntent.putExtra(INTENT_MODE, MODE_REPLIES);
+      startActivity(repliesIntent);
+      return true;
+    case OPTIONS_MENU_ID_DM:
+      Intent dmIntent = new Intent(this, DmActivity.class);
+      startActivity(dmIntent);
+      return true;            
     }
 
     return super.onOptionsItemSelected(item);

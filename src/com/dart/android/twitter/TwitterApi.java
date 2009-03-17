@@ -55,6 +55,8 @@ public class TwitterApi {
     "https://twitter.com/account/verify_credentials.json";
   private static final String FRIENDS_TIMELINE_URL =
     "http://twitter.com/statuses/friends_timeline.json";
+  private static final String DIRECT_MESSAGES_URL =
+    "http://twitter.com/statuses/direct_messages.json";
 
   private static final String TWITTER_HOST = "twitter.com";
 
@@ -201,6 +203,25 @@ public class TwitterApi {
       data.close();
     }
         
+    return json;
+  }  
+
+  public JSONArray getDirectMessages() throws IOException,
+      AuthException {
+    Log.i(TAG, "Requesting direct messages.");
+    
+    InputStream data = requestData(DIRECT_MESSAGES_URL, METHOD_GET, null);
+    JSONArray json = null;
+
+    try {
+      json = new JSONArray(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
     return json;
   }  
   

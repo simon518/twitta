@@ -2,6 +2,8 @@
 <resources>
     <string name="app_name">Twitta</string>
     
+    <string name="direct_messages">Direct Messages</string>
+    
     <string name="username_label">Username:</string>    
     <string name="password_label">Password:</string>
     <string name="signin">Sign-In!</string>
@@ -10,6 +12,8 @@
     <string name="refresh">Refresh</string>
     <string name="preferences">Preferences</string>
     <string name="about">About</string>
+    <string name="replies">\@Replies</string>
+    <string name="dm">DM</string>
            
     <string name="pref_check_updates_title">Enable notifications?</string>
     <string name="pref_check_updates_summary">Check for new tweets when application is not running</string>
