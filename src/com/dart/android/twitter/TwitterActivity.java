@@ -396,7 +396,7 @@ public class TwitterActivity extends Activity {
       mMetaBuilder.setLength(0);
 
       try {
-        mMetaBuilder.append(Tweet.getRelativeDate(
+        mMetaBuilder.append(Utils.getRelativeDate(
             TwitterDbAdapter.DB_DATE_FORMATTER.parse(
                 cursor.getString(mCreatedAtColumn))));
         mMetaBuilder.append(" ");
