@@ -663,11 +663,8 @@ public class TwitterActivity extends Activity {
     item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
     item.setIcon(android.R.drawable.ic_menu_info_details);
 
-    // TODO:
-    /*
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
-    */
     
     return true;
   }

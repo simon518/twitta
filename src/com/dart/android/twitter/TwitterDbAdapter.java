@@ -39,7 +39,7 @@ public class TwitterDbAdapter {
   public static final String KEY_CREATED_AT = "created_at";
   public static final String KEY_SOURCE = "source";
   
-  public static final String [] COLUMNS = new String [] {
+  public static final String [] TWEET_COLUMNS = new String [] {
     KEY_ID,
     KEY_USER,
     KEY_TEXT,
@@ -53,13 +53,15 @@ public class TwitterDbAdapter {
   private SQLiteDatabase mDb;
 
   private static final String DATABASE_NAME = "data";
-  private static final String DATABASE_TABLE = "tweets";
+  private static final String TWEET_TABLE = "tweets";
+  private static final String DM_TABLE = "dm";
+  
   private static final int DATABASE_VERSION = 1;
   
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
   // the old row upon conflict.
-  private static final String DATABASE_CREATE =
+  private static final String TWEET_TABLE_CREATE =
       "create table tweets (" +
           KEY_ID + " integer primary key on conflict replace, " +
           KEY_USER + " text not null, " +
@@ -69,6 +71,16 @@ public class TwitterDbAdapter {
           KEY_CREATED_AT + " date not null, " +
           KEY_SOURCE + " text not null)";
 
+  private static final String DM_TABLE_CREATE =
+    "create table dm (" +
+        KEY_ID + " integer primary key on conflict replace, " +
+        KEY_USER + " text not null, " +
+        KEY_TEXT + " text not null, " +
+        KEY_PROFILE_IMAGE_URL + " text not null, " +
+        KEY_IS_UNREAD + " boolean not null, " +
+        KEY_CREATED_AT + " date not null, " +
+        KEY_SOURCE + " text not null)";
+  
   private final Context mContext;
 
   private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -78,14 +90,16 @@ public class TwitterDbAdapter {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-      db.execSQL(DATABASE_CREATE);
+      db.execSQL(TWEET_TABLE_CREATE);
+      db.execSQL(DM_TABLE_CREATE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
       Log.w(TAG, "Upgrading database from version " + oldVersion + " to " +
           newVersion + " which destroys all old data");
-      db.execSQL("DROP TABLE IF EXISTS " + DATABASE_TABLE);
+      db.execSQL("DROP TABLE IF EXISTS " + TWEET_TABLE);
+      db.execSQL("DROP TABLE IF EXISTS " + DM_TABLE_CREATE);
       onCreate(db);
     }
   }
@@ -119,7 +133,7 @@ public class TwitterDbAdapter {
         DB_DATE_FORMATTER.format(tweet.createdAt));
     initialValues.put(KEY_SOURCE, tweet.source);
     
-    return mDb.insert(DATABASE_TABLE, null, initialValues);
+    return mDb.insert(TWEET_TABLE, null, initialValues);
   }
 
   public void syncTweets(List<Tweet> tweets) {
@@ -158,18 +172,18 @@ public class TwitterDbAdapter {
   }
   
   public Cursor fetchAllTweets() {
-    return mDb.query(DATABASE_TABLE, COLUMNS, null, null, null, null,
+    return mDb.query(TWEET_TABLE, TWEET_COLUMNS, null, null, null, null,
         KEY_ID + " DESC");
   }
   
   public boolean deleteAllTweets() {
-    return mDb.delete(DATABASE_TABLE, null, null) > 0;
+    return mDb.delete(TWEET_TABLE, null, null) > 0;
   }  
 
   public void markAllRead() {
     ContentValues values = new ContentValues();
     values.put(KEY_IS_UNREAD, 0);    
-    mDb.update(DATABASE_TABLE, values, null, null);
+    mDb.update(TWEET_TABLE, values, null, null);
   }
   
   public int fetchMaxId() {
