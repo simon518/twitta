@@ -81,7 +81,6 @@ public class LoginActivity extends Activity {
     if (TwitterApi.isValidCredentials(username, password)) {
       // User has logged in.
       launchTwitterActivity();
-      // The method above finishes this activity.
     }
     
     mApi = new TwitterApi();
@@ -127,8 +126,12 @@ public class LoginActivity extends Activity {
   void launchTwitterActivity() {
     Intent intent = new Intent(); 
     intent.setClass(this, TwitterActivity.class); 
-    startActivity(intent); 
-    finish();           
+    startActivityForResult(intent, 0); 
+  }
+
+  protected void onActivityResult(int requestCode, int resultCode,
+      Intent data) {
+    finish();  
   }
   
   @Override
