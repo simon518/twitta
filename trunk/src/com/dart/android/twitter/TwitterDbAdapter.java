@@ -56,7 +56,7 @@ public class TwitterDbAdapter {
   private static final String TWEET_TABLE = "tweets";
   private static final String DM_TABLE = "dm";
   
-  private static final int DATABASE_VERSION = 1;
+  private static final int DATABASE_VERSION = 2;
   
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
@@ -78,8 +78,7 @@ public class TwitterDbAdapter {
         KEY_TEXT + " text not null, " +
         KEY_PROFILE_IMAGE_URL + " text not null, " +
         KEY_IS_UNREAD + " boolean not null, " +
-        KEY_CREATED_AT + " date not null, " +
-        KEY_SOURCE + " text not null)";
+        KEY_CREATED_AT + " date not null)";
   
   private final Context mContext;
 
@@ -99,7 +98,7 @@ public class TwitterDbAdapter {
       Log.w(TAG, "Upgrading database from version " + oldVersion + " to " +
           newVersion + " which destroys all old data");
       db.execSQL("DROP TABLE IF EXISTS " + TWEET_TABLE);
-      db.execSQL("DROP TABLE IF EXISTS " + DM_TABLE_CREATE);
+      db.execSQL("DROP TABLE IF EXISTS " + DM_TABLE);
       onCreate(db);
     }
   }

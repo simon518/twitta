@@ -20,22 +20,30 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import android.util.Log;
 
 public class Utils {
   
+  private static final String TAG = "Utils";
+
   public static boolean isEmpty(String s) {
-    return s == null || s.length() == 0;      
+    return s == null || s.length() == 0;
   }
-   
+
   public static String stringifyStream(InputStream is) throws IOException {
     BufferedReader reader = new BufferedReader(new InputStreamReader(is));
     StringBuilder sb = new StringBuilder();
     String line;
-    
+
     while ((line = reader.readLine()) != null) {
       sb.append(line + "\n");
     }
-     
+
     return sb.toString();
   }
 
@@ -43,5 +51,55 @@ public class Utils {
   public static String decodeTwitterJson(String s) {
     return s.replace("&lt;", "<").replace("&gt;", ">");
   }
-  
+
+  public static final DateFormat TWITTER_DATE_FORMATTER = new SimpleDateFormat(
+      "E MMM d HH:mm:ss Z yyyy");
+
+  public static final Date parseDateTime(String dateString) {
+    try {
+      return TWITTER_DATE_FORMATTER.parse(dateString);
+    } catch (ParseException e) {
+      Log.w(TAG, "Could not parse Twitter date string: " + dateString);
+      return null;
+    }
+  }
+
+  public static final DateFormat AGO_FULL_DATE_FORMATTER = new SimpleDateFormat(
+      "h:mm a MMM d");
+
+  public static String getRelativeDate(Date date) {
+    Date now = new Date();
+
+    // Seconds.
+    long diff = (now.getTime() - date.getTime()) / 1000;
+
+    if (diff < 0) {
+      diff = 0;
+    }
+
+    if (diff < 60) {
+      return diff + " seconds ago";
+    }
+
+    // Minutes.
+    diff /= 60;
+
+    if (diff <= 1) {
+      return "about a minute ago";
+    } else if (diff < 60) {
+      return "about " + diff + " minutes ago";
+    }
+
+    // Hours.
+    diff /= 60;
+
+    if (diff <= 1) {
+      return "about an hour ago";
+    } else if (diff < 24) {
+      return "about " + diff + " hours ago";
+    }
+
+    return AGO_FULL_DATE_FORMATTER.format(date);
+  }
+
 }
