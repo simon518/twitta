@@ -165,7 +165,7 @@ public class TwitterActivity extends Activity {
       }      
     } else {
       // Mark all as read.
-      mDb.markAllRead();     
+      mDb.markAllTweetsRead();     
       // We want to refresh.     
       doRetrieve();
     }

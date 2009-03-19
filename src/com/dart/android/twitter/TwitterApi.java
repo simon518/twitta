@@ -56,7 +56,7 @@ public class TwitterApi {
   private static final String FRIENDS_TIMELINE_URL =
     "http://twitter.com/statuses/friends_timeline.json";
   private static final String DIRECT_MESSAGES_URL =
-    "http://twitter.com/statuses/direct_messages.json";
+    "http://twitter.com/direct_messages.json";
 
   private static final String TWITTER_HOST = "twitter.com";
 

@@ -48,15 +48,24 @@ public class TwitterDbAdapter {
     KEY_CREATED_AT,
     KEY_SOURCE
   };
+
+  public static final String [] DM_COLUMNS = new String [] {
+    KEY_ID,
+    KEY_USER,
+    KEY_TEXT,
+    KEY_PROFILE_IMAGE_URL,
+    KEY_IS_UNREAD,
+    KEY_CREATED_AT
+  };
   
   private DatabaseHelper mDbHelper;
   private SQLiteDatabase mDb;
 
   private static final String DATABASE_NAME = "data";
   private static final String TWEET_TABLE = "tweets";
-  private static final String DM_TABLE = "dm";
+  private static final String DM_TABLE = "dms";  	
   
-  private static final int DATABASE_VERSION = 2;
+  private static final int DATABASE_VERSION = 1;
   
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
@@ -72,7 +81,7 @@ public class TwitterDbAdapter {
           KEY_SOURCE + " text not null)";
 
   private static final String DM_TABLE_CREATE =
-    "create table dm (" +
+    "create table dms (" +
         KEY_ID + " integer primary key on conflict replace, " +
         KEY_USER + " text not null, " +
         KEY_TEXT + " text not null, " +
@@ -121,6 +130,7 @@ public class TwitterDbAdapter {
   public final static DateFormat DB_DATE_FORMATTER =
       new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
   
+  // TODO: move all these to the model.  
   public long createTweet(Tweet tweet, boolean isUnread) {
     ContentValues initialValues = new ContentValues();
     initialValues.put(KEY_ID, tweet.id);
@@ -135,6 +145,19 @@ public class TwitterDbAdapter {
     return mDb.insert(TWEET_TABLE, null, initialValues);
   }
 
+  public long createDm(Dm dm, boolean isUnread) {
+    ContentValues initialValues = new ContentValues();
+    initialValues.put(KEY_ID, dm.id);
+    initialValues.put(KEY_USER, dm.screenName);      
+    initialValues.put(KEY_TEXT, dm.text);
+    initialValues.put(KEY_PROFILE_IMAGE_URL, dm.profileImageUrl);
+    initialValues.put(KEY_IS_UNREAD, isUnread);
+    initialValues.put(KEY_CREATED_AT,
+        DB_DATE_FORMATTER.format(dm.createdAt));
+    
+    return mDb.insert(DM_TABLE, null, initialValues);
+  }
+  
   public void syncTweets(List<Tweet> tweets) {
     try {
       mDb.beginTransaction();
@@ -151,6 +174,22 @@ public class TwitterDbAdapter {
     }
   }
 
+  public void syncDms(List<Dm> dms) {
+    try {
+      mDb.beginTransaction();
+      
+      deleteAllDms();
+      
+      for (Dm dm : dms) {
+        createDm(dm, false);
+      }
+      
+      mDb.setTransactionSuccessful();
+    } finally {      
+      mDb.endTransaction();
+    }
+  }
+  
   public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
     int unreadCount = 0;
     
@@ -174,15 +213,30 @@ public class TwitterDbAdapter {
     return mDb.query(TWEET_TABLE, TWEET_COLUMNS, null, null, null, null,
         KEY_ID + " DESC");
   }
+
+  public Cursor fetchAllDms() {
+    return mDb.query(DM_TABLE, DM_COLUMNS, null, null, null, null,
+        KEY_ID + " DESC");
+  }
   
   public boolean deleteAllTweets() {
     return mDb.delete(TWEET_TABLE, null, null) > 0;
   }  
 
-  public void markAllRead() {
+  public boolean deleteAllDms() {
+    return mDb.delete(DM_TABLE, null, null) > 0;
+  }  
+  
+  public void markAllTweetsRead() {
     ContentValues values = new ContentValues();
     values.put(KEY_IS_UNREAD, 0);    
     mDb.update(TWEET_TABLE, values, null, null);
+  }
+
+  public void markAllDmsRead() {
+    ContentValues values = new ContentValues();
+    values.put(KEY_IS_UNREAD, 0);    
+    mDb.update(DM_TABLE, values, null, null);
   }
   
   public int fetchMaxId() {
