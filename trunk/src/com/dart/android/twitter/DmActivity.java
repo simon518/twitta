@@ -96,13 +96,14 @@ public class DmActivity extends BaseActivity {
       }
       */      
     } else {
-      // Mark all as read.
-      mDb.markAllDmsRead();     
-      // We want to refresh.     
-      doRetrieve();
     }
-                
+
     setupAdapter();
+        
+    // Mark all as read.
+    mDb.markAllDmsRead();     
+    // We want to refresh.     
+    doRetrieve();
     
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.

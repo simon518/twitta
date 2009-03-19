@@ -11,6 +11,7 @@ import android.view.MenuItem;
 
 public class BaseActivity extends Activity {
   
+  @SuppressWarnings("unused")
   private static final String TAG = "BaseActivity";
 
   protected static final int MAX_TWEET_LENGTH = 140;
@@ -38,6 +39,7 @@ public class BaseActivity extends Activity {
     mApi.setCredentials(username, password);
         
     if (sImageManager == null) {
+      Log.i(TAG, "Creating ImageManager.");
       sImageManager = new ImageManager(this);
     }
     mDb = new TwitterDbAdapter(this);
