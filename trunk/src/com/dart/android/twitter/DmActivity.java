@@ -8,15 +8,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
@@ -29,7 +28,7 @@ import android.widget.TextView;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
-public class DmActivity extends Activity {
+public class DmActivity extends BaseActivity {
   
   private static final String TAG = "DmActivity";
 
@@ -43,13 +42,6 @@ public class DmActivity extends Activity {
   private TextView mCharsRemainText;
   private TextView mProgressText;
 
-  // Sources.
-  private TwitterApi mApi;
-  private TwitterDbAdapter mDb;
-  private ImageManager mImageManager;
-
-  private SharedPreferences mPreferences;
-
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   
@@ -57,13 +49,6 @@ public class DmActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
   
-    mApi = new TwitterApi();
-    mDb = new TwitterDbAdapter(this);
-    mDb.open();
-    mImageManager = new ImageManager(this);
-  
-    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        
     setContentView(R.layout.main);
     
     mTweetList = (ListView) findViewById(R.id.tweet_list);
@@ -85,9 +70,7 @@ public class DmActivity extends Activity {
       }
     });
 
-    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-    mApi.setCredentials(username, password);
+    mApi.setCredentials(getStoredUsername(), getStoredPassword());
     
     // Nice optimization which can preserve objects in an Activity
     // that is going to be destroyed and recreated immediately by the system.
@@ -95,12 +78,6 @@ public class DmActivity extends Activity {
     Object data = getLastNonConfigurationInstance();
 
     if (data != null) {
-      // Non configuration instance.
-      // Use the ImageManager from previous Activity instance.
-      // mImageManager = ((NonConfigurationState) data).imageManager;
-      // Set context to this activity. The old one is of no use.
-      // mImageManager.setContext(this);
-
       // Check to see if it was running a send or retrieve task.
       // It makes no sense to resend the send request (don't want dupes)
       // so we instead retrieve (refresh) to see if the message has posted.
@@ -149,10 +126,6 @@ public class DmActivity extends Activity {
       mRetrieveTask.cancel(true);
     }
 
-//    mDb.close();
-//
-//    mImageManager.cleanup();
-
     super.onDestroy();
   }
   
@@ -163,30 +136,6 @@ public class DmActivity extends Activity {
     mAdapter = new Adapter(this, cursor);
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
-  }
-  
-  private void logout() {
-    TwitterService.unschedule(this);
-
-    /*
-    mDb.deleteAllTweets();
-    */
-
-    // It is very important to clear preferences,
-    // in particular the username and password, or else
-    // LoginActivity may launch TwitterActivity again because
-    // it thinks there are valid credentials.
-    SharedPreferences.Editor editor = mPreferences.edit();
-    editor.clear();
-    editor.commit();
-
-    // Let's cleanup files while we're at it.
-    // mImageManager.clear();
-
-    Intent intent = new Intent();
-    intent.setClass(this, LoginActivity.class);
-    startActivity(intent);
-    finish();
   }
   
   public void update() {
@@ -313,9 +262,7 @@ public class DmActivity extends Activity {
       mProfileImageUrlColumn = cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
       mCreatedAtColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
-      
-      mMetaBuilder = new StringBuilder();
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);      
     }
 
     private LayoutInflater mInflater;
@@ -324,8 +271,6 @@ public class DmActivity extends Activity {
     private int mTextColumn;
     private int mProfileImageUrlColumn;
     private int mCreatedAtColumn;
-    
-    private StringBuilder mMetaBuilder;
     
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
@@ -361,23 +306,80 @@ public class DmActivity extends Activity {
         holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
       }
 
-      mMetaBuilder.setLength(0);
-
       try {
-        mMetaBuilder.append(Utils.getRelativeDate(
+        holder.metaText.setText(Utils.getRelativeDate(
             TwitterDbAdapter.DB_DATE_FORMATTER.parse(
                 cursor.getString(mCreatedAtColumn))));
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
-
-      holder.metaText.setText(mMetaBuilder.toString());
     }
 
     public void refresh() {
       getCursor().requery();
     }
 
+  }
+
+  // Menu.
+  
+  private static final int OPTIONS_MENU_ID_LOGOUT = 1;
+  private static final int OPTIONS_MENU_ID_REFRESH = 2;
+  private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
+  private static final int OPTIONS_MENU_ID_ABOUT = 4;
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);
+    item.setIcon(android.R.drawable.ic_menu_revert);
+
+    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.preferences);
+    item.setIcon(android.R.drawable.ic_menu_preferences);
+
+    item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
+    item.setIcon(R.drawable.refresh);
+
+    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
+    item.setIcon(android.R.drawable.ic_menu_info_details);
+
+    return true;
+  }
+
+  private static final int REQUEST_CODE_PREFERENCES = 1;
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+    case OPTIONS_MENU_ID_LOGOUT:
+      logout();
+      return true;
+    case OPTIONS_MENU_ID_REFRESH:
+      mImageManager.clear();
+      doRetrieve();
+      return true;
+    case OPTIONS_MENU_ID_PREFERENCES:
+      Intent launchPreferencesIntent = new Intent().setClass(this,
+          PreferencesActivity.class);
+      startActivityForResult(launchPreferencesIntent, REQUEST_CODE_PREFERENCES);
+      return true;
+    case OPTIONS_MENU_ID_ABOUT:
+      AboutDialog.show(this);
+      return true;
+    }
+
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    // TODO:
+    if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
+      // controlUpdateChecks();
+    }
   }
   
 }

@@ -218,6 +218,11 @@ public class TwitterDbAdapter {
     return mDb.query(DM_TABLE, DM_COLUMNS, null, null, null, null,
         KEY_ID + " DESC");
   }
+
+  public void clearData() {
+    deleteAllTweets();
+    deleteAllDms();
+  }
   
   public boolean deleteAllTweets() {
     return mDb.delete(TWEET_TABLE, null, null) > 0;

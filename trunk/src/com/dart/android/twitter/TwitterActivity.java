@@ -24,13 +24,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Selection;
@@ -55,11 +52,8 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
-public class TwitterActivity extends Activity {
+public class TwitterActivity extends BaseActivity {
   private static final String TAG = "TwitterActivity";
-
-  private static final int MAX_TWEET_LENGTH = 140;
-  private static final int MAX_TWEET_INPUT_LENGTH = 400;
 
   // Views.
   private ListView mTweetList;
@@ -70,14 +64,6 @@ public class TwitterActivity extends Activity {
 
   private TextView mCharsRemainText;
   private TextView mProgressText;
-
-  // Sources.
-  private TwitterApi mApi;
-  private TwitterDbAdapter mDb;
-  private ImageManager mImageManager;
-
-  // Preferences.
-  private SharedPreferences mPreferences;
 
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
@@ -96,18 +82,9 @@ public class TwitterActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-
     // TODO:
     // int mode = getExtra(INTENT_MODE);
     
-    mApi = new TwitterApi();
-    mDb = new TwitterDbAdapter(this);
-    mDb.open();
-    mImageManager = new ImageManager(this);
-
-    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-
     controlUpdateChecks();
 
     setContentView(R.layout.main);
@@ -130,22 +107,12 @@ public class TwitterActivity extends Activity {
       }
     });
 
-    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-    mApi.setCredentials(username, password);
-
     // Nice optimization which can preserve objects in an Activity
     // that is going to be destroyed and recreated immediately by the system.
     // See Activity doc for more.
     Object data = getLastNonConfigurationInstance();
 
     if (data != null) {
-      // Non configuration instance.
-      // Use the ImageManager from previous Activity instance.
-      mImageManager = ((NonConfigurationState) data).imageManager;
-      // Set context to this activity. The old one is of no use.
-      mImageManager.setContext(this);
-
       // Check to see if it was running a send or retrieve task.
       // It makes no sense to resend the send request (don't want dupes)
       // so we instead retrieve (refresh) to see if the message has posted.
@@ -175,20 +142,6 @@ public class TwitterActivity extends Activity {
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
-  }
-
-  @Override
-  public Object onRetainNonConfigurationInstance() {
-    // Save ImageManager for the subsequent Activity instance.
-    return new NonConfigurationState(mImageManager);
-  }
-
-  private class NonConfigurationState {
-    public ImageManager imageManager;
-
-    NonConfigurationState(ImageManager imageManager) {
-      this.imageManager = imageManager;
-    }
   }
 
   @Override
@@ -246,10 +199,6 @@ public class TwitterActivity extends Activity {
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
     }
-
-    mDb.close();
-
-    mImageManager.cleanup();
 
     super.onDestroy();
   }
@@ -432,28 +381,6 @@ public class TwitterActivity extends Activity {
   }
 
   // Actions.
-
-  private void logout() {
-    TwitterService.unschedule(this);
-
-    mDb.deleteAllTweets();
-
-    // It is very important to clear preferences,
-    // in particular the username and password, or else
-    // LoginActivity may launch TwitterActivity again because
-    // it thinks there are valid credentials.
-    SharedPreferences.Editor editor = mPreferences.edit();
-    editor.clear();
-    editor.commit();
-
-    // Let's cleanup files while we're at it.
-    mImageManager.clear();
-
-    Intent intent = new Intent();
-    intent.setClass(this, LoginActivity.class);
-    startActivity(intent);
-    finish();
-  }
 
   private void doSend() {
     if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
