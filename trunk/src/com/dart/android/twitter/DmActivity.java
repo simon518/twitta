@@ -1,6 +1,7 @@
 package com.dart.android.twitter;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
@@ -8,14 +9,20 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -28,6 +35,7 @@ public class DmActivity extends Activity {
 
   // Views.
   private ListView mTweetList;
+  private Adapter mAdapter;
 
   private EditText mTweetEdit;
   private ImageButton mSendButton;
@@ -37,7 +45,8 @@ public class DmActivity extends Activity {
 
   // Sources.
   private TwitterApi mApi;
-  // private TwitterDbAdapter mDb;
+  private TwitterDbAdapter mDb;
+  private ImageManager mImageManager;
 
   private SharedPreferences mPreferences;
 
@@ -49,6 +58,10 @@ public class DmActivity extends Activity {
     super.onCreate(savedInstanceState);
   
     mApi = new TwitterApi();
+    mDb = new TwitterDbAdapter(this);
+    mDb.open();
+    mImageManager = new ImageManager(this);
+  
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         
     setContentView(R.layout.main);
@@ -76,7 +89,45 @@ public class DmActivity extends Activity {
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
     mApi.setCredentials(username, password);
     
-    doRetrieve();
+    // Nice optimization which can preserve objects in an Activity
+    // that is going to be destroyed and recreated immediately by the system.
+    // See Activity doc for more.
+    Object data = getLastNonConfigurationInstance();
+
+    if (data != null) {
+      // Non configuration instance.
+      // Use the ImageManager from previous Activity instance.
+      // mImageManager = ((NonConfigurationState) data).imageManager;
+      // Set context to this activity. The old one is of no use.
+      // mImageManager.setContext(this);
+
+      // Check to see if it was running a send or retrieve task.
+      // It makes no sense to resend the send request (don't want dupes)
+      // so we instead retrieve (refresh) to see if the message has posted.
+      /*
+      boolean wasRunning = false;
+
+      if (savedInstanceState != null) {
+        if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
+          if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+            wasRunning = true;
+          }
+        }
+      }
+      
+      if (wasRunning) {
+        Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
+        doRetrieve();
+      }
+      */      
+    } else {
+      // Mark all as read.
+      mDb.markAllDmsRead();     
+      // We want to refresh.     
+      doRetrieve();
+    }
+                
+    setupAdapter();
     
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
@@ -103,6 +154,15 @@ public class DmActivity extends Activity {
 //    mImageManager.cleanup();
 
     super.onDestroy();
+  }
+  
+  private void setupAdapter() {
+    Cursor cursor = mDb.fetchAllDms();
+    startManagingCursor(cursor);
+
+    mAdapter = new Adapter(this, cursor);
+    mTweetList.setAdapter(mAdapter);
+    registerForContextMenu(mTweetList);
   }
   
   private void logout() {
@@ -171,7 +231,7 @@ public class DmActivity extends Activity {
       JSONArray jsonArray;
 
       try {
-        jsonArray = mApi.getTimeline();
+        jsonArray = mApi.getDirectMessages();
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -180,19 +240,19 @@ public class DmActivity extends Activity {
         return RetrieveResult.AUTH_ERROR;
       }
 
-      ArrayList<Tweet> tweets = new ArrayList<Tweet>();
+      ArrayList<Dm> dms = new ArrayList<Dm>();
 
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
         }
 
-        Tweet tweet;
+        Dm dm;
 
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.create(jsonObject);
-          tweets.add(tweet);
+          dm = Dm.create(jsonObject);
+          dms.add(dm);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;
@@ -202,24 +262,22 @@ public class DmActivity extends Activity {
           return RetrieveResult.CANCELLED;
         }
 
-        /*
-        if (!Utils.isEmpty(tweet.profileImageUrl)
-            && !mImageManager.contains(tweet.profileImageUrl)) {
+        if (!Utils.isEmpty(dm.profileImageUrl)
+            && !mImageManager.contains(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.put(tweet.profileImageUrl);
+            mImageManager.put(dm.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
         }
-        */
       }
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
       }
 
-      // mDb.syncTweets(tweets);
+      mDb.syncDms(dms);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
@@ -240,6 +298,86 @@ public class DmActivity extends Activity {
 
       updateProgress("");
     }
+  }
+
+  private class Adapter extends CursorAdapter {
+
+    public Adapter(Context context, Cursor cursor) {
+      super(context, cursor);
+      
+      mInflater = LayoutInflater.from(context);
+      
+      mUserTextColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+      mTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT);
+      mProfileImageUrlColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
+      mCreatedAtColumn = cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
+      
+      mMetaBuilder = new StringBuilder();
+    }
+
+    private LayoutInflater mInflater;
+    
+    private int mUserTextColumn; 
+    private int mTextColumn;
+    private int mProfileImageUrlColumn;
+    private int mCreatedAtColumn;
+    
+    private StringBuilder mMetaBuilder;
+    
+    @Override
+    public View newView(Context context, Cursor cursor, ViewGroup parent) {
+      View view = mInflater.inflate(R.layout.tweet, parent, false);
+      
+      ViewHolder holder = new ViewHolder();      
+      holder.userText = (TextView) view.findViewById(R.id.tweet_user_text);
+      holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
+      holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
+      holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);      
+      view.setTag(holder);
+      
+      return view;
+    }
+
+    class ViewHolder {
+      public TextView userText;
+      public TextView tweetText;
+      public ImageView profileImage;
+      public TextView metaText;      
+    }
+    
+    @Override
+    public void bindView(View view, Context context, Cursor cursor) {
+      ViewHolder holder = (ViewHolder) view.getTag();
+
+      holder.userText.setText(cursor.getString(mUserTextColumn));
+      holder.tweetText.setText(cursor.getString(mTextColumn));
+
+      String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
+
+      if (!Utils.isEmpty(profileImageUrl)) {
+        holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
+      }
+
+      mMetaBuilder.setLength(0);
+
+      try {
+        mMetaBuilder.append(Utils.getRelativeDate(
+            TwitterDbAdapter.DB_DATE_FORMATTER.parse(
+                cursor.getString(mCreatedAtColumn))));
+      } catch (ParseException e) {
+        Log.w(TAG, "Invalid created at data.");
+      }
+
+      holder.metaText.setText(mMetaBuilder.toString());
+    }
+
+    public void refresh() {
+      getCursor().requery();
+    }
+
   }
   
 }
