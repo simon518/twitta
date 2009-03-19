@@ -127,8 +127,8 @@ public class LoginActivity extends Activity {
     Intent intent = new Intent(); 
     intent.setClass(this, TwitterActivity.class); 
     startActivityForResult(intent, 0); 
-    // Keep the activity around so we can clear the stack 
-    // in case of logout.
+    // Keep the activity around so we can return to it later
+    // in case of logout. See BaseActivity.logout().
   }
 
   protected void onActivityResult(int requestCode, int resultCode,

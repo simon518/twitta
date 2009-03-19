@@ -5,8 +5,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 
 public class BaseActivity extends Activity {
+  
+  private static final String TAG = "BaseActivity";
 
   protected static final int MAX_TWEET_LENGTH = 140;
   protected static final int MAX_TWEET_INPUT_LENGTH = 400;
@@ -23,6 +28,8 @@ public class BaseActivity extends Activity {
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
     
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);        
+
+    manageUpdateChecks();
     
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
@@ -66,5 +73,72 @@ public class BaseActivity extends Activity {
     startActivity(intent);
     finish();
   }
-    
+
+  protected void manageUpdateChecks() {
+    boolean isEnabled = mPreferences.getBoolean(
+        Preferences.CHECK_UPDATES_KEY, false);
+      
+    if (isEnabled) {
+      TwitterService.schedule(this);
+    } else {
+      TwitterService.unschedule(this);
+    }
+  }
+  
+  // Menus.
+  
+  protected static final int OPTIONS_MENU_ID_LOGOUT = 1;
+  protected static final int OPTIONS_MENU_ID_PREFERENCES = 2;
+  protected static final int OPTIONS_MENU_ID_ABOUT = 3;
+
+  protected static final int OPTIONS_MENU_ID_REFRESH = 4;
+  protected static final int OPTIONS_MENU_ID_REPLIES = 5;  
+  protected static final int OPTIONS_MENU_ID_DM = 6;
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);
+    item.setIcon(android.R.drawable.ic_menu_revert);
+
+    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.preferences);
+    item.setIcon(android.R.drawable.ic_menu_preferences);
+
+    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
+    item.setIcon(android.R.drawable.ic_menu_info_details);
+
+    return true;
+  }
+
+  private static final int REQUEST_CODE_PREFERENCES = 1;
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+    case OPTIONS_MENU_ID_LOGOUT:
+      logout();
+      return true;
+    case OPTIONS_MENU_ID_PREFERENCES:
+      Intent launchPreferencesIntent = new Intent().setClass(this,
+          PreferencesActivity.class);
+      startActivityForResult(launchPreferencesIntent, REQUEST_CODE_PREFERENCES);
+      return true;
+    case OPTIONS_MENU_ID_ABOUT:
+      AboutDialog.show(this);
+      return true;
+    }
+
+    return super.onOptionsItemSelected(item);
+  }
+
+  @Override
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    super.onActivityResult(requestCode, resultCode, data);
+
+    if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
+      manageUpdateChecks();
+    }
+  }
+  
 }
