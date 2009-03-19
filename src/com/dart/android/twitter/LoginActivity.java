@@ -75,14 +75,6 @@ public class LoginActivity extends Activity {
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     
-    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-    
-    if (TwitterApi.isValidCredentials(username, password)) {
-      // User has logged in.
-      launchTwitterActivity();
-    }
-    
     mApi = new TwitterApi();
     
     setContentView(R.layout.login);
@@ -111,6 +103,14 @@ public class LoginActivity extends Activity {
         doLogin();
       }
     });        
+    
+    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
+    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
+    
+    if (TwitterApi.isValidCredentials(username, password)) {
+      // User has logged in.
+      launchTwitterActivity();
+    }       
   }
 
   @Override  
@@ -127,10 +127,13 @@ public class LoginActivity extends Activity {
     Intent intent = new Intent(); 
     intent.setClass(this, TwitterActivity.class); 
     startActivityForResult(intent, 0); 
+    // Keep the activity around so we can clear the stack 
+    // in case of logout.
   }
 
   protected void onActivityResult(int requestCode, int resultCode,
       Intent data) {
+    // This was caused by the back button in TwitterActivity.
     finish();  
   }
   
