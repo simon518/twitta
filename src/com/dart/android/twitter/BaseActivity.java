@@ -22,14 +22,19 @@ public class BaseActivity extends Activity {
    
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
     
+    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);        
+    
+    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
+    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
+    
     mApi = new TwitterApi();
+    mApi.setCredentials(username, password);
+        
     if (mImageManager == null) {
       mImageManager = new ImageManager(this);
     }
     mDb = new TwitterDbAdapter(this);
     mDb.open();
-    
-    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);        
   }
   
   @Override
@@ -39,18 +44,6 @@ public class BaseActivity extends Activity {
     super.onDestroy();
   }
   
-  public SharedPreferences getPreferences() {
-    return mPreferences;
-  }
-  
-  public String getStoredUsername() {
-    return mPreferences.getString(Preferences.USERNAME_KEY, "");
-  }
-
-  public String getStoredPassword() {
-    return mPreferences.getString(Preferences.PASSWORD_KEY, "");
-  }
-
   protected void logout() {
     TwitterService.unschedule(this);
 

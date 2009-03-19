@@ -70,8 +70,6 @@ public class DmActivity extends BaseActivity {
       }
     });
 
-    mApi.setCredentials(getStoredUsername(), getStoredPassword());
-    
     // Nice optimization which can preserve objects in an Activity
     // that is going to be destroyed and recreated immediately by the system.
     // See Activity doc for more.
