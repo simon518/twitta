@@ -24,6 +24,9 @@ public class PreferencesActivity extends PreferenceActivity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    // TODO: is this a hack?    
+    setResult(RESULT_OK);
+    
     addPreferencesFromResource(R.xml.preferences);
   }
     

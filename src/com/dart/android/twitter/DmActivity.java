@@ -321,63 +321,26 @@ public class DmActivity extends BaseActivity {
 
   // Menu.
   
-  private static final int OPTIONS_MENU_ID_LOGOUT = 1;
-  private static final int OPTIONS_MENU_ID_REFRESH = 2;
-  private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
-  private static final int OPTIONS_MENU_ID_ABOUT = 4;
-
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
 
-    MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);
-    item.setIcon(android.R.drawable.ic_menu_revert);
-
-    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.preferences);
-    item.setIcon(android.R.drawable.ic_menu_preferences);
-
-    item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
-
-    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
-    item.setIcon(android.R.drawable.ic_menu_info_details);
 
     return true;
   }
 
-  private static final int REQUEST_CODE_PREFERENCES = 1;
-
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-    case OPTIONS_MENU_ID_LOGOUT:
-      logout();
-      return true;
     case OPTIONS_MENU_ID_REFRESH:
       mImageManager.clear();
       doRetrieve();
-      return true;
-    case OPTIONS_MENU_ID_PREFERENCES:
-      Intent launchPreferencesIntent = new Intent().setClass(this,
-          PreferencesActivity.class);
-      startActivityForResult(launchPreferencesIntent, REQUEST_CODE_PREFERENCES);
-      return true;
-    case OPTIONS_MENU_ID_ABOUT:
-      AboutDialog.show(this);
       return true;
     }
 
     return super.onOptionsItemSelected(item);
   }
 
-  @Override
-  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-
-    // TODO:
-    if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
-      // controlUpdateChecks();
-    }
-  }
-  
 }

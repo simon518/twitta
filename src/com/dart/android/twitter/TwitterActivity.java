@@ -69,15 +69,6 @@ public class TwitterActivity extends BaseActivity {
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
 
-  private void controlUpdateChecks() {
-    // Controls scheduling of the new tweet checker depending on user preference
-    if (mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
-      TwitterService.schedule(this);
-    } else {
-      TwitterService.unschedule(this);
-    }
-  }
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -85,8 +76,6 @@ public class TwitterActivity extends BaseActivity {
     // TODO:
     // int mode = getExtra(INTENT_MODE);
     
-    controlUpdateChecks();
-
     setContentView(R.layout.main);
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
@@ -142,22 +131,6 @@ public class TwitterActivity extends BaseActivity {
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
-  }
-
-  @Override
-  protected void onPause() {
-    Log.i(TAG, "onPause.");
-    // Update checker should be active when Activity is paused.
-    controlUpdateChecks();
-    super.onPause();
-  }
-
-  @Override
-  protected void onResume() {
-    Log.i(TAG, "onResume.");
-    super.onResume();
-    // Try to prevent update checks while activity is visible.
-    TwitterService.unschedule(this);
   }
 
   private static final String SIS_RUNNING_KEY = "running";
@@ -567,58 +540,28 @@ public class TwitterActivity extends BaseActivity {
 
   // Menu.
 
-  private static final int OPTIONS_MENU_ID_LOGOUT = 1;
-  private static final int OPTIONS_MENU_ID_REFRESH = 2;
-  private static final int OPTIONS_MENU_ID_PREFERENCES = 3;
-  private static final int OPTIONS_MENU_ID_ABOUT = 4;
-  private static final int OPTIONS_MENU_ID_REPLIES = 5;  
-  private static final int OPTIONS_MENU_ID_DM = 6;
-
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
-
-    MenuItem item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);
-    item.setIcon(android.R.drawable.ic_menu_revert);
-
-    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.preferences);
-    item.setIcon(android.R.drawable.ic_menu_preferences);
-
-    item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
+    
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
-
-    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
-    item.setIcon(android.R.drawable.ic_menu_info_details);
 
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
-    
+        
     return true;
   }
 
-  private static final String INTENT_MODE = "mode";
-  
+  private static final String INTENT_MODE = "mode";  
   private static final int MODE_REPLIES = 1;
   
-  private static final int REQUEST_CODE_PREFERENCES = 1;
-
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
-    case OPTIONS_MENU_ID_LOGOUT:
-      logout();
-      return true;
     case OPTIONS_MENU_ID_REFRESH:
       mImageManager.clear();
       doRetrieve();
-      return true;
-    case OPTIONS_MENU_ID_PREFERENCES:
-      Intent launchPreferencesIntent = new Intent().setClass(this,
-          PreferencesActivity.class);
-      startActivityForResult(launchPreferencesIntent, REQUEST_CODE_PREFERENCES);
-      return true;
-    case OPTIONS_MENU_ID_ABOUT:
-      AboutDialog.show(this);
       return true;
     case OPTIONS_MENU_ID_REPLIES:
       Intent repliesIntent = new Intent(this, TwitterActivity.class);
@@ -632,15 +575,6 @@ public class TwitterActivity extends BaseActivity {
     }
 
     return super.onOptionsItemSelected(item);
-  }
-
-  @Override
-  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    super.onActivityResult(requestCode, resultCode, data);
-
-    if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
-      controlUpdateChecks();
-    }
   }
 
   // Various handlers.
