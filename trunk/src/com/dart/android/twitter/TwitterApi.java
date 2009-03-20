@@ -237,8 +237,6 @@ public class TwitterApi {
 
     String url = String.format(DIRECT_MESSAGES_DESTROY_URL, id);
     
-    Log.i(TAG, url);
-        
     InputStream data = requestData(url, METHOD_DELETE, null);
     JSONObject json = null;
 

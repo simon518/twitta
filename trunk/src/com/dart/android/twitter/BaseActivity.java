@@ -1,11 +1,13 @@
 package com.dart.android.twitter;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -41,16 +43,12 @@ public class BaseActivity extends Activity {
     mApi = new TwitterApi();
     mApi.setCredentials(username, password);
         
-    mImageManager = TwitterApplication.mImageManager;
-    
-    mDb = new TwitterDbAdapter(this);
-    mDb.open();
+    mImageManager = TwitterApplication.mImageManager;    
+    mDb = TwitterApplication.mDb;
   }
   
   @Override
   protected void onDestroy() {
-    mDb.close();
-
     super.onDestroy();
   }
   

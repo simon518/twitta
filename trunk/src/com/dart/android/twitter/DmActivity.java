@@ -373,7 +373,6 @@ public class DmActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_REFRESH:
-      mImageManager.clear();
       doRetrieve();
       return true;
     }
