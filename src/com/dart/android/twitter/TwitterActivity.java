@@ -65,7 +65,7 @@ public class TwitterActivity extends BaseActivity {
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
 
-  // Refresh data if last successful refresh was this long ago or greater.   
+  // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
     
   @Override
