@@ -109,16 +109,14 @@ public class TwitterActivity extends BaseActivity {
     
     if (diff > REFRESH_THRESHOLD) {
       shouldRetrieve = true;
-    } else if (savedInstanceState != null) {
+    } else if (savedInstanceState != null
+        && savedInstanceState.containsKey(SIS_RUNNING_KEY)
+        && savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
       // Check to see if it was running a send or retrieve task.
       // It makes no sense to resend the send request (don't want dupes)
-      // so we instead retrieve (refresh) to see if the message has posted.      
-      if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
-        if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
-          Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
-          shouldRetrieve = true;     
-        }
-      }
+      // so we instead retrieve (refresh) to see if the message has posted.
+      Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
+      shouldRetrieve = true;
     }
     
     if (shouldRetrieve) {
