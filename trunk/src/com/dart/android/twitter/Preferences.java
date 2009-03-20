@@ -29,5 +29,6 @@ public class Preferences {
       "content://settings/system/notification_sound";  
   
   public static final String LAST_TWEET_REFRESH_KEY = "last_tweet_refresh";
+  public static final String LAST_DM_REFRESH_KEY = "last_dm_refresh";
   
 }

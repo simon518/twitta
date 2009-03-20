@@ -9,7 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
@@ -36,14 +36,16 @@ public class DmActivity extends BaseActivity {
   private ListView mTweetList;
   private Adapter mAdapter;
 
-  private EditText mTweetEdit;
+  private TweetEdit mTweetEdit;  
   private ImageButton mSendButton;
 
-  private TextView mCharsRemainText;
   private TextView mProgressText;
 
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
+
+  // Refresh data at startup if last refresh was this long ago or greater.   
+  private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -52,15 +54,14 @@ public class DmActivity extends BaseActivity {
     setContentView(R.layout.main);
     
     mTweetList = (ListView) findViewById(R.id.tweet_list);
-    mTweetEdit = (EditText) findViewById(R.id.tweet_edit);
+    
+    mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
+        (TextView) findViewById(R.id.chars_text));
+    
     /*
-    mTweetEdit.addTextChangedListener(mTextWatcher);
-    mTweetEdit.setFilters(new InputFilter[] { new InputFilter.LengthFilter(
-        MAX_TWEET_INPUT_LENGTH) });
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
     */
 
-    mCharsRemainText = (TextView) findViewById(R.id.chars_text);
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     mSendButton = (ImageButton) findViewById(R.id.send_button);
@@ -70,44 +71,63 @@ public class DmActivity extends BaseActivity {
       }
     });
 
-    // Nice optimization which can preserve objects in an Activity
-    // that is going to be destroyed and recreated immediately by the system.
-    // See Activity doc for more.
-    Object data = getLastNonConfigurationInstance();
-
-    if (data != null) {
-      // Check to see if it was running a send or retrieve task.
-      // It makes no sense to resend the send request (don't want dupes)
-      // so we instead retrieve (refresh) to see if the message has posted.
-      /*
-      boolean wasRunning = false;
-
-      if (savedInstanceState != null) {
-        if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
-          if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
-            wasRunning = true;
-          }
-        }
-      }
-      
-      if (wasRunning) {
-        Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
-        doRetrieve();
-      }
-      */      
-    } else {
-    }
-
-    setupAdapter();
-        
     // Mark all as read.
     mDb.markAllDmsRead();     
-    // We want to refresh.     
-    doRetrieve();
+    
+    setupAdapter();
+        
+    boolean shouldRetrieve = false;
+
+    long lastRefreshTime = mPreferences.getLong(
+        Preferences.LAST_DM_REFRESH_KEY, 0);
+    long nowTime = Utils.getNowTime();
+    
+    long diff = nowTime - lastRefreshTime;
+    Log.i(TAG, "Last refresh was " + diff + " ms ago.");
+    
+    if (diff > REFRESH_THRESHOLD) {
+      shouldRetrieve = true;
+    } else if (savedInstanceState != null) {
+      // Check to see if it was running a send or retrieve task.
+      // It makes no sense to resend the send request (don't want dupes)
+      // so we instead retrieve (refresh) to see if the message has posted.      
+      if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
+        if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+          Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
+          shouldRetrieve = true;     
+        }
+      }
+    }
+    
+    if (shouldRetrieve) {
+      doRetrieve();      
+    }
     
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);    
+  }
+  
+  private static final String SIS_RUNNING_KEY = "running";
+
+  @Override
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+
+    if (mRetrieveTask != null
+        && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      outState.putBoolean(SIS_RUNNING_KEY, true);
+//    } else if (mSendTask != null
+//        && mSendTask.getStatus() == UserTask.Status.RUNNING) {
+//      outState.putBoolean(SIS_RUNNING_KEY, true);
+    }
+  }
+
+  @Override
+  protected void onRestoreInstanceState(Bundle bundle) {
+    super.onRestoreInstanceState(bundle);
+
+    mTweetEdit.updateCharsRemain();
   }
   
   @Override
@@ -127,7 +147,13 @@ public class DmActivity extends BaseActivity {
 
     super.onDestroy();
   }
-  
+
+  // UI helpers.
+
+  private void updateProgress(String progress) {
+    mProgressText.setText(progress);
+  }
+    
   private void setupAdapter() {
     Cursor cursor = mDb.fetchAllDms();
     startManagingCursor(cursor);
@@ -136,13 +162,20 @@ public class DmActivity extends BaseActivity {
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
   }
-  
-  public void update() {
-    
+
+  private void update() {
+    mAdapter.refresh();
+    mTweetList.setSelection(0);
   }
-  
-  private void updateProgress(String progress) {
-    mProgressText.setText(progress);
+
+  private void enableEntry() {
+    mTweetEdit.setEnabled(true);
+    mSendButton.setEnabled(true);
+  }
+
+  private void disableEntry() {
+    mTweetEdit.setEnabled(false);
+    mSendButton.setEnabled(false);
   }
   
   private enum RetrieveResult {
@@ -239,6 +272,9 @@ public class DmActivity extends BaseActivity {
       if (result == RetrieveResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == RetrieveResult.OK) {
+        SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putLong(Preferences.LAST_DM_REFRESH_KEY, Utils.getNowTime());
+        editor.commit();                
         update();
       } else {
         // Do nothing.
