@@ -60,19 +60,18 @@ public class TwitterActivity extends BaseActivity {
   private ListView mTweetList;
   private TweetAdapter mTweetAdapter;
 
-  private EditText mTweetEdit;
+  private TweetEdit mTweetEdit;
   private ImageButton mSendButton;
 
-  private TextView mCharsRemainText;
   private TextView mProgressText;
 
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
 
-  // Refresh data if last successful refresh was this long ago or greater. 
-  private static final long REFRESH_THRESHOLD = 30 * 1000;
-  
+  // Refresh data if last successful refresh was this long ago or greater.   
+  private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
+    
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -84,13 +83,11 @@ public class TwitterActivity extends BaseActivity {
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
 
-    mTweetEdit = (EditText) findViewById(R.id.tweet_edit);
-    mTweetEdit.addTextChangedListener(mTextWatcher);
-    mTweetEdit.setFilters(new InputFilter[] { new InputFilter.LengthFilter(
-        MAX_TWEET_INPUT_LENGTH) });
+    mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
+        (TextView) findViewById(R.id.chars_text));
+            
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
 
-    mCharsRemainText = (TextView) findViewById(R.id.chars_text);
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     mSendButton = (ImageButton) findViewById(R.id.send_button);
@@ -146,8 +143,8 @@ public class TwitterActivity extends BaseActivity {
     if (mRetrieveTask != null
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
-    } else if (mSendTask != null &&
-               mSendTask.getStatus() == UserTask.Status.RUNNING) {
+    } else if (mSendTask != null
+        && mSendTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
     }
   }
@@ -156,10 +153,7 @@ public class TwitterActivity extends BaseActivity {
   protected void onRestoreInstanceState(Bundle bundle) {
     super.onRestoreInstanceState(bundle);
 
-    // TODO: why do we need to do this? Can't we detect the box is being set?
-    // Update the char remaining message.
-    int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
-    updateCharsRemain(remaining + "");
+    mTweetEdit.updateCharsRemain();
   }
 
   @Override
@@ -182,12 +176,8 @@ public class TwitterActivity extends BaseActivity {
 
   // UI helpers.
 
-  private void updateProgress(String progress) {
+  protected void updateProgress(String progress) {
     mProgressText.setText(progress);
-  }
-
-  private void updateCharsRemain(String remaining) {
-    mCharsRemainText.setText(remaining);
   }
 
   private void setupAdapter() {
@@ -226,9 +216,9 @@ public class TwitterActivity extends BaseActivity {
         // TODO: this isn't quite perfect. It leaves extra empty spaces if you
         // perform the reply action again.
         String replyTo = "@" + cursor.getString(userIndex);
-        String text = mTweetEdit.getText().toString();
+        String text = mTweetEdit.getText();
         text = replyTo + " " + text.replace(replyTo, "");
-        setAndFocusTweetInput(text);
+        mTweetEdit.setTextAndFocus(text);
   
         return true;
       case CONTEXT_RETWEET_ID:
@@ -236,7 +226,7 @@ public class TwitterActivity extends BaseActivity {
             cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER)) +
             " " +
             cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT));
-        setAndFocusTweetInput(retweet);
+        mTweetEdit.setTextAndFocus(retweet);
   
         return true;        
       default:
@@ -244,17 +234,6 @@ public class TwitterActivity extends BaseActivity {
     }
   }
   
-  private void setAndFocusTweetInput(String text) {
-    mTweetEdit.setText(text);
-    Editable editable = mTweetEdit.getText();
-    Selection.setSelection(editable, editable.length());
-    mTweetEdit.requestFocus();    
-    // TODO: why do we need to do this?
-    // Can't we detect the box is being set?
-    int remaining = MAX_TWEET_LENGTH - mTweetEdit.length();
-    updateCharsRemain(remaining + "");    
-  }
-
   private class TweetAdapter extends CursorAdapter {
 
     public TweetAdapter(Context context, Cursor cursor) {
@@ -429,7 +408,6 @@ public class TwitterActivity extends BaseActivity {
   private void onSendSuccess() {
     mTweetEdit.setText("");
     updateProgress("");
-    updateCharsRemain("");
     enableEntry();
     update();
   }
@@ -585,23 +563,6 @@ public class TwitterActivity extends BaseActivity {
   }
 
   // Various handlers.
-
-  private TextWatcher mTextWatcher = new TextWatcher() {
-    @Override
-    public void afterTextChanged(Editable e) {
-      int remaining = MAX_TWEET_LENGTH - e.length();
-      updateCharsRemain(remaining + "");
-    }
-
-    @Override
-    public void beforeTextChanged(CharSequence s, int start, int count,
-        int after) {
-    }
-
-    @Override
-    public void onTextChanged(CharSequence s, int start, int before, int count) {
-    }
-  };
 
   private View.OnKeyListener tweetEnterHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
