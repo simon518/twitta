@@ -231,6 +231,10 @@ public class TwitterDbAdapter {
   public boolean deleteAllDms() {
     return mDb.delete(DM_TABLE, null, null) > 0;
   }  
+
+  public boolean deleteDm(int id) {
+    return mDb.delete(DM_TABLE, KEY_ID + "=" + id, null) > 0;
+  }  
   
   public void markAllTweetsRead() {
     ContentValues values = new ContentValues();

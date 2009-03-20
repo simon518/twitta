@@ -30,6 +30,7 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
@@ -57,6 +58,8 @@ public class TwitterApi {
     "http://twitter.com/statuses/friends_timeline.json";
   private static final String DIRECT_MESSAGES_URL =
     "http://twitter.com/direct_messages.json";
+  private static final String DIRECT_MESSAGES_DESTROY_URL =
+    "http://twitter.com/direct_messages/destroy/%d.json";
 
   private static final String TWITTER_HOST = "twitter.com";
 
@@ -65,6 +68,7 @@ public class TwitterApi {
   
   private static final String METHOD_GET = "GET";
   private static final String METHOD_POST = "POST";
+  private static final String METHOD_DELETE = "DELETE";
 
   public class AuthException extends Exception {
     private static final long serialVersionUID = 1703735789572778599L;    
@@ -123,6 +127,8 @@ public class TwitterApi {
           false);                 
       post.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
       method = post;
+    } else if (METHOD_DELETE.equals(httpMethod)) {
+      method = new HttpDelete(uri);            
     } else {
       method = new HttpGet(uri);            
     }
@@ -224,7 +230,30 @@ public class TwitterApi {
 
     return json;
   }  
-  
+
+  public JSONObject destroyDirectMessage(int id) throws
+      IOException, AuthException {
+    Log.i(TAG, "Deleting direct message: " + id);
+
+    String url = String.format(DIRECT_MESSAGES_DESTROY_URL, id);
+    
+    Log.i(TAG, url);
+        
+    InputStream data = requestData(url, METHOD_DELETE, null);
+    JSONObject json = null;
+
+    try {
+      json = new JSONObject(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
+    return json;
+  }  
+    
   public JSONObject update(String status) throws IOException, AuthException {
     Log.i(TAG, "Updating status.");
     

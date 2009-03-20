@@ -13,17 +13,20 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -378,4 +381,67 @@ public class DmActivity extends BaseActivity {
     return super.onOptionsItemSelected(item);
   }
 
+  private static final int CONTEXT_REPLY_ID = 0;
+  private static final int CONTEXT_DELETE_ID = 1;
+
+  @Override
+  public void onCreateContextMenu(ContextMenu menu, View v,
+      ContextMenuInfo menuInfo) {
+    super.onCreateContextMenu(menu, v, menuInfo);
+    menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
+    menu.add(0, CONTEXT_DELETE_ID, 0, R.string.delete);
+  }
+
+  @Override
+  public boolean onContextItemSelected(MenuItem item) {
+    AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+    Cursor cursor = (Cursor) mAdapter.getItem(info.position);
+
+    if (cursor == null) {
+      Log.w(TAG, "Selected item not available.");
+      return super.onContextItemSelected(item);
+    }
+
+    switch (item.getItemId()) {
+      case CONTEXT_REPLY_ID:
+        int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+        // TODO: this isn't quite perfect. It leaves extra empty spaces if you
+        // perform the reply action again.
+        String replyTo = "@" + cursor.getString(userIndex);
+        String text = mTweetEdit.getText();
+        text = replyTo + " " + text.replace(replyTo, "");
+        mTweetEdit.setTextAndFocus(text);
+  
+        return true;
+      case CONTEXT_DELETE_ID:
+        int idIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_ID);
+        int id = cursor.getInt(idIndex);
+        destroyDirectMessage(id);
+  
+        return true;        
+      default:
+        return super.onContextItemSelected(item);
+    }
+  }
+  
+  // TODO: move this to a thread task.
+  private void destroyDirectMessage(int id) {
+    try {
+      JSONObject json = mApi.destroyDirectMessage(id);
+      Dm.create(json);
+    } catch (IOException e) {
+      Log.e(TAG, "Could not destroy direct message.", e);
+      return;
+    } catch (AuthException e) {
+      logout();
+      return;
+    } catch (JSONException e) {
+      Log.e(TAG, "Could not destroy direct message.", e);
+      return;
+    }
+    
+    mDb.deleteDm(id);
+    mAdapter.refresh();    
+  }
+  
 }
