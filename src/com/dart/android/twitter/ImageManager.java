@@ -26,7 +26,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -232,7 +231,7 @@ public class ImageManager {
     }
   }
 
-  public void cleanup(Set<String> keepers) {
+  public void cleanup(HashSet<String> keepers) {
     String [] files = mContext.fileList();
     HashSet<String> hashedUrls = new HashSet<String>();
 

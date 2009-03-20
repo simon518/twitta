@@ -4,7 +4,6 @@ import java.util.HashSet;
 
 import android.app.Application;
 import android.database.Cursor;
-import android.util.Log;
 
 public class TwitterApplication extends Application {
   
@@ -16,6 +15,7 @@ public class TwitterApplication extends Application {
   @Override
   public void onCreate() {
     super.onCreate();
+
     mImageManager = new ImageManager(this);
     mDb = new TwitterDbAdapter(this);
     mDb.open();
@@ -23,14 +23,13 @@ public class TwitterApplication extends Application {
   
   @Override
   public void onTerminate() {
-    Log.i(TAG, "onTerminate.");    
     cleanupImages();
     mDb.close();
     
     super.onTerminate();
   }
   
-  protected static void cleanupImages() {
+  private void cleanupImages() {
     HashSet<String> keepers = new HashSet<String>();
     
     Cursor cursor = mDb.fetchAllTweets();
