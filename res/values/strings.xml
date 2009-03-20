@@ -30,6 +30,7 @@
     
     <string name="reply">Reply</string>
     <string name="retweet">Retweet</string>
+    <string name="delete">Delete</string>
                 
     <string name="vibrate_title">Vibrate?</string>
     <string name="vibrate_summary">Vibrate the phone when notified of new tweets</string>
