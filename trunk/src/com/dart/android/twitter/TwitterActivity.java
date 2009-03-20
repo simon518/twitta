@@ -29,10 +29,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.Selection;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -176,7 +172,7 @@ public class TwitterActivity extends BaseActivity {
 
   // UI helpers.
 
-  protected void updateProgress(String progress) {
+  private void updateProgress(String progress) {
     mProgressText.setText(progress);
   }
 
