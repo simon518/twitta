@@ -23,7 +23,7 @@ public class BaseActivity extends Activity {
   protected SharedPreferences mPreferences;    
   protected TwitterApi mApi;
   protected TwitterDbAdapter mDb;
-  protected static ImageManager sImageManager;
+  protected ImageManager mImageManager;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -41,10 +41,8 @@ public class BaseActivity extends Activity {
     mApi = new TwitterApi();
     mApi.setCredentials(username, password);
         
-    if (sImageManager == null) {
-      Log.i(TAG, "Creating ImageManager.");
-      sImageManager = new ImageManager(this);
-    }
+    mImageManager = TwitterApplication.mImageManager;
+    
     mDb = new TwitterDbAdapter(this);
     mDb.open();
   }
@@ -70,7 +68,7 @@ public class BaseActivity extends Activity {
     editor.commit();
 
     // Let's cleanup files while we're at it.
-    sImageManager.clear();
+    mImageManager.clear();
 
     Intent intent = new Intent();
     intent.setClass(this, LoginActivity.class);

@@ -3,7 +3,10 @@
       package="com.dart.android.twitter"
       android:versionCode="5"
       android:versionName="5">
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
+    <application
+        android:name=".TwitterApplication"    
+        android:icon="@drawable/icon"
+        android:label="@string/app_name">
         <activity android:name=".LoginActivity"
                   android:label="@string/app_name">
             <intent-filter>
