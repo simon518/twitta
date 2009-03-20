@@ -27,4 +27,7 @@ public class Preferences {
   public static String RINGTONE_KEY = "ringtone";
   public static final String RINGTONE_DEFAULT_KEY =
       "content://settings/system/notification_sound";  
+  
+  public static final String LAST_TWEET_REFRESH_KEY = "last_tweet_refresh";
+  
 }

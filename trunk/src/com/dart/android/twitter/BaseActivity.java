@@ -11,7 +11,6 @@ import android.view.MenuItem;
 
 public class BaseActivity extends Activity {
   
-  @SuppressWarnings("unused")
   private static final String TAG = "BaseActivity";
 
   protected static final int MAX_TWEET_LENGTH = 140;

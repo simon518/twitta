@@ -23,6 +23,7 @@ import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 
 import android.util.Log;
@@ -102,4 +103,8 @@ public class Utils {
     return AGO_FULL_DATE_FORMATTER.format(date);
   }
 
+  public static long getNowTime() {
+    return Calendar.getInstance().getTime().getTime();    
+  }
+  
 }

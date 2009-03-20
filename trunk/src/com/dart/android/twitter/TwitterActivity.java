@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
@@ -69,6 +70,9 @@ public class TwitterActivity extends BaseActivity {
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, String, SendResult> mSendTask;
 
+  // Refresh data if last successful refresh was this long ago or greater. 
+  private static final long REFRESH_THRESHOLD = 30 * 1000;
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -96,38 +100,38 @@ public class TwitterActivity extends BaseActivity {
       }
     });
 
-    // Nice optimization which can preserve objects in an Activity
-    // that is going to be destroyed and recreated immediately by the system.
-    // See Activity doc for more.
-    Object data = getLastNonConfigurationInstance();
+    // Mark all as read.
+    mDb.markAllTweetsRead();    
+    
+    setupAdapter();
+    
+    boolean shouldRetrieve = false;
 
-    if (data != null) {
+    long lastRefreshTime = mPreferences.getLong(
+        Preferences.LAST_TWEET_REFRESH_KEY, 0);
+    long nowTime = Utils.getNowTime();
+    
+    long diff = nowTime - lastRefreshTime;
+    Log.i(TAG, "Last refresh was " + diff + " ms ago.");
+    
+    if (diff > REFRESH_THRESHOLD) {
+      shouldRetrieve = true;
+    } else if (savedInstanceState != null) {
       // Check to see if it was running a send or retrieve task.
       // It makes no sense to resend the send request (don't want dupes)
-      // so we instead retrieve (refresh) to see if the message has posted.
-      boolean wasRunning = false;
-
-      if (savedInstanceState != null) {
-        if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
-          if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
-            wasRunning = true;
-          }
+      // so we instead retrieve (refresh) to see if the message has posted.      
+      if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
+        if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+          Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
+          shouldRetrieve = true;     
         }
       }
-      
-      if (wasRunning) {
-        Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
-        doRetrieve();
-      }      
-    } else {
-      // Mark all as read.
-      mDb.markAllTweetsRead();     
-      // We want to refresh.     
-      doRetrieve();
     }
-                
-    setupAdapter();
-
+    
+    if (shouldRetrieve) {
+      doRetrieve();      
+    }
+    
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
@@ -529,6 +533,9 @@ public class TwitterActivity extends BaseActivity {
       if (result == RetrieveResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == RetrieveResult.OK) {
+        SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putLong(Preferences.LAST_TWEET_REFRESH_KEY, Utils.getNowTime());
+        editor.commit();        
         update();
       } else {
         // Do nothing.
