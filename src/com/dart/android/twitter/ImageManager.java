@@ -23,9 +23,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -231,16 +232,13 @@ public class ImageManager {
     }
   }
 
-  // Deletes files not currently in the memory cache.
-  public void cleanup() {
+  public void cleanup(Set<String> keepers) {
     String [] files = mContext.fileList();
-    ArrayList<String> hashedUrls = new ArrayList<String>();
+    HashSet<String> hashedUrls = new HashSet<String>();
 
-    synchronized(this) {    
-      for (String key : mCache.keySet()) {
-        hashedUrls.add(getMd5(key));
-      }
-    }    
+    for (String imageUrl : keepers) {
+      hashedUrls.add(getMd5(imageUrl));
+    }
     
     for (String file : files) {
       if (!hashedUrls.contains(file)) {

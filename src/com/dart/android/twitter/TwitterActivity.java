@@ -539,7 +539,6 @@ public class TwitterActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_REFRESH:
-      mImageManager.clear();
       doRetrieve();
       return true;
     case OPTIONS_MENU_ID_REPLIES:
