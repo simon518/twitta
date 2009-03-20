@@ -5,16 +5,25 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.text.Editable;
+import android.text.InputFilter;
+import android.text.Selection;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
+
+/**
+ * A BaseActivity has common routines and variables for an Activity
+ * that contains a list of tweets and a text input field.
+ * 
+ * Not the cleanest design, but works okay for several Activities in this app.
+ */
 
 public class BaseActivity extends Activity {
   
   private static final String TAG = "BaseActivity";
-
-  protected static final int MAX_TWEET_LENGTH = 140;
-  protected static final int MAX_TWEET_INPUT_LENGTH = 400;
 
   protected SharedPreferences mPreferences;    
   protected TwitterApi mApi;
@@ -141,5 +150,5 @@ public class BaseActivity extends Activity {
       manageUpdateChecks();
     }
   }
-  
+
 }
