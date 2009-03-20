@@ -289,7 +289,7 @@ public class TwitterActivity extends BaseActivity {
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(sImageManager.get(profileImageUrl));
+        holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
       }
 
       mMetaBuilder.setLength(0);
@@ -477,10 +477,10 @@ public class TwitterActivity extends BaseActivity {
         }
 
         if (!Utils.isEmpty(tweet.profileImageUrl)
-            && !sImageManager.contains(tweet.profileImageUrl)) {
+            && !mImageManager.contains(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            sImageManager.put(tweet.profileImageUrl);
+            mImageManager.put(tweet.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
@@ -539,7 +539,7 @@ public class TwitterActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_REFRESH:
-      sImageManager.clear();
+      mImageManager.clear();
       doRetrieve();
       return true;
     case OPTIONS_MENU_ID_REPLIES:

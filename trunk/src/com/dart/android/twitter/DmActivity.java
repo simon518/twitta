@@ -242,10 +242,10 @@ public class DmActivity extends BaseActivity {
         }
 
         if (!Utils.isEmpty(dm.profileImageUrl)
-            && !sImageManager.contains(dm.profileImageUrl)) {
+            && !mImageManager.contains(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            sImageManager.put(dm.profileImageUrl);
+            mImageManager.put(dm.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
@@ -336,7 +336,7 @@ public class DmActivity extends BaseActivity {
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(sImageManager.get(profileImageUrl));
+        holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
       }
 
       try {
@@ -370,7 +370,7 @@ public class DmActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_REFRESH:
-      sImageManager.clear();
+      mImageManager.clear();
       doRetrieve();
       return true;
     }
