@@ -360,6 +360,17 @@ public class TwitterActivity extends BaseActivity {
         String status = mTweetEdit.getText().toString();
         JSONObject jsonObject = mApi.update(status);
         Tweet tweet = Tweet.create(jsonObject);
+        
+        if (!Utils.isEmpty(tweet.profileImageUrl)
+            && !mImageManager.contains(tweet.profileImageUrl)) {
+          // Fetch image to cache.
+          try {
+            mImageManager.put(tweet.profileImageUrl);
+          } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+          }
+        }
+                
         mDb.createTweet(tweet, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
@@ -371,7 +382,7 @@ public class TwitterActivity extends BaseActivity {
         Log.w(TAG, "Could not parse JSON after sending update.");
         return SendResult.IO_ERROR;
       }
-
+      
       return SendResult.OK;
     }
 

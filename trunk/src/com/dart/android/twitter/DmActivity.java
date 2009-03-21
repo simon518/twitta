@@ -146,6 +146,10 @@ public class DmActivity extends BaseActivity {
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
     }
+    if (mDeleteTask != null
+        && mDeleteTask.getStatus() == UserTask.Status.RUNNING) {
+      mDeleteTask.cancel(true);
+    }
 
     super.onDestroy();
   }
