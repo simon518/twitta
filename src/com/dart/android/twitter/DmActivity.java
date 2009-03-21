@@ -45,7 +45,8 @@ public class DmActivity extends BaseActivity {
   private TextView mProgressText;
 
   // Tasks.
-  private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
+  private UserTask<Void, Void, TaskResult> mRetrieveTask;
+  private UserTask<Integer, Void, TaskResult> mDeleteTask;
 
   // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
@@ -179,7 +180,7 @@ public class DmActivity extends BaseActivity {
     mSendButton.setEnabled(false);
   }
   
-  private enum RetrieveResult {
+  private enum TaskResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
   
@@ -202,31 +203,31 @@ public class DmActivity extends BaseActivity {
     logout();
   }
   
-  private class RetrieveTask extends UserTask<Void, Void, RetrieveResult> {
+  private class RetrieveTask extends UserTask<Void, Void, TaskResult> {
     @Override
     public void onPreExecute() {
       onRetrieveBegin();
     }
 
     @Override
-    public RetrieveResult doInBackground(Void... params) {
+    public TaskResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
       try {
         jsonArray = mApi.getDirectMessages();
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
-        return RetrieveResult.IO_ERROR;
+        return TaskResult.IO_ERROR;
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
-        return RetrieveResult.AUTH_ERROR;
+        return TaskResult.AUTH_ERROR;
       }
 
       ArrayList<Dm> dms = new ArrayList<Dm>();
 
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
-          return RetrieveResult.CANCELLED;
+          return TaskResult.CANCELLED;
         }
 
         Dm dm;
@@ -237,11 +238,11 @@ public class DmActivity extends BaseActivity {
           dms.add(dm);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
-          return RetrieveResult.IO_ERROR;
+          return TaskResult.IO_ERROR;
         }
 
         if (isCancelled()) {
-          return RetrieveResult.CANCELLED;
+          return TaskResult.CANCELLED;
         }
 
         if (!Utils.isEmpty(dm.profileImageUrl)
@@ -256,23 +257,23 @@ public class DmActivity extends BaseActivity {
       }
 
       if (isCancelled()) {
-        return RetrieveResult.CANCELLED;
+        return TaskResult.CANCELLED;
       }
 
       mDb.syncDms(dms);
 
       if (isCancelled()) {
-        return RetrieveResult.CANCELLED;
+        return TaskResult.CANCELLED;
       }
 
-      return RetrieveResult.OK;
+      return TaskResult.OK;
     }
 
     @Override
-    public void onPostExecute(RetrieveResult result) {
-      if (result == RetrieveResult.AUTH_ERROR) {
+    public void onPostExecute(TaskResult result) {
+      if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
-      } else if (result == RetrieveResult.OK) {
+      } else if (result == TaskResult.OK) {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_DM_REFRESH_KEY, Utils.getNowTime());
         editor.commit();                
@@ -415,7 +416,7 @@ public class DmActivity extends BaseActivity {
       case CONTEXT_DELETE_ID:
         int idIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_ID);
         int id = cursor.getInt(idIndex);
-        destroyDirectMessage(id);
+        doDestroy(id);
   
         return true;        
       default:
@@ -423,24 +424,62 @@ public class DmActivity extends BaseActivity {
     }
   }
   
-  // TODO: move this to a thread task.
-  private void destroyDirectMessage(int id) {
-    try {
-      JSONObject json = mApi.destroyDirectMessage(id);
-      Dm.create(json);
-    } catch (IOException e) {
-      Log.e(TAG, "Could not destroy direct message.", e);
-      return;
-    } catch (AuthException e) {
-      logout();
-      return;
-    } catch (JSONException e) {
-      Log.e(TAG, "Could not destroy direct message.", e);
-      return;
+  private void doDestroy(int id) {
+    Log.i(TAG, "Attempting delete.");
+
+    if (mDeleteTask != null
+        && mDeleteTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already deleting.");
+    } else {
+      mDeleteTask = new DeleteTask().execute(new Integer[] { id });
     }
-    
-    mDb.deleteDm(id);
-    mAdapter.refresh();    
   }
   
+  private class DeleteTask extends UserTask<Integer, Void, TaskResult> {
+    @Override
+    public void onPreExecute() {
+      updateProgress("Deleting...");
+    }
+
+    @Override
+    public TaskResult doInBackground(Integer... params) {
+      Integer id = (Integer) params[0];
+      
+      try {
+        JSONObject json = mApi.destroyDirectMessage(id);
+        Dm.create(json);
+        mDb.deleteDm(id);        
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return TaskResult.AUTH_ERROR;
+      } catch (JSONException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      }
+                  
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+
+      return TaskResult.OK;
+    }
+
+    @Override
+    public void onPostExecute(TaskResult result) {
+      if (result == TaskResult.AUTH_ERROR) {
+        onAuthFailure();
+      } else if (result == TaskResult.OK) {
+        mAdapter.refresh();
+      } else {
+        // Do nothing.
+      }
+
+      updateProgress("");
+    }
+  }
+  
+
 }
