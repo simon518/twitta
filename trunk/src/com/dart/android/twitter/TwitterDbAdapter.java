@@ -223,14 +223,10 @@ public class TwitterDbAdapter {
   public Cursor getRecentFriends(String filter) {
     String likeFilter = '%' + filter + '%';
     
-    return mDb.rawQuery(
-        "SELECT " + KEY_USER + " as _id, " + KEY_USER + " " +
-    		"FROM " + TWEET_TABLE + " " +
-    		"WHERE " + KEY_USER + " LIKE ? " +
-    		"UNION " +
-        "SELECT " + KEY_USER + " as _id, " + KEY_USER + " " +
-        "FROM " + DM_TABLE + " " +
-        "WHERE " + KEY_USER + " LIKE ?",
+    return mDb.rawQuery("SELECT " + KEY_USER + " as _id, " + KEY_USER + " "
+        + "FROM " + TWEET_TABLE + " " + "WHERE " + KEY_USER + " LIKE ? "
+        + "UNION " + "SELECT " + KEY_USER + " as _id, " + KEY_USER + " "
+        + "FROM " + DM_TABLE + " " + "WHERE " + KEY_USER + " LIKE ?",
         new String[] { likeFilter, likeFilter });    
   }
   
