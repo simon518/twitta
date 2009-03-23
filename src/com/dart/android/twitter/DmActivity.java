@@ -20,11 +20,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.ArrayAdapter;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
@@ -39,6 +41,7 @@ public class DmActivity extends BaseActivity {
   private ListView mTweetList;
   private Adapter mAdapter;
 
+  private EditText mToEdit;    
   private TweetEdit mTweetEdit;  
   private ImageButton mSendButton;
 
@@ -55,9 +58,11 @@ public class DmActivity extends BaseActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
   
-    setContentView(R.layout.main);
+    setContentView(R.layout.dm);
     
     mTweetList = (ListView) findViewById(R.id.tweet_list);
+    
+    mToEdit = (EditText) findViewById(R.id.to_edit);
     
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
         (TextView) findViewById(R.id.chars_text));

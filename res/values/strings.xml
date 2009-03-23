@@ -14,6 +14,8 @@
     <string name="about">About</string>
     <string name="replies">\@Replies</string>
     <string name="dm">DM</string>
+
+    <string name="send_dm">Select recipient</string>
            
     <string name="pref_check_updates_title">Enable notifications?</string>
     <string name="pref_check_updates_summary">Check for new tweets when application is not running</string>
