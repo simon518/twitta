@@ -75,7 +75,7 @@ public class DmActivity extends BaseActivity {
         (TextView) findViewById(R.id.chars_text));
         
     
-    mTweetEdit.setOnKeyListener(tweetEnterHandler);
+    mTweetEdit.setOnKeyListener(editEnterHandler);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
@@ -152,7 +152,6 @@ public class DmActivity extends BaseActivity {
       // See the SendTask code for more details.
       mSendTask.cancel(true);
     }
-
     if (mRetrieveTask != null
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
@@ -631,7 +630,7 @@ public class DmActivity extends BaseActivity {
     }
   }
   
-  private View.OnKeyListener tweetEnterHandler = new View.OnKeyListener() {
+  private View.OnKeyListener editEnterHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
       if (keyCode == KeyEvent.KEYCODE_ENTER
           || keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
