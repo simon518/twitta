@@ -14,13 +14,13 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
@@ -52,6 +52,7 @@ public class DmActivity extends BaseActivity {
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
   private UserTask<Integer, Void, TaskResult> mDeleteTask;
+  private UserTask<Void, Void, TaskResult> mSendTask;
 
   // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
@@ -73,16 +74,15 @@ public class DmActivity extends BaseActivity {
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
         (TextView) findViewById(R.id.chars_text));
         
-    /*
+    
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
-    */
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     mSendButton = (ImageButton) findViewById(R.id.send_button);
     mSendButton.setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
-        // doSend();
+        doSend();
       }
     });
 
@@ -130,9 +130,9 @@ public class DmActivity extends BaseActivity {
     if (mRetrieveTask != null
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
-//    } else if (mSendTask != null
-//        && mSendTask.getStatus() == UserTask.Status.RUNNING) {
-//      outState.putBoolean(SIS_RUNNING_KEY, true);
+    } else if (mSendTask != null
+        && mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      outState.putBoolean(SIS_RUNNING_KEY, true);
     }
   }
 
@@ -147,11 +147,11 @@ public class DmActivity extends BaseActivity {
   protected void onDestroy() {
     Log.i(TAG, "onDestroy.");
 
-//    if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
-//      // Doesn't really cancel execution (we let it continue running).
-//      // See the SendTask code for more details.
-//      mSendTask.cancel(true);
-//    }
+    if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      // Doesn't really cancel execution (we let it continue running).
+      // See the SendTask code for more details.
+      mSendTask.cancel(true);
+    }
 
     if (mRetrieveTask != null
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
@@ -186,17 +186,32 @@ public class DmActivity extends BaseActivity {
   }
 
   private void enableEntry() {
+    mToEdit.setEnabled(true);
     mTweetEdit.setEnabled(true);
     mSendButton.setEnabled(true);
   }
 
   private void disableEntry() {
+    mToEdit.setEnabled(false);
     mTweetEdit.setEnabled(false);
     mSendButton.setEnabled(false);
   }
   
   private enum TaskResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
+  }
+  
+  private void doSend() {
+    if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already sending.");
+    } else {
+      String to = mToEdit.getText().toString();
+      String status = mTweetEdit.getText().toString();
+
+      if (!Utils.isEmpty(status) && !Utils.isEmpty(to)) {
+        mSendTask = new SendTask().execute();
+      }
+    }
   }
   
   private void doRetrieve() {
@@ -373,6 +388,71 @@ public class DmActivity extends BaseActivity {
 
   }
   
+  private class SendTask extends UserTask<Void, Void, TaskResult> {
+    @Override
+    public void onPreExecute() {
+      disableEntry();
+      updateProgress("Sending DM...");
+    }
+
+    @Override
+    public TaskResult doInBackground(Void... params) {
+      try {
+        String user = mToEdit.getText().toString();
+        String text = mTweetEdit.getText().toString();
+        
+        JSONObject jsonObject = mApi.sendDirectMessage(user, text);
+        Dm dm = Dm.create(jsonObject);
+        
+        if (!Utils.isEmpty(dm.profileImageUrl)
+            && !mImageManager.contains(dm.profileImageUrl)) {
+          // Fetch image to cache.
+          try {
+            mImageManager.put(dm.profileImageUrl);
+          } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+          }
+        }
+                
+        mDb.createDm(dm, false);
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return TaskResult.AUTH_ERROR;
+      } catch (JSONException e) {
+        Log.w(TAG, "Could not parse JSON after sending update.");
+        return TaskResult.IO_ERROR;
+      }
+      
+      return TaskResult.OK;
+    }
+
+    @Override
+    public void onPostExecute(TaskResult result) {
+      if (isCancelled()) {
+        // Canceled doesn't really mean "canceled" in this task.
+        // We want the request to complete, but don't want to update the
+        // activity (it's probably dead).
+        return;
+      }
+
+      if (result == TaskResult.AUTH_ERROR) {
+        onAuthFailure();
+      } else if (result == TaskResult.OK) {
+        mToEdit.setText("");
+        mTweetEdit.setText("");
+        updateProgress("");
+        enableEntry();
+        update();
+      } else if (result == TaskResult.IO_ERROR) {
+        updateProgress("Unable to send DM");
+        enableEntry();
+      }
+    }
+  }
+  
   private class FriendsAdapter extends CursorAdapter {
 
     public FriendsAdapter(Context context, Cursor cursor) {
@@ -416,6 +496,11 @@ public class DmActivity extends BaseActivity {
       
       return mDb.getRecentFriends(filter);
     }
+    
+    @Override 
+    public String convertToString(Cursor cursor) { 
+      return cursor.getString(mUserTextColumn); 
+    } 
     
     public void refresh() {
       getCursor().requery();
@@ -546,5 +631,17 @@ public class DmActivity extends BaseActivity {
     }
   }
   
-
+  private View.OnKeyListener tweetEnterHandler = new View.OnKeyListener() {
+    public boolean onKey(View v, int keyCode, KeyEvent event) {
+      if (keyCode == KeyEvent.KEYCODE_ENTER
+          || keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+        if (event.getAction() == KeyEvent.ACTION_UP) {
+          doSend();
+        }
+        return true;
+      }
+      return false;
+    }
+  };
+  
 }

@@ -60,6 +60,8 @@ public class TwitterApi {
     "http://twitter.com/direct_messages.json";
   private static final String DIRECT_MESSAGES_DESTROY_URL =
     "http://twitter.com/direct_messages/destroy/%d.json";
+  private static final String DIRECT_MESSAGES_NEW_URL =
+    "http://twitter.com/direct_messages/new.json";
 
   private static final String TWITTER_HOST = "twitter.com";
 
@@ -151,6 +153,7 @@ public class TwitterApi {
     if (statusCode == 401) {
       throw new AuthException();      
     } else if (statusCode != 200) {
+      Log.i(TAG, Utils.stringifyStream(response.getEntity().getContent()));
       throw new IOException("Non OK response code: " + statusCode);
     }
     
@@ -251,7 +254,31 @@ public class TwitterApi {
 
     return json;
   }  
+
+  public JSONObject sendDirectMessage(String user, String text)
+      throws IOException, AuthException {
+    Log.i(TAG, "Sending dm.");
     
+    ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
+    params.add(new BasicNameValuePair("user", user));    
+    params.add(new BasicNameValuePair("text", text));
+    
+    InputStream data = requestData(DIRECT_MESSAGES_NEW_URL,
+        METHOD_POST, params);
+    JSONObject json = null;
+    
+    try {
+      json = new JSONObject(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {      
+      data.close();
+    }
+        
+    return json;
+  }  
+  
   public JSONObject update(String status) throws IOException, AuthException {
     Log.i(TAG, "Updating status.");
     

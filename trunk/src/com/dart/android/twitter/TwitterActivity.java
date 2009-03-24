@@ -63,7 +63,7 @@ public class TwitterActivity extends BaseActivity {
 
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
-  private UserTask<Void, String, SendResult> mSendTask;
+  private UserTask<Void, Void, SendResult> mSendTask;
 
   // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
@@ -348,7 +348,7 @@ public class TwitterActivity extends BaseActivity {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
 
-  private class SendTask extends UserTask<Void, String, SendResult> {
+  private class SendTask extends UserTask<Void, Void, SendResult> {
     @Override
     public void onPreExecute() {
       onSendBegin();
