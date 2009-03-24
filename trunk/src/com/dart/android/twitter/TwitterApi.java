@@ -153,7 +153,7 @@ public class TwitterApi {
     if (statusCode == 401) {
       throw new AuthException();      
     } else if (statusCode != 200) {
-      Log.i(TAG, Utils.stringifyStream(response.getEntity().getContent()));
+      Log.e(TAG, Utils.stringifyStream(response.getEntity().getContent()));
       throw new IOException("Non OK response code: " + statusCode);
     }
     
