@@ -185,13 +185,15 @@ public class TwitterActivity extends BaseActivity {
 
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
-
+  private static final int CONTEXT_DM_ID = 2;
+  
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v,
       ContextMenuInfo menuInfo) {
     super.onCreateContextMenu(menu, v, menuInfo);
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
+    menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);    
   }
 
   @Override
@@ -222,7 +224,12 @@ public class TwitterActivity extends BaseActivity {
             cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT));
         mTweetEdit.setTextAndFocus(retweet);
   
-        return true;        
+        return true;
+      case CONTEXT_DM_ID:
+        String user = cursor.getString(
+            cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
+        DmActivity.show(this, user);        
+        return true;                
       default:
         return super.onContextItemSelected(item);
     }
