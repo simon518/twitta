@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -57,6 +58,14 @@ public class DmActivity extends BaseActivity {
   // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
   
+  private static final String EXTRA_USER = "user";
+  
+  public static void show(Context context, String user) {
+    Intent intent = new Intent(context, DmActivity.class);
+    intent.putExtra(EXTRA_USER, user);    
+    context.startActivity(intent);            
+  }
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -73,8 +82,7 @@ public class DmActivity extends BaseActivity {
     
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
         (TextView) findViewById(R.id.chars_text));
-        
-    
+            
     mTweetEdit.setOnKeyListener(editEnterHandler);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
@@ -116,6 +124,16 @@ public class DmActivity extends BaseActivity {
       doRetrieve();      
     }
     
+    Bundle extras = getIntent().getExtras();
+    
+    if (extras != null) {
+      String to = extras.getString(EXTRA_USER);
+      if (!Utils.isEmpty(to)) {
+        mToEdit.setText(to);
+        mToEdit.requestFocus();
+      }
+    }
+        
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);    
@@ -242,6 +260,8 @@ public class DmActivity extends BaseActivity {
     public TaskResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
+      ArrayList<Dm> dms = new ArrayList<Dm>();
+      
       try {
         jsonArray = mApi.getDirectMessages();
       } catch (IOException e) {
@@ -251,8 +271,6 @@ public class DmActivity extends BaseActivity {
         Log.i(TAG, "Invalid authorization.");
         return TaskResult.AUTH_ERROR;
       }
-
-      ArrayList<Dm> dms = new ArrayList<Dm>();
 
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
@@ -284,7 +302,48 @@ public class DmActivity extends BaseActivity {
           }
         }
       }
+      
+      try {
+        jsonArray = mApi.getDirectMessagesSent();
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return TaskResult.AUTH_ERROR;
+      }
 
+      for (int i = 0; i < jsonArray.length(); ++i) {
+        if (isCancelled()) {
+          return TaskResult.CANCELLED;
+        }
+
+        Dm dm;
+
+        try {
+          JSONObject jsonObject = jsonArray.getJSONObject(i);
+          dm = Dm.create(jsonObject);
+          dms.add(dm);
+        } catch (JSONException e) {
+          Log.e(TAG, e.getMessage(), e);
+          return TaskResult.IO_ERROR;
+        }
+
+        if (isCancelled()) {
+          return TaskResult.CANCELLED;
+        }
+
+        if (!Utils.isEmpty(dm.profileImageUrl)
+            && !mImageManager.contains(dm.profileImageUrl)) {
+          // Fetch image to cache.
+          try {
+            mImageManager.put(dm.profileImageUrl);
+          } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+          }
+        }
+      }
+      
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }

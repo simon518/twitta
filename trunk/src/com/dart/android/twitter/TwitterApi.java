@@ -58,6 +58,8 @@ public class TwitterApi {
     "http://twitter.com/statuses/friends_timeline.json";
   private static final String DIRECT_MESSAGES_URL =
     "http://twitter.com/direct_messages.json";
+  private static final String DIRECT_MESSAGES_SENT_URL =
+    "http://twitter.com/direct_messages/sent.json";
   private static final String DIRECT_MESSAGES_DESTROY_URL =
     "http://twitter.com/direct_messages/destroy/%d.json";
   private static final String DIRECT_MESSAGES_NEW_URL =
@@ -234,6 +236,24 @@ public class TwitterApi {
     return json;
   }  
 
+  public JSONArray getDirectMessagesSent() throws IOException, AuthException {
+    Log.i(TAG, "Requesting sent direct messages.");
+
+    InputStream data = requestData(DIRECT_MESSAGES_SENT_URL, METHOD_GET, null);
+    JSONArray json = null;
+
+    try {
+      json = new JSONArray(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
+    return json;
+  }  
+  
   public JSONObject destroyDirectMessage(int id) throws
       IOException, AuthException {
     Log.i(TAG, "Deleting direct message: " + id);
