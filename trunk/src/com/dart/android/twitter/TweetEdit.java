@@ -68,5 +68,9 @@ public class TweetEdit {
   public void setOnKeyListener(OnKeyListener listener) {
     mEditText.setOnKeyListener(listener);    
   }
+
+  public void requestFocus() {
+    mEditText.requestFocus();
+  }
     
 }
