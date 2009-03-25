@@ -35,7 +35,7 @@ import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
 public class DmActivity extends BaseActivity {
-  
+
   private static final String TAG = "DmActivity";
 
   // Views.
@@ -44,8 +44,8 @@ public class DmActivity extends BaseActivity {
   // Adapter for To: recipient autocomplete.
   private FriendsAdapter mFriendsAdapter;
 
-  private AutoCompleteTextView mToEdit;    
-  private TweetEdit mTweetEdit;  
+  private AutoCompleteTextView mToEdit;
+  private TweetEdit mTweetEdit;
   private ImageButton mSendButton;
 
   private TextView mProgressText;
@@ -55,34 +55,34 @@ public class DmActivity extends BaseActivity {
   private UserTask<Integer, Void, TaskResult> mDeleteTask;
   private UserTask<Void, Void, TaskResult> mSendTask;
 
-  // Refresh data at startup if last refresh was this long ago or greater.   
+  // Refresh data at startup if last refresh was this long ago or greater.
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
-  
+
   private static final String EXTRA_USER = "user";
-  
+
   public static void show(Context context, String user) {
     Intent intent = new Intent(context, DmActivity.class);
-    intent.putExtra(EXTRA_USER, user);    
-    context.startActivity(intent);            
+    intent.putExtra(EXTRA_USER, user);
+    context.startActivity(intent);
   }
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
-  
+
     setContentView(R.layout.dm);
-    
+
     mTweetList = (ListView) findViewById(R.id.tweet_list);
-    
+
     mToEdit = (AutoCompleteTextView) findViewById(R.id.to_edit);
     Cursor cursor = mDb.getRecentFriends("");
-    startManagingCursor(cursor);    
+    startManagingCursor(cursor);
     mFriendsAdapter = new FriendsAdapter(this, cursor);
     mToEdit.setAdapter(mFriendsAdapter);
-    
+
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
         (TextView) findViewById(R.id.chars_text));
-            
+
     mTweetEdit.setOnKeyListener(editEnterHandler);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
@@ -95,19 +95,19 @@ public class DmActivity extends BaseActivity {
     });
 
     // Mark all as read.
-    mDb.markAllDmsRead();     
-    
+    mDb.markAllDmsRead();
+
     setupAdapter();
-        
+
     boolean shouldRetrieve = false;
 
     long lastRefreshTime = mPreferences.getLong(
         Preferences.LAST_DM_REFRESH_KEY, 0);
     long nowTime = Utils.getNowTime();
-    
+
     long diff = nowTime - lastRefreshTime;
     Log.i(TAG, "Last refresh was " + diff + " ms ago.");
-    
+
     if (diff > REFRESH_THRESHOLD) {
       shouldRetrieve = true;
     } else if (savedInstanceState != null
@@ -119,13 +119,13 @@ public class DmActivity extends BaseActivity {
       Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
       shouldRetrieve = true;
     }
-    
+
     if (shouldRetrieve) {
-      doRetrieve();      
+      doRetrieve();
     }
-    
+
     Bundle extras = getIntent().getExtras();
-    
+
     if (extras != null) {
       String to = extras.getString(EXTRA_USER);
       if (!Utils.isEmpty(to)) {
@@ -133,12 +133,12 @@ public class DmActivity extends BaseActivity {
         mTweetEdit.requestFocus();
       }
     }
-        
+
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
-    mTweetList.setItemsCanFocus(true);    
+    mTweetList.setItemsCanFocus(true);
   }
-  
+
   private static final String SIS_RUNNING_KEY = "running";
 
   @Override
@@ -160,7 +160,7 @@ public class DmActivity extends BaseActivity {
 
     mTweetEdit.updateCharsRemain();
   }
-  
+
   @Override
   protected void onDestroy() {
     Log.i(TAG, "onDestroy.");
@@ -187,7 +187,7 @@ public class DmActivity extends BaseActivity {
   private void updateProgress(String progress) {
     mProgressText.setText(progress);
   }
-    
+
   private void setupAdapter() {
     Cursor cursor = mDb.fetchAllDms();
     startManagingCursor(cursor);
@@ -213,11 +213,11 @@ public class DmActivity extends BaseActivity {
     mTweetEdit.setEnabled(false);
     mSendButton.setEnabled(false);
   }
-  
+
   private enum TaskResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
-  
+
   private void doSend() {
     if (mSendTask != null && mSendTask.getStatus() == UserTask.Status.RUNNING) {
       Log.w(TAG, "Already sending.");
@@ -230,7 +230,7 @@ public class DmActivity extends BaseActivity {
       }
     }
   }
-  
+
   private void doRetrieve() {
     Log.i(TAG, "Attempting retrieve.");
 
@@ -241,7 +241,7 @@ public class DmActivity extends BaseActivity {
       mRetrieveTask = new RetrieveTask().execute();
     }
   }
-  
+
   private void onRetrieveBegin() {
     updateProgress("Refreshing...");
   }
@@ -249,7 +249,7 @@ public class DmActivity extends BaseActivity {
   private void onAuthFailure() {
     logout();
   }
-  
+
   private class RetrieveTask extends UserTask<Void, Void, TaskResult> {
     @Override
     public void onPreExecute() {
@@ -261,7 +261,7 @@ public class DmActivity extends BaseActivity {
       JSONArray jsonArray;
 
       ArrayList<Dm> dms = new ArrayList<Dm>();
-      
+
       try {
         jsonArray = mApi.getDirectMessages();
       } catch (IOException e) {
@@ -302,11 +302,11 @@ public class DmActivity extends BaseActivity {
           }
         }
       }
-      
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
-      
+
       try {
         jsonArray = mApi.getDirectMessagesSent();
       } catch (IOException e) {
@@ -347,7 +347,7 @@ public class DmActivity extends BaseActivity {
           }
         }
       }
-      
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
@@ -368,7 +368,7 @@ public class DmActivity extends BaseActivity {
       } else if (result == TaskResult.OK) {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_DM_REFRESH_KEY, Utils.getNowTime());
-        editor.commit();                
+        editor.commit();
         update();
       } else {
         // Do nothing.
@@ -382,39 +382,38 @@ public class DmActivity extends BaseActivity {
 
     public Adapter(Context context, Cursor cursor) {
       super(context, cursor);
-      
+
       mInflater = LayoutInflater.from(context);
-      
-      mUserTextColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+
+      mUserTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
       mTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT);
       mProfileImageUrlColumn = cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
       mCreatedAtColumn = cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
       mIsSentColumn = cursor
-      .getColumnIndexOrThrow(TwitterDbAdapter.KEY_IS_SENT);            
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_IS_SENT);
     }
 
     private LayoutInflater mInflater;
-    
-    private int mUserTextColumn; 
+
+    private int mUserTextColumn;
     private int mTextColumn;
     private int mProfileImageUrlColumn;
-    private int mIsSentColumn;    
+    private int mIsSentColumn;
     private int mCreatedAtColumn;
-    
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
       View view = mInflater.inflate(R.layout.tweet, parent, false);
-      
-      ViewHolder holder = new ViewHolder();      
+
+      ViewHolder holder = new ViewHolder();
       holder.userText = (TextView) view.findViewById(R.id.tweet_user_text);
       holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
       holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
-      holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);      
+      holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       view.setTag(holder);
-      
+
       return view;
     }
 
@@ -422,22 +421,22 @@ public class DmActivity extends BaseActivity {
       public TextView userText;
       public TextView tweetText;
       public ImageView profileImage;
-      public TextView metaText;      
+      public TextView metaText;
     }
-    
+
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
       ViewHolder holder = (ViewHolder) view.getTag();
 
       int isSent = cursor.getInt(mIsSentColumn);
       String user = cursor.getString(mUserTextColumn);
-      
+
       if (isSent == 0) {
-        holder.userText.setText("from " + user);                
+        holder.userText.setText("from " + user);
       } else {
-        holder.userText.setText("to " + user);        
+        holder.userText.setText("to " + user);
       }
-            
+
       holder.tweetText.setText(cursor.getString(mTextColumn));
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
@@ -447,9 +446,9 @@ public class DmActivity extends BaseActivity {
       }
 
       try {
-        holder.metaText.setText(Utils.getRelativeDate(
-            TwitterDbAdapter.DB_DATE_FORMATTER.parse(
-                cursor.getString(mCreatedAtColumn))));
+        holder.metaText.setText(Utils
+            .getRelativeDate(TwitterDbAdapter.DB_DATE_FORMATTER.parse(cursor
+                .getString(mCreatedAtColumn))));
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
@@ -460,7 +459,7 @@ public class DmActivity extends BaseActivity {
     }
 
   }
-  
+
   private class SendTask extends UserTask<Void, Void, TaskResult> {
     @Override
     public void onPreExecute() {
@@ -473,10 +472,10 @@ public class DmActivity extends BaseActivity {
       try {
         String user = mToEdit.getText().toString();
         String text = mTweetEdit.getText().toString();
-        
+
         JSONObject jsonObject = mApi.sendDirectMessage(user, text);
         Dm dm = Dm.create(jsonObject, true);
-        
+
         if (!Utils.isEmpty(dm.profileImageUrl)
             && !mImageManager.contains(dm.profileImageUrl)) {
           // Fetch image to cache.
@@ -486,7 +485,7 @@ public class DmActivity extends BaseActivity {
             Log.e(TAG, e.getMessage(), e);
           }
         }
-                
+
         mDb.createDm(dm, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
@@ -498,7 +497,7 @@ public class DmActivity extends BaseActivity {
         Log.w(TAG, "Could not parse JSON after sending update.");
         return TaskResult.IO_ERROR;
       }
-      
+
       return TaskResult.OK;
     }
 
@@ -525,37 +524,36 @@ public class DmActivity extends BaseActivity {
       }
     }
   }
-  
+
   private class FriendsAdapter extends CursorAdapter {
 
     public FriendsAdapter(Context context, Cursor cursor) {
       super(context, cursor);
-      
+
       mInflater = LayoutInflater.from(context);
-      
-      mUserTextColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+
+      mUserTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
     }
 
     private LayoutInflater mInflater;
-    
-    private int mUserTextColumn; 
-    
+
+    private int mUserTextColumn;
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
       View view = mInflater.inflate(R.layout.dropdown_item, parent, false);
-      
-      ViewHolder holder = new ViewHolder();      
+
+      ViewHolder holder = new ViewHolder();
       holder.userText = (TextView) view.findViewById(android.R.id.text1);
       view.setTag(holder);
-      
+
       return view;
     }
 
     class ViewHolder {
       public TextView userText;
     }
-    
+
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
       ViewHolder holder = (ViewHolder) view.getTag();
@@ -566,23 +564,23 @@ public class DmActivity extends BaseActivity {
     @Override
     public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
       String filter = constraint == null ? "" : constraint.toString();
-      
+
       return mDb.getRecentFriends(filter);
     }
-    
-    @Override 
-    public String convertToString(Cursor cursor) { 
-      return cursor.getString(mUserTextColumn); 
-    } 
-    
+
+    @Override
+    public String convertToString(Cursor cursor) {
+      return cursor.getString(mUserTextColumn);
+    }
+
     public void refresh() {
       getCursor().requery();
     }
 
   }
-  
+
   // Menu.
-  
+
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
@@ -626,24 +624,24 @@ public class DmActivity extends BaseActivity {
     }
 
     switch (item.getItemId()) {
-      case CONTEXT_REPLY_ID:
-        String user = cursor.getString(
-            cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));        
-        mToEdit.setText(user);
-        mTweetEdit.requestFocus();
-        
-        return true;
-      case CONTEXT_DELETE_ID:
-        int idIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_ID);
-        int id = cursor.getInt(idIndex);
-        doDestroy(id);
-  
-        return true;        
-      default:
-        return super.onContextItemSelected(item);
+    case CONTEXT_REPLY_ID:
+      String user = cursor.getString(cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
+      mToEdit.setText(user);
+      mTweetEdit.requestFocus();
+
+      return true;
+    case CONTEXT_DELETE_ID:
+      int idIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_ID);
+      int id = cursor.getInt(idIndex);
+      doDestroy(id);
+
+      return true;
+    default:
+      return super.onContextItemSelected(item);
     }
   }
-  
+
   private void doDestroy(int id) {
     Log.i(TAG, "Attempting delete.");
 
@@ -654,7 +652,7 @@ public class DmActivity extends BaseActivity {
       mDeleteTask = new DeleteTask().execute(new Integer[] { id });
     }
   }
-  
+
   private class DeleteTask extends UserTask<Integer, Void, TaskResult> {
     @Override
     public void onPreExecute() {
@@ -664,11 +662,11 @@ public class DmActivity extends BaseActivity {
     @Override
     public TaskResult doInBackground(Integer... params) {
       Integer id = (Integer) params[0];
-      
+
       try {
         JSONObject json = mApi.destroyDirectMessage(id);
         Dm.create(json, false);
-        mDb.deleteDm(id);        
+        mDb.deleteDm(id);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -679,7 +677,7 @@ public class DmActivity extends BaseActivity {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
       }
-                  
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
@@ -700,7 +698,7 @@ public class DmActivity extends BaseActivity {
       updateProgress("");
     }
   }
-  
+
   private View.OnKeyListener editEnterHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
       if (keyCode == KeyEvent.KEYCODE_ENTER
@@ -713,5 +711,5 @@ public class DmActivity extends BaseActivity {
       return false;
     }
   };
-  
+
 }

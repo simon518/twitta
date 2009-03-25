@@ -25,8 +25,8 @@ public class Dm {
     dm.createdAt = Utils.parseDateTime(jsonObject.getString("created_at"));
     dm.isSent = isSent;
 
-    JSONObject user = dm.isSent ? jsonObject.getJSONObject("recipient") :
-      jsonObject.getJSONObject("sender");
+    JSONObject user = dm.isSent ? jsonObject.getJSONObject("recipient")
+        : jsonObject.getJSONObject("sender");
     dm.screenName = Utils.decodeTwitterJson(user.getString("screen_name"));
     dm.profileImageUrl = user.getString("profile_image_url");
 

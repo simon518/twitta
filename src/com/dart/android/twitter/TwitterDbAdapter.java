@@ -67,7 +67,7 @@ public class TwitterDbAdapter {
   private static final String TWEET_TABLE = "tweets";
   private static final String DM_TABLE = "dms";  	
   
-  private static final int DATABASE_VERSION = 2;
+  private static final int DATABASE_VERSION = 4;
   
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
