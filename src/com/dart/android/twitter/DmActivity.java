@@ -130,7 +130,7 @@ public class DmActivity extends BaseActivity {
       String to = extras.getString(EXTRA_USER);
       if (!Utils.isEmpty(to)) {
         mToEdit.setText(to);
-        mToEdit.requestFocus();
+        mTweetEdit.requestFocus();
       }
     }
         
@@ -281,7 +281,7 @@ public class DmActivity extends BaseActivity {
 
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          dm = Dm.create(jsonObject);
+          dm = Dm.create(jsonObject, false);
           dms.add(dm);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
@@ -303,6 +303,10 @@ public class DmActivity extends BaseActivity {
         }
       }
       
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+      
       try {
         jsonArray = mApi.getDirectMessagesSent();
       } catch (IOException e) {
@@ -322,7 +326,7 @@ public class DmActivity extends BaseActivity {
 
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          dm = Dm.create(jsonObject);
+          dm = Dm.create(jsonObject, true);
           dms.add(dm);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
@@ -387,7 +391,9 @@ public class DmActivity extends BaseActivity {
       mProfileImageUrlColumn = cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
       mCreatedAtColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);      
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
+      mIsSentColumn = cursor
+      .getColumnIndexOrThrow(TwitterDbAdapter.KEY_IS_SENT);            
     }
 
     private LayoutInflater mInflater;
@@ -395,6 +401,7 @@ public class DmActivity extends BaseActivity {
     private int mUserTextColumn; 
     private int mTextColumn;
     private int mProfileImageUrlColumn;
+    private int mIsSentColumn;    
     private int mCreatedAtColumn;
     
     @Override
@@ -422,7 +429,15 @@ public class DmActivity extends BaseActivity {
     public void bindView(View view, Context context, Cursor cursor) {
       ViewHolder holder = (ViewHolder) view.getTag();
 
-      holder.userText.setText(cursor.getString(mUserTextColumn));
+      int isSent = cursor.getInt(mIsSentColumn);
+      String user = cursor.getString(mUserTextColumn);
+      
+      if (isSent == 0) {
+        holder.userText.setText("from " + user);                
+      } else {
+        holder.userText.setText("to " + user);        
+      }
+            
       holder.tweetText.setText(cursor.getString(mTextColumn));
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
@@ -460,7 +475,7 @@ public class DmActivity extends BaseActivity {
         String text = mTweetEdit.getText().toString();
         
         JSONObject jsonObject = mApi.sendDirectMessage(user, text);
-        Dm dm = Dm.create(jsonObject);
+        Dm dm = Dm.create(jsonObject, true);
         
         if (!Utils.isEmpty(dm.profileImageUrl)
             && !mImageManager.contains(dm.profileImageUrl)) {
@@ -612,14 +627,11 @@ public class DmActivity extends BaseActivity {
 
     switch (item.getItemId()) {
       case CONTEXT_REPLY_ID:
-        int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
-        // TODO: this isn't quite perfect. It leaves extra empty spaces if you
-        // perform the reply action again.
-        String replyTo = "@" + cursor.getString(userIndex);
-        String text = mTweetEdit.getText();
-        text = replyTo + " " + text.replace(replyTo, "");
-        mTweetEdit.setTextAndFocus(text);
-  
+        String user = cursor.getString(
+            cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));        
+        mToEdit.setText(user);
+        mTweetEdit.requestFocus();
+        
         return true;
       case CONTEXT_DELETE_ID:
         int idIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_ID);
@@ -655,7 +667,7 @@ public class DmActivity extends BaseActivity {
       
       try {
         JSONObject json = mApi.destroyDirectMessage(id);
-        Dm.create(json);
+        Dm.create(json, false);
         mDb.deleteDm(id);        
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
