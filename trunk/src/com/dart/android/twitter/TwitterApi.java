@@ -163,9 +163,8 @@ public class TwitterApi {
     } else if (statusCode == 403) {
       try {
         JSONObject json = new JSONObject(Utils.stringifyStream(response
-            .getEntity().getContent()));
-        // TODO: parse out error.
-        throw new ApiException(statusCode, "foo");
+            .getEntity().getContent()));        
+        throw new ApiException(statusCode, json.getString("error"));
       } catch (IllegalStateException e) {
         throw new IOException("Could not parse error response.");
       } catch (JSONException e) {
