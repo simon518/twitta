@@ -216,7 +216,7 @@ public class DmActivity extends BaseActivity {
   }
 
   private enum TaskResult {
-    OK, IO_ERROR, AUTH_ERROR, CANCELLED
+    OK, IO_ERROR, AUTH_ERROR, CANCELLED, NOT_FOLLOWED_ERROR
   }
 
   private void doSend() {
@@ -504,8 +504,9 @@ public class DmActivity extends BaseActivity {
         Log.w(TAG, "Could not parse JSON after sending update.");
         return TaskResult.IO_ERROR;
       } catch (ApiException e) {
-        // TODO: probably not followed.
-        return TaskResult.IO_ERROR;
+        Log.i(TAG, e.getMessage());
+        // TODO: check is this is actually the case.
+        return TaskResult.NOT_FOLLOWED_ERROR;
       }
 
       return TaskResult.OK;
@@ -528,8 +529,11 @@ public class DmActivity extends BaseActivity {
         updateProgress("");
         enableEntry();
         update();
+      } else if (result == TaskResult.NOT_FOLLOWED_ERROR) {
+        updateProgress("Unable to send. Is the person following you?");
+        enableEntry();        
       } else if (result == TaskResult.IO_ERROR) {
-        updateProgress("Unable to send DM");
+        updateProgress("Unable to send");
         enableEntry();
       }
     }
