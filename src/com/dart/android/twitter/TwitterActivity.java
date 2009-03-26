@@ -193,7 +193,8 @@ public class TwitterActivity extends BaseActivity {
     super.onCreateContextMenu(menu, v, menuInfo);
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
-    menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);    
+    // TODO: would result in too many "not following" errors.
+    // menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);    
   }
 
   @Override

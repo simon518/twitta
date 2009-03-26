@@ -31,6 +31,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
+import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
@@ -76,7 +77,7 @@ public class DmActivity extends BaseActivity {
 
     mToEdit = (AutoCompleteTextView) findViewById(R.id.to_edit);
     Cursor cursor = mDb.getRecentRecipients("");
-    startManagingCursor(cursor);
+    // startManagingCursor(cursor);
     mFriendsAdapter = new FriendsAdapter(this, cursor);
     mToEdit.setAdapter(mFriendsAdapter);
 
@@ -270,6 +271,9 @@ public class DmActivity extends BaseActivity {
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
         return TaskResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
       }
 
       for (int i = 0; i < jsonArray.length(); ++i) {
@@ -315,6 +319,9 @@ public class DmActivity extends BaseActivity {
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
         return TaskResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;        
       }
 
       for (int i = 0; i < jsonArray.length(); ++i) {
@@ -496,6 +503,9 @@ public class DmActivity extends BaseActivity {
       } catch (JSONException e) {
         Log.w(TAG, "Could not parse JSON after sending update.");
         return TaskResult.IO_ERROR;
+      } catch (ApiException e) {
+        // TODO: probably not followed.
+        return TaskResult.IO_ERROR;
       }
 
       return TaskResult.OK;
@@ -674,6 +684,9 @@ public class DmActivity extends BaseActivity {
         Log.i(TAG, "Invalid authorization.");
         return TaskResult.AUTH_ERROR;
       } catch (JSONException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (ApiException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
       }
