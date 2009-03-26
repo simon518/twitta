@@ -43,6 +43,7 @@ import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
@@ -245,6 +246,9 @@ public class TwitterService extends Service {
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
         return RetrieveResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return RetrieveResult.IO_ERROR;
       }
       
       for (int i = 0; i < jsonArray.length(); ++i) {

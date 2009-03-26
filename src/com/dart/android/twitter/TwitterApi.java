@@ -114,7 +114,7 @@ public class TwitterApi {
   // that calls finish on the HttpEntity and stream.
   private InputStream requestData(String url, String httpMethod,
       ArrayList<NameValuePair> params) throws IOException, AuthException,
-      ApiException {
+          ApiException {
     Log.i(TAG, "Sending " + httpMethod + " request to " + url);
 
     URI uri;

@@ -46,6 +46,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
+import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
@@ -389,6 +390,9 @@ public class TwitterActivity extends BaseActivity {
       } catch (JSONException e) {
         Log.w(TAG, "Could not parse JSON after sending update.");
         return SendResult.IO_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return SendResult.IO_ERROR;
       }
       
       return SendResult.OK;
@@ -471,6 +475,9 @@ public class TwitterActivity extends BaseActivity {
       } catch (AuthException e) {
         Log.i(TAG, "Invalid authorization.");
         return RetrieveResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return RetrieveResult.IO_ERROR;
       }
 
       ArrayList<Tweet> tweets = new ArrayList<Tweet>();
