@@ -50,37 +50,42 @@ import android.util.Log;
 public class TwitterApi {
   private static final String TAG = "TwitterApi";
 
-  private static final String UPDATE_URL =
-    "http://twitter.com/statuses/update.json";
-  private static final String VERIFY_CREDENTIALS_URL =
-    "https://twitter.com/account/verify_credentials.json";
-  private static final String FRIENDS_TIMELINE_URL =
-    "http://twitter.com/statuses/friends_timeline.json";
-  private static final String DIRECT_MESSAGES_URL =
-    "http://twitter.com/direct_messages.json";
-  private static final String DIRECT_MESSAGES_SENT_URL =
-    "http://twitter.com/direct_messages/sent.json";
-  private static final String DIRECT_MESSAGES_DESTROY_URL =
-    "http://twitter.com/direct_messages/destroy/%d.json";
-  private static final String DIRECT_MESSAGES_NEW_URL =
-    "http://twitter.com/direct_messages/new.json";
+  private static final String UPDATE_URL = "http://twitter.com/statuses/update.json";
+  private static final String VERIFY_CREDENTIALS_URL = "https://twitter.com/account/verify_credentials.json";
+  private static final String FRIENDS_TIMELINE_URL = "http://twitter.com/statuses/friends_timeline.json";
+  private static final String DIRECT_MESSAGES_URL = "http://twitter.com/direct_messages.json";
+  private static final String DIRECT_MESSAGES_SENT_URL = "http://twitter.com/direct_messages/sent.json";
+  private static final String DIRECT_MESSAGES_DESTROY_URL = "http://twitter.com/direct_messages/destroy/%d.json";
+  private static final String DIRECT_MESSAGES_NEW_URL = "http://twitter.com/direct_messages/new.json";
 
   private static final String TWITTER_HOST = "twitter.com";
 
   private DefaultHttpClient mClient;
   private AuthScope mAuthScope;
-  
+
   private static final String METHOD_GET = "GET";
   private static final String METHOD_POST = "POST";
   private static final String METHOD_DELETE = "DELETE";
 
   public class AuthException extends Exception {
-    private static final long serialVersionUID = 1703735789572778599L;    
+    private static final long serialVersionUID = 1703735789572778599L;
   }
-    
+
+  public class ApiException extends Exception {
+    public int mCode;
+
+    public ApiException(int code, String string) {
+      super(string);
+
+      mCode = code;
+    }
+
+    private static final long serialVersionUID = -3755642135241860532L;
+  }
+
   private static final int CONNECTION_TIMEOUT_MS = 30 * 1000;
   private static final int SOCKET_TIMEOUT_MS = 30 * 1000;
-  
+
   public TwitterApi() {
     prepareHttpClient();
   }
@@ -88,85 +93,97 @@ public class TwitterApi {
   public static boolean isValidCredentials(String username, String password) {
     return !Utils.isEmpty(username) && !Utils.isEmpty(password);
   }
-    
+
   private void prepareHttpClient() {
     mAuthScope = new AuthScope(TWITTER_HOST, AuthScope.ANY_PORT);
     mClient = new DefaultHttpClient();
-    BasicScheme basicScheme = new BasicScheme(); 
-    AuthSchemeRegistry authRegistry = new AuthSchemeRegistry(); 
-    authRegistry.register(basicScheme.getSchemeName(),
-        new BasicSchemeFactory()); 
-    mClient.setAuthSchemes(authRegistry); 
-    mClient.setCredentialsProvider(new BasicCredentialsProvider());     
+    BasicScheme basicScheme = new BasicScheme();
+    AuthSchemeRegistry authRegistry = new AuthSchemeRegistry();
+    authRegistry
+        .register(basicScheme.getSchemeName(), new BasicSchemeFactory());
+    mClient.setAuthSchemes(authRegistry);
+    mClient.setCredentialsProvider(new BasicCredentialsProvider());
   }
-    
+
   public void setCredentials(String username, String password) {
-    mClient.getCredentialsProvider().setCredentials( 
-        mAuthScope, 
-        new UsernamePasswordCredentials(username, password));         
+    mClient.getCredentialsProvider().setCredentials(mAuthScope,
+        new UsernamePasswordCredentials(username, password));
   }
-   
+
   // TODO: return a custom object that has a finish method
   // that calls finish on the HttpEntity and stream.
   private InputStream requestData(String url, String httpMethod,
-      ArrayList<NameValuePair> params) throws IOException, AuthException {
+      ArrayList<NameValuePair> params) throws IOException, AuthException,
+      ApiException {
     Log.i(TAG, "Sending " + httpMethod + " request to " + url);
-    
+
     URI uri;
-    
+
     try {
       uri = new URI(url);
     } catch (URISyntaxException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Invalid URL.");
     }
-    
+
     HttpUriRequest method;
 
     if (METHOD_POST.equals(httpMethod)) {
       HttpPost post = new HttpPost(uri);
       // See this:
-      // http://groups.google.com/group/twitter-development-talk/browse_thread/thread/e178b1d3d63d8e3b
+      // http://groups.google.com/group/twitter-development-talk/browse_thread/
+      // thread/e178b1d3d63d8e3b
       post.getParams().setBooleanParameter("http.protocol.expect-continue",
-          false);                 
+          false);
       post.setEntity(new UrlEncodedFormEntity(params, HTTP.UTF_8));
       method = post;
     } else if (METHOD_DELETE.equals(httpMethod)) {
-      method = new HttpDelete(uri);            
+      method = new HttpDelete(uri);
     } else {
-      method = new HttpGet(uri);            
+      method = new HttpGet(uri);
     }
-    
+
     HttpConnectionParams.setConnectionTimeout(method.getParams(),
         CONNECTION_TIMEOUT_MS);
-    HttpConnectionParams.setSoTimeout(method.getParams(), SOCKET_TIMEOUT_MS);    
-    
+    HttpConnectionParams.setSoTimeout(method.getParams(), SOCKET_TIMEOUT_MS);
+
     HttpResponse response;
-    
+
     try {
       response = mClient.execute(method);
     } catch (ClientProtocolException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("HTTP protocol error.");
-    }              
-    
+    }
+
     int statusCode = response.getStatusLine().getStatusCode();
-      
+
     if (statusCode == 401) {
-      throw new AuthException();      
+      throw new AuthException();
+    } else if (statusCode == 403) {
+      try {
+        JSONObject json = new JSONObject(Utils.stringifyStream(response
+            .getEntity().getContent()));
+        // TODO: parse out error.
+        throw new ApiException(statusCode, "foo");
+      } catch (IllegalStateException e) {
+        throw new IOException("Could not parse error response.");
+      } catch (JSONException e) {
+        throw new IOException("Could not parse error response.");
+      }
     } else if (statusCode != 200) {
       Log.e(TAG, Utils.stringifyStream(response.getEntity().getContent()));
       throw new IOException("Non OK response code: " + statusCode);
     }
-    
+
     return response.getEntity().getContent();
   }
-  
-  public void login(String username, String password) throws
-      IOException, AuthException {
+
+  public void login(String username, String password) throws IOException,
+      AuthException, ApiException {
     Log.i(TAG, "Login attempt for " + username);
     setCredentials(username, password);
-    InputStream data = requestData(VERIFY_CREDENTIALS_URL, METHOD_GET, null);    
+    InputStream data = requestData(VERIFY_CREDENTIALS_URL, METHOD_GET, null);
     data.close();
   }
 
@@ -174,53 +191,54 @@ public class TwitterApi {
     setCredentials("", "");
   }
 
-  public JSONArray getTimeline() throws IOException, AuthException {
+  public JSONArray getTimeline() throws IOException, AuthException,
+      ApiException {
     Log.i(TAG, "Requesting friends timeline.");
 
-    String url = FRIENDS_TIMELINE_URL + "?count=" +
-        URLEncoder.encode(50 + "", HTTP.UTF_8);
+    String url = FRIENDS_TIMELINE_URL + "?count="
+        + URLEncoder.encode(50 + "", HTTP.UTF_8);
 
-    InputStream data = requestData(url, METHOD_GET, null);        
+    InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
-    
+
     try {
       json = new JSONArray(Utils.stringifyStream(data));
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Could not parse JSON.");
-    } finally {      
+    } finally {
       data.close();
     }
-        
-    return json;
-  }  
 
-  public JSONArray getTimelineSinceId(int sinceId) throws
-      IOException, AuthException {
+    return json;
+  }
+
+  public JSONArray getTimelineSinceId(int sinceId) throws IOException,
+      AuthException, ApiException {
     Log.i(TAG, "Requesting friends timeline since id.");
 
-    String url = FRIENDS_TIMELINE_URL + "?since_id=" +
-        URLEncoder.encode(sinceId + "", HTTP.UTF_8);
-    
-    InputStream data = requestData(url, METHOD_GET, null);        
+    String url = FRIENDS_TIMELINE_URL + "?since_id="
+        + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+
+    InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
-    
+
     try {
       json = new JSONArray(Utils.stringifyStream(data));
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Could not parse JSON.");
-    } finally {      
+    } finally {
       data.close();
     }
-        
-    return json;
-  }  
 
-  public JSONArray getDirectMessages() throws IOException,
-      AuthException {
+    return json;
+  }
+
+  public JSONArray getDirectMessages() throws IOException, AuthException,
+      ApiException {
     Log.i(TAG, "Requesting direct messages.");
-    
+
     InputStream data = requestData(DIRECT_MESSAGES_URL, METHOD_GET, null);
     JSONArray json = null;
 
@@ -234,9 +252,10 @@ public class TwitterApi {
     }
 
     return json;
-  }  
+  }
 
-  public JSONArray getDirectMessagesSent() throws IOException, AuthException {
+  public JSONArray getDirectMessagesSent() throws IOException, AuthException,
+      ApiException {
     Log.i(TAG, "Requesting sent direct messages.");
 
     InputStream data = requestData(DIRECT_MESSAGES_SENT_URL, METHOD_GET, null);
@@ -252,14 +271,14 @@ public class TwitterApi {
     }
 
     return json;
-  }  
-  
-  public JSONObject destroyDirectMessage(int id) throws
-      IOException, AuthException {
+  }
+
+  public JSONObject destroyDirectMessage(int id) throws IOException,
+      AuthException, ApiException {
     Log.i(TAG, "Deleting direct message: " + id);
 
     String url = String.format(DIRECT_MESSAGES_DESTROY_URL, id);
-    
+
     InputStream data = requestData(url, METHOD_DELETE, null);
     JSONObject json = null;
 
@@ -273,52 +292,51 @@ public class TwitterApi {
     }
 
     return json;
-  }  
+  }
 
   public JSONObject sendDirectMessage(String user, String text)
-      throws IOException, AuthException {
+      throws IOException, AuthException, ApiException {
     Log.i(TAG, "Sending dm.");
-    
+
     ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-    params.add(new BasicNameValuePair("user", user));    
+    params.add(new BasicNameValuePair("user", user));
     params.add(new BasicNameValuePair("text", text));
-    
-    InputStream data = requestData(DIRECT_MESSAGES_NEW_URL,
-        METHOD_POST, params);
+
+    InputStream data = requestData(DIRECT_MESSAGES_NEW_URL, METHOD_POST, params);
     JSONObject json = null;
-    
+
     try {
       json = new JSONObject(Utils.stringifyStream(data));
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Could not parse JSON.");
-    } finally {      
+    } finally {
       data.close();
     }
-        
+
     return json;
-  }  
-  
-  public JSONObject update(String status) throws IOException, AuthException {
+  }
+
+  public JSONObject update(String status) throws IOException, AuthException, ApiException {
     Log.i(TAG, "Updating status.");
-    
+
     ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
-    params.add(new BasicNameValuePair("status", status));    
+    params.add(new BasicNameValuePair("status", status));
     params.add(new BasicNameValuePair("source", "Twitta"));
-    
+
     InputStream data = requestData(UPDATE_URL, METHOD_POST, params);
     JSONObject json = null;
-    
+
     try {
       json = new JSONObject(Utils.stringifyStream(data));
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Could not parse JSON.");
-    } finally {      
+    } finally {
       data.close();
     }
-        
+
     return json;
-  }  
-  
+  }
+
 }
