@@ -30,6 +30,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
@@ -226,6 +227,10 @@ public class LoginActivity extends Activity {
         return false;
       } catch (AuthException e) {
         publishProgress("Invalid username or password");
+        return false;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        publishProgress("Network or connection error");
         return false;
       }                
             
