@@ -17,6 +17,7 @@ import android.view.MenuItem;
 
 public class BaseActivity extends Activity {
   
+  @SuppressWarnings("unused")
   private static final String TAG = "BaseActivity";
 
   protected SharedPreferences mPreferences;    
