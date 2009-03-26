@@ -75,7 +75,7 @@ public class DmActivity extends BaseActivity {
     mTweetList = (ListView) findViewById(R.id.tweet_list);
 
     mToEdit = (AutoCompleteTextView) findViewById(R.id.to_edit);
-    Cursor cursor = mDb.getRecentFriends("");
+    Cursor cursor = mDb.getRecentRecipients("");
     startManagingCursor(cursor);
     mFriendsAdapter = new FriendsAdapter(this, cursor);
     mToEdit.setAdapter(mFriendsAdapter);
@@ -565,7 +565,7 @@ public class DmActivity extends BaseActivity {
     public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
       String filter = constraint == null ? "" : constraint.toString();
 
-      return mDb.getRecentFriends(filter);
+      return mDb.getRecentRecipients(filter);
     }
 
     @Override
