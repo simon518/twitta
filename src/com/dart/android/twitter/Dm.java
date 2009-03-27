@@ -1,20 +1,13 @@
 package com.dart.android.twitter;
 
-import java.util.Date;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Dm {
+public class Dm extends Message {
   @SuppressWarnings("unused")
   private static final String TAG = "Dm";
 
-  public String id;
-  public String screenName;
-  public String text;
-  public String profileImageUrl;
   public boolean isSent;
-  public Date createdAt;
 
   public static Dm create(JSONObject jsonObject, boolean isSent)
       throws JSONException {
