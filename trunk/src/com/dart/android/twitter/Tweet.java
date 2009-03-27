@@ -16,20 +16,13 @@
 
 package com.dart.android.twitter;
 
-import java.util.Date;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Tweet {
+public class Tweet extends Message {
   @SuppressWarnings("unused")
   private static final String TAG = "Tweet";
   
-  public String id;
-  public String screenName;
-  public String text;
-  public String profileImageUrl;
-  public Date createdAt;
   public String source;
   
   public static Tweet create(JSONObject jsonObject) throws JSONException {

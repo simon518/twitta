@@ -49,258 +49,230 @@ import com.google.android.photostream.UserTask;
 
 public class TwitterService extends Service {
   private static final String TAG = "TwitterService";
-  
+
   private TwitterApi mApi;
   private TwitterDbAdapter mDb;
-  private SharedPreferences mPreferences;  
-  
+  private SharedPreferences mPreferences;
+
   private NotificationManager mNotificationManager;
-  
-  private ArrayList<Tweet> mNewTweets;           
-  private ArrayList<Dm> mNewDms;           
-  
+
+  private ArrayList<Tweet> mNewTweets;
+  private ArrayList<Dm> mNewDms;
+
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
 
   private WakeLock mWakeLock;
-  
+
   @Override
   public IBinder onBind(Intent intent) {
     return null;
   }
-  
+
   @Override
   public void onCreate() {
     super.onCreate();
-        
-    PowerManager pm = (PowerManager)getSystemService(Context.POWER_SERVICE);
-    mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);    
+
+    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+    mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
     mWakeLock.acquire();
-    
+
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    
+
     if (!mPreferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
       Log.i(TAG, "Check update preference is false.");
-      stopSelf();      
+      stopSelf();
       return;
-    }        
-        
+    }
+
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-        
+
     if (!TwitterApi.isValidCredentials(username, password)) {
       Log.i(TAG, "No credentials.");
-      stopSelf();      
+      stopSelf();
       return;
-    }        
+    }
 
     mApi = new TwitterApi();
     mApi.setCredentials(username, password);
 
-    mNotificationManager =
-      (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-    
+    mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+
     mDb = new TwitterDbAdapter(this);
-    mDb.open();                
-    
-    mNewTweets = new ArrayList<Tweet>();           
-    mNewDms = new ArrayList<Dm>();           
-    
-    mRetrieveTask = new RetrieveTask().execute();            
+    mDb.open();
+
+    mNewTweets = new ArrayList<Tweet>();
+    mNewDms = new ArrayList<Dm>();
+
+    mRetrieveTask = new RetrieveTask().execute();
   }
 
   private static final int NOTIFICATION_ID = 0;
-  
+
   private void processNewTweets() {
     if (mNewTweets.size() <= 0) {
       return;
-    }    
+    }
 
     Log.i(TAG, mNewTweets.size() + " new tweets.");
-        
+
     int count = mDb.addNewTweetsAndCountUnread(mNewTweets);
-    
+
     if (count <= 0) {
       return;
     }
-    
+
     Tweet latestTweet = mNewTweets.get(0);
-           
-    Notification notification = new Notification(
-        android.R.drawable.stat_notify_chat,
-        latestTweet.text,
-        System.currentTimeMillis());
-    
+
     String title;
     String text;
-    
+
     if (count == 1) {
       title = latestTweet.screenName;
       text = latestTweet.text;
     } else {
       title = getString(R.string.new_twitter_updates);
       text = getString(R.string.x_new_tweets);
-      text = MessageFormat.format(text, count);      
+      text = MessageFormat.format(text, count);
     }
-    
-    PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-        new Intent(this, LoginActivity.class), 0);
-    
-    notification.setLatestEventInfo(this, title, text, contentIntent);
-    
-    notification.flags = 
-        Notification.FLAG_AUTO_CANCEL |
-        Notification.FLAG_ONLY_ALERT_ONCE |
-        Notification.FLAG_SHOW_LIGHTS;
-    
-    notification.ledARGB = 0xFF84E4FA; 
-    notification.ledOnMS = 5000; 
-    notification.ledOffMS = 5000;     
-    
+
+    PendingIntent intent = PendingIntent.getActivity(this, 0, new Intent(this,
+        LoginActivity.class), 0);
+
+    notify(intent, latestTweet.text, title, text);
+  }
+
+  private void notify(PendingIntent intent, String tickerText, String title,
+      String text) {
+    Notification notification = new Notification(
+        android.R.drawable.stat_notify_chat, tickerText, System
+            .currentTimeMillis());
+
+    notification.setLatestEventInfo(this, title, text, intent);
+
+    notification.flags = Notification.FLAG_AUTO_CANCEL
+        | Notification.FLAG_ONLY_ALERT_ONCE | Notification.FLAG_SHOW_LIGHTS;
+
+    notification.ledARGB = 0xFF84E4FA;
+    notification.ledOnMS = 5000;
+    notification.ledOffMS = 5000;
+
     String ringtoneUri = mPreferences.getString(Preferences.RINGTONE_KEY, null);
-    
+
     if (ringtoneUri == null) {
       notification.defaults |= Notification.DEFAULT_SOUND;
     } else {
       notification.sound = Uri.parse(ringtoneUri);
-    }    
-    
-    if (mPreferences.getBoolean(Preferences.VIBRATE_KEY, false)) {    
+    }
+
+    if (mPreferences.getBoolean(Preferences.VIBRATE_KEY, false)) {
       notification.defaults |= Notification.DEFAULT_VIBRATE;
     }
-    
-    mNotificationManager.notify(NOTIFICATION_ID, notification);       
+
+    mNotificationManager.notify(NOTIFICATION_ID, notification);
   }
 
   private void processNewDms() {
     if (mNewDms.size() <= 0) {
       return;
-    }    
+    }
 
     Log.i(TAG, mNewDms.size() + " new DMs.");
-        
+
     int count = mDb.addNewDmsAndCountUnread(mNewDms);
-    
+
     if (count <= 0) {
       return;
     }
-    
+
     Dm latest = mNewDms.get(0);
-           
-    Notification notification = new Notification(
-        android.R.drawable.stat_notify_chat,
-        latest.text,
-        System.currentTimeMillis());
-    
+
     String title;
     String text;
-    
+
     if (count == 1) {
       title = latest.screenName;
       text = latest.text;
     } else {
       title = getString(R.string.new_twitter_updates);
       text = getString(R.string.x_new_tweets);
-      text = MessageFormat.format(text, count);      
+      text = MessageFormat.format(text, count);
     }
-    
-    PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+
+    PendingIntent intent = PendingIntent.getActivity(this, 0,
         new Intent(this, LoginActivity.class), 0);
-    
-    notification.setLatestEventInfo(this, title, text, contentIntent);
-    
-    notification.flags = 
-        Notification.FLAG_AUTO_CANCEL |
-        Notification.FLAG_ONLY_ALERT_ONCE |
-        Notification.FLAG_SHOW_LIGHTS;
-    
-    notification.ledARGB = 0xFF84E4FA; 
-    notification.ledOnMS = 5000; 
-    notification.ledOffMS = 5000;     
-    
-    String ringtoneUri = mPreferences.getString(Preferences.RINGTONE_KEY, null);
-    
-    if (ringtoneUri == null) {
-      notification.defaults |= Notification.DEFAULT_SOUND;
-    } else {
-      notification.sound = Uri.parse(ringtoneUri);
-    }    
-    
-    if (mPreferences.getBoolean(Preferences.VIBRATE_KEY, false)) {    
-      notification.defaults |= Notification.DEFAULT_VIBRATE;
-    }
-    
-    mNotificationManager.notify(NOTIFICATION_ID, notification);       
+
+    notify(intent, latest.text, title, text);
   }
-  
+
   @Override
   public void onDestroy() {
     Log.i(TAG, "IM DYING!!!");
-    
-    if (mRetrieveTask != null &&
-        mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+
+    if (mRetrieveTask != null
+        && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
-    }    
-    
+    }
+
     if (mDb != null) {
       mDb.close();
     }
-    
+
     mWakeLock.release();
-        
+
     super.onDestroy();
   }
-          
-  static void schedule(Context context) {    
-    SharedPreferences preferences = 
-        PreferenceManager.getDefaultSharedPreferences(context);
-    
+
+  static void schedule(Context context) {
+    SharedPreferences preferences = PreferenceManager
+        .getDefaultSharedPreferences(context);
+
     if (!preferences.getBoolean(Preferences.CHECK_UPDATES_KEY, false)) {
       Log.i(TAG, "Check update preference is false.");
       return;
-    }        
-    
+    }
+
     String intervalPref = preferences.getString(
-        Preferences.CHECK_UPDATE_INTERVAL_KEY,
-        context.getString(
-            R.string.pref_check_updates_interval_default));    
+        Preferences.CHECK_UPDATE_INTERVAL_KEY, context
+            .getString(R.string.pref_check_updates_interval_default));
     int interval = Integer.parseInt(intervalPref);
-    
+
     Intent intent = new Intent(context, TwitterService.class);
     PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
 
     Calendar c = new GregorianCalendar();
     c.add(Calendar.MINUTE, interval);
-    
+
     DateFormat df = new SimpleDateFormat("h:mm a");
     Log.i(TAG, "Scheduling alarm at " + df.format(c.getTime()));
 
-    AlarmManager alarm =
-        (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+    AlarmManager alarm = (AlarmManager) context
+        .getSystemService(Context.ALARM_SERVICE);
     alarm.cancel(pending);
     alarm.set(AlarmManager.RTC_WAKEUP, c.getTimeInMillis(), pending);
   }
-  
+
   static void unschedule(Context context) {
     Intent intent = new Intent(context, TwitterService.class);
     PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
-    AlarmManager alarm =
-      (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-    Log.i(TAG, "Cancelling alarms.");    
+    AlarmManager alarm = (AlarmManager) context
+        .getSystemService(Context.ALARM_SERVICE);
+    Log.i(TAG, "Cancelling alarms.");
     alarm.cancel(pending);
   }
 
   private enum RetrieveResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
-  
+
   private class RetrieveTask extends UserTask<Void, Void, RetrieveResult> {
     @Override
     public RetrieveResult doInBackground(Void... params) {
-      int maxId = mDb.fetchMaxId();    
-      Log.i(TAG, "Max id is:" + maxId);      
-      
+      int maxId = mDb.fetchMaxId();
+      Log.i(TAG, "Max id is:" + maxId);
+
       JSONArray jsonArray;
-      
+
       try {
         jsonArray = mApi.getTimelineSinceId(maxId);
       } catch (IOException e) {
@@ -313,14 +285,14 @@ public class TwitterService extends Service {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
       }
-      
+
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
         }
-        
+
         Tweet tweet;
-        
+
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           tweet = Tweet.create(jsonObject);
@@ -328,17 +300,17 @@ public class TwitterService extends Service {
           Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;
         }
-        
+
         mNewTweets.add(tweet);
-        
-        if (isCancelled()) {
-          return RetrieveResult.CANCELLED;
-        }                  
-      }      
-      
-      maxId = mDb.fetchMaxDmId();    
-      Log.i(TAG, "Max DM id is:" + maxId);      
-      
+      }
+
+      if (isCancelled()) {
+        return RetrieveResult.CANCELLED;
+      }
+
+      maxId = mDb.fetchMaxDmId();
+      Log.i(TAG, "Max DM id is:" + maxId);
+
       try {
         jsonArray = mApi.getDmsSinceId(maxId);
       } catch (IOException e) {
@@ -351,14 +323,14 @@ public class TwitterService extends Service {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
       }
-      
+
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
         }
-        
+
         Dm dm;
-        
+
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           dm = Dm.create(jsonObject, true);
@@ -366,14 +338,14 @@ public class TwitterService extends Service {
           Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;
         }
-        
+
         mNewDms.add(dm);
-        
-        if (isCancelled()) {
-          return RetrieveResult.CANCELLED;
-        }                  
-      }      
-      
+      }
+
+      if (isCancelled()) {
+        return RetrieveResult.CANCELLED;
+      }
+
       return RetrieveResult.OK;
     }
 
@@ -386,9 +358,9 @@ public class TwitterService extends Service {
       } else if (result == RetrieveResult.IO_ERROR) {
         schedule(TwitterService.this);
       }
-      
-      stopSelf();      
+
+      stopSelf();
     }
   }
-  
+
 }
