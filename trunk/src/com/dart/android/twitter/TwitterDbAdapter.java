@@ -18,7 +18,6 @@ package com.dart.android.twitter;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -315,7 +314,7 @@ public class TwitterDbAdapter {
     return result;
   }
 
-  public int addNewDmsAndCountUnread(ArrayList<Dm> dms) {
+  public int addNewDmsAndCountUnread(List<Dm> dms) {
     int unreadCount = 0;
     
     try {
@@ -336,7 +335,7 @@ public class TwitterDbAdapter {
 
   private int fetchUnreadDmCount() {
     Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM dms " +
-        "WHERE is_unread = 1", null);
+        "WHERE is_unread = 1 AND is_sent = 0", null);
 
     int result = 0;
         
