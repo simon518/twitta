@@ -114,7 +114,7 @@ public class TwitterApi {
   // that calls finish on the HttpEntity and stream.
   private InputStream requestData(String url, String httpMethod,
       ArrayList<NameValuePair> params) throws IOException, AuthException,
-          ApiException {
+      ApiException {
     Log.i(TAG, "Sending " + httpMethod + " request to " + url);
 
     URI uri;
@@ -163,7 +163,7 @@ public class TwitterApi {
     } else if (statusCode == 403) {
       try {
         JSONObject json = new JSONObject(Utils.stringifyStream(response
-            .getEntity().getContent()));        
+            .getEntity().getContent()));
         throw new ApiException(statusCode, json.getString("error"));
       } catch (IllegalStateException e) {
         throw new IOException("Could not parse error response.");
@@ -316,7 +316,8 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONObject update(String status) throws IOException, AuthException, ApiException {
+  public JSONObject update(String status) throws IOException, AuthException,
+      ApiException {
     Log.i(TAG, "Updating status.");
 
     ArrayList<NameValuePair> params = new ArrayList<NameValuePair>();
@@ -328,6 +329,28 @@ public class TwitterApi {
 
     try {
       json = new JSONObject(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
+    return json;
+  }
+
+  public JSONArray getDmsSinceId(int sinceId) throws IOException,
+      AuthException, ApiException {
+    Log.i(TAG, "Requesting DMs since id.");
+
+    String url = DIRECT_MESSAGES_URL + "?since_id="
+        + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+
+    InputStream data = requestData(url, METHOD_GET, null);
+    JSONArray json = null;
+
+    try {
+      json = new JSONArray(Utils.stringifyStream(data));
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Could not parse JSON.");

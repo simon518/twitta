@@ -57,6 +57,7 @@ public class TwitterService extends Service {
   private NotificationManager mNotificationManager;
   
   private ArrayList<Tweet> mNewTweets;           
+  private ArrayList<Dm> mNewDms;           
   
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
 
@@ -102,6 +103,7 @@ public class TwitterService extends Service {
     mDb.open();                
     
     mNewTweets = new ArrayList<Tweet>();           
+    mNewDms = new ArrayList<Dm>();           
     
     mRetrieveTask = new RetrieveTask().execute();            
   }
@@ -134,6 +136,67 @@ public class TwitterService extends Service {
     if (count == 1) {
       title = latestTweet.screenName;
       text = latestTweet.text;
+    } else {
+      title = getString(R.string.new_twitter_updates);
+      text = getString(R.string.x_new_tweets);
+      text = MessageFormat.format(text, count);      
+    }
+    
+    PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+        new Intent(this, LoginActivity.class), 0);
+    
+    notification.setLatestEventInfo(this, title, text, contentIntent);
+    
+    notification.flags = 
+        Notification.FLAG_AUTO_CANCEL |
+        Notification.FLAG_ONLY_ALERT_ONCE |
+        Notification.FLAG_SHOW_LIGHTS;
+    
+    notification.ledARGB = 0xFF84E4FA; 
+    notification.ledOnMS = 5000; 
+    notification.ledOffMS = 5000;     
+    
+    String ringtoneUri = mPreferences.getString(Preferences.RINGTONE_KEY, null);
+    
+    if (ringtoneUri == null) {
+      notification.defaults |= Notification.DEFAULT_SOUND;
+    } else {
+      notification.sound = Uri.parse(ringtoneUri);
+    }    
+    
+    if (mPreferences.getBoolean(Preferences.VIBRATE_KEY, false)) {    
+      notification.defaults |= Notification.DEFAULT_VIBRATE;
+    }
+    
+    mNotificationManager.notify(NOTIFICATION_ID, notification);       
+  }
+
+  private void processNewDms() {
+    if (mNewDms.size() <= 0) {
+      return;
+    }    
+
+    Log.i(TAG, mNewDms.size() + " new DMs.");
+        
+    int count = mDb.addNewDmsAndCountUnread(mNewDms);
+    
+    if (count <= 0) {
+      return;
+    }
+    
+    Dm latest = mNewDms.get(0);
+           
+    Notification notification = new Notification(
+        android.R.drawable.stat_notify_chat,
+        latest.text,
+        System.currentTimeMillis());
+    
+    String title;
+    String text;
+    
+    if (count == 1) {
+      title = latest.screenName;
+      text = latest.text;
     } else {
       title = getString(R.string.new_twitter_updates);
       text = getString(R.string.x_new_tweets);
@@ -273,9 +336,43 @@ public class TwitterService extends Service {
         }                  
       }      
       
-      if (isCancelled()) {
-        return RetrieveResult.CANCELLED;
+      maxId = mDb.fetchMaxDmId();    
+      Log.i(TAG, "Max DM id is:" + maxId);      
+      
+      try {
+        jsonArray = mApi.getDmsSinceId(maxId);
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return RetrieveResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return RetrieveResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return RetrieveResult.IO_ERROR;
       }
+      
+      for (int i = 0; i < jsonArray.length(); ++i) {
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }
+        
+        Dm dm;
+        
+        try {
+          JSONObject jsonObject = jsonArray.getJSONObject(i);
+          dm = Dm.create(jsonObject, true);
+        } catch (JSONException e) {
+          Log.e(TAG, e.getMessage(), e);
+          return RetrieveResult.IO_ERROR;
+        }
+        
+        mNewDms.add(dm);
+        
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }                  
+      }      
       
       return RetrieveResult.OK;
     }
@@ -284,6 +381,7 @@ public class TwitterService extends Service {
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.OK) {
         processNewTweets();
+        processNewDms();
         schedule(TwitterService.this);
       } else if (result == RetrieveResult.IO_ERROR) {
         schedule(TwitterService.this);
