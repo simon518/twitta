@@ -18,6 +18,7 @@ package com.dart.android.twitter;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.content.ContentValues;
@@ -282,6 +283,59 @@ public class TwitterDbAdapter {
 
   public int fetchUnreadCount() {
     Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM tweets " +
+        "WHERE is_unread = 1", null);
+
+    int result = 0;
+        
+    if (mCursor == null) {
+      return result;
+    } 
+    
+    mCursor.moveToFirst();    
+    result = mCursor.getInt(0);
+    mCursor.close();
+    
+    return result;
+  }
+
+  public int fetchMaxDmId() {
+    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM dm",
+        null);
+
+    int result = 0;
+        
+    if (mCursor == null) {
+      return result;
+    } 
+    
+    mCursor.moveToFirst();    
+    result = mCursor.getInt(0);
+    mCursor.close();
+    
+    return result;
+  }
+
+  public int addNewDmsAndCountUnread(ArrayList<Dm> dms) {
+    int unreadCount = 0;
+    
+    try {
+      mDb.beginTransaction();
+      
+      for (Dm dm : dms) {
+        createDm(dm, true);
+      }
+      
+      unreadCount = fetchUnreadDmCount();      
+      mDb.setTransactionSuccessful();
+    } finally {      
+      mDb.endTransaction();
+    }
+    
+    return unreadCount;
+  }
+
+  private int fetchUnreadDmCount() {
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM dms " +
         "WHERE is_unread = 1", null);
 
     int result = 0;
