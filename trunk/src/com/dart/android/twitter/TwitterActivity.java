@@ -547,15 +547,13 @@ public class TwitterActivity extends BaseActivity {
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
-    super.onCreateOptionsMenu(menu);
-    
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
 
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
         
-    return true;
+    return super.onCreateOptionsMenu(menu);    
   }
 
   private static final String INTENT_MODE = "mode";  

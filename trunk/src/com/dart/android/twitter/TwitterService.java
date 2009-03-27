@@ -194,15 +194,18 @@ public class TwitterService extends Service {
       title = latest.screenName;
       text = latest.text;
     } else {
-      title = getString(R.string.new_twitter_updates);
-      text = getString(R.string.x_new_tweets);
+      title = getString(R.string.new_twitter_dms);
+      text = getString(R.string.x_new_dms);
       text = MessageFormat.format(text, count);
     }
 
-    PendingIntent intent = PendingIntent.getActivity(this, 0,
-        new Intent(this, LoginActivity.class), 0);
+    Intent intent = new Intent(this, LoginActivity.class);
+    intent.putExtra(LoginActivity.EXTRA_START_ACTIVITY,
+        LoginActivity.EXTRA_DM_ACTIVITY);
 
-    notify(intent, latest.text, title, text);
+    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+    notify(pendingIntent, latest.text, title, text);
   }
 
   @Override
@@ -239,7 +242,6 @@ public class TwitterService extends Service {
 
     Intent intent = new Intent(context, TwitterService.class);
     PendingIntent pending = PendingIntent.getService(context, 0, intent, 0);
-
     Calendar c = new GregorianCalendar();
     c.add(Calendar.MINUTE, interval);
 
@@ -333,7 +335,7 @@ public class TwitterService extends Service {
 
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          dm = Dm.create(jsonObject, true);
+          dm = Dm.create(jsonObject, false);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;

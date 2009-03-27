@@ -597,12 +597,10 @@ public class DmActivity extends BaseActivity {
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
-    super.onCreateOptionsMenu(menu);
-
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
 
-    return true;
+    return super.onCreateOptionsMenu(menu);
   }
 
   @Override
