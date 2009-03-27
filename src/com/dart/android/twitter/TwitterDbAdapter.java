@@ -279,7 +279,7 @@ public class TwitterDbAdapter {
 
   public int fetchMaxDmId() {
     Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID
-        + ") FROM dm WHERE is_sent = 0", null);
+        + ") FROM dms WHERE is_sent = 0", null);
 
     int result = 0;
 

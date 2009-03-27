@@ -16,7 +16,7 @@
     <string name="dm">DM</string>
 
     <string name="pref_check_updates_title">Enable notifications?</string>
-    <string name="pref_check_updates_summary">Check for new tweets when application is not running</string>
+    <string name="pref_check_updates_summary">Check for new tweets and DMs when application is not running</string>
 
     <string name="pref_check_updates_interval_title">Update check interval</string>
     <string name="pref_check_updates_interval_summary">Minutes between checks for new tweets</string>
@@ -26,7 +26,9 @@
     <string name="pref_check_updates_interval_default">60</string>
     
     <string name="new_twitter_updates">New Twitter updates</string>
-    <string name="x_new_tweets">{0} new tweets</string>    
+    <string name="x_new_tweets">{0} new tweets</string>
+    <string name="new_twitter_dms">New Twitter DMs</string>    
+    <string name="x_new_dms">{0} new DMs</string>    
     
     <string name="reply">Reply</string>
     <string name="retweet">Retweet</string>

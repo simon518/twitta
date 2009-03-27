@@ -36,60 +36,63 @@ import com.google.android.photostream.UserTask;
 
 public class LoginActivity extends Activity {
   private static final String TAG = "LoginActivity";
-  
+
   // Views.
   private EditText mUsernameEdit;
   private EditText mPasswordEdit;
-  
+
   // Displays progress of tasks.
   private TextView mProgressText;
-  
+
   private Button mSigninButton;
-  
+
   private View.OnKeyListener enterKeyHandler = new View.OnKeyListener() {
     public boolean onKey(View v, int keyCode, KeyEvent event) {
-      if (keyCode == KeyEvent.KEYCODE_ENTER ||
-          keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+      if (keyCode == KeyEvent.KEYCODE_ENTER
+          || keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
         if (event.getAction() == KeyEvent.ACTION_UP) {
           doLogin();
         }
         return true;
-      }      
+      }
       return false;
     }
   };
-      
+
   // Sources.
   private TwitterApi mApi;
-  
+
   // Preferences.
-  private SharedPreferences mPreferences;    
-  
+  private SharedPreferences mPreferences;
+
   // Tasks.
   private UserTask<Void, String, Boolean> mLoginTask;
-  
+
   private static final String SIS_RUNNING_KEY = "running";
-  
+
+  public static final String EXTRA_START_ACTIVITY = "start";
+  public static final String EXTRA_DM_ACTIVITY = "dm";
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-    
+
     mApi = new TwitterApi();
-    
+
     setContentView(R.layout.login);
-            
+
     mUsernameEdit = (EditText) findViewById(R.id.username_edit);
     mPasswordEdit = (EditText) findViewById(R.id.password_edit);
     mUsernameEdit.setOnKeyListener(enterKeyHandler);
     mPasswordEdit.setOnKeyListener(enterKeyHandler);
-    
+
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mProgressText.setFreezesText(true);
-           
+
     mSigninButton = (Button) findViewById(R.id.signin_button);
-    
+
     if (savedInstanceState != null) {
       if (savedInstanceState.containsKey(SIS_RUNNING_KEY)) {
         if (savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
@@ -97,128 +100,144 @@ public class LoginActivity extends Activity {
           doLogin();
         }
       }
-    }    
-        
+    }
+
     mSigninButton.setOnClickListener(new View.OnClickListener() {
       public void onClick(View v) {
         doLogin();
       }
-    });        
-    
+    });
+
     String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-    
+
     if (TwitterApi.isValidCredentials(username, password)) {
-      // User has logged in.
-      launchTwitterActivity();
-    }       
+      Bundle extras = getIntent().getExtras();
+
+      if (extras != null) {
+        String startActivity = extras.getString(EXTRA_START_ACTIVITY);
+        if (!Utils.isEmpty(startActivity)
+            && startActivity.equals(EXTRA_DM_ACTIVITY)) {
+          launchDmActivity();
+          return;
+        }
+      }
+      
+      launchTwitterActivity();     
+      return;
+    }
   }
 
-  @Override  
+  @Override
   protected void onDestroy() {
-    if (mLoginTask != null &&
-        mLoginTask.getStatus() == UserTask.Status.RUNNING) {
+    if (mLoginTask != null && mLoginTask.getStatus() == UserTask.Status.RUNNING) {
       mLoginTask.cancel(true);
-    }    
+    }
 
-    super.onDestroy();    
+    super.onDestroy();
   }
 
   void launchTwitterActivity() {
-    Intent intent = new Intent(); 
-    intent.setClass(this, TwitterActivity.class); 
-    startActivityForResult(intent, 0); 
+    Intent intent = new Intent();
+    intent.setClass(this, TwitterActivity.class);
+    startActivityForResult(intent, 0);
     // Keep the activity around so we can return to it later
     // in case of logout. See BaseActivity.logout().
   }
 
-  protected void onActivityResult(int requestCode, int resultCode,
-      Intent data) {
-    // This was caused by the back button in TwitterActivity.
-    finish();  
+  void launchDmActivity() {
+    Intent intent = new Intent();
+    intent.setClass(this, DmActivity.class);
+    startActivityForResult(intent, 0);
+    // Keep the activity around so we can return to it later
+    // in case of logout. See BaseActivity.logout().
   }
   
+  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    // This was caused by the back button in TwitterActivity.
+    finish();
+  }
+
   @Override
-  protected void onSaveInstanceState(Bundle outState) {    
-    super.onSaveInstanceState(outState);  
-        
-    if (mLoginTask != null &&
-        mLoginTask.getStatus() == UserTask.Status.RUNNING) {
-      // If the task was running, want to start it anew when the 
+  protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+
+    if (mLoginTask != null && mLoginTask.getStatus() == UserTask.Status.RUNNING) {
+      // If the task was running, want to start it anew when the
       // Activity restarts.
       // This addresses the case where you user changes orientation
       // in the middle of execution.
       outState.putBoolean(SIS_RUNNING_KEY, true);
-    }   
+    }
   }
-  
+
   // UI helpers.
-  
+
   private void updateProgress(String progress) {
     mProgressText.setText(progress);
   }
-    
+
   private void enableLogin() {
     mUsernameEdit.setEnabled(true);
     mPasswordEdit.setEnabled(true);
-    mSigninButton.setEnabled(true);    
+    mSigninButton.setEnabled(true);
   }
 
   private void disableLogin() {
     mUsernameEdit.setEnabled(false);
     mPasswordEdit.setEnabled(false);
-    mSigninButton.setEnabled(false);    
+    mSigninButton.setEnabled(false);
   }
 
   // Login task.
 
   private void doLogin() {
     mLoginTask = new LoginTask().execute();
-  }      
+  }
 
   private void onLoginBegin() {
-    disableLogin();        
+    disableLogin();
   }
-  
+
   private void onLoginSuccess() {
     updateProgress("");
-    
+
     String username = mUsernameEdit.getText().toString();
     String password = mPasswordEdit.getText().toString();
     mUsernameEdit.setText("");
     mPasswordEdit.setText("");
-        
+
     Log.i(TAG, "Storing credentials.");
     SharedPreferences.Editor editor = mPreferences.edit();
     editor.putString(Preferences.USERNAME_KEY, username);
-    editor.putString(Preferences.PASSWORD_KEY, password);    
+    editor.putString(Preferences.PASSWORD_KEY, password);
     editor.commit();
-    
+
     launchTwitterActivity();
   }
 
   private void onLoginFailure() {
     enableLogin();
   }
-  
+
   private class LoginTask extends UserTask<Void, String, Boolean> {
     @Override
     public void onPreExecute() {
-      onLoginBegin();      
+      onLoginBegin();
     }
 
-    @Override    
+    @Override
     public Boolean doInBackground(Void... params) {
       String username = mUsernameEdit.getText().toString();
       String password = mPasswordEdit.getText().toString();
-            
+
       publishProgress("Logging in...");
 
       if (!TwitterApi.isValidCredentials(username, password)) {
         publishProgress("Invalid username or password");
         return false;
-      }    
-      
+      }
+
       try {
         mApi.login(username, password);
       } catch (IOException e) {
@@ -232,28 +251,28 @@ public class LoginActivity extends Activity {
         Log.e(TAG, e.getMessage(), e);
         publishProgress("Network or connection error");
         return false;
-      }                
-            
+      }
+
       return true;
     }
 
-    @Override    
+    @Override
     public void onProgressUpdate(String... progress) {
       updateProgress(progress[0]);
     }
-    
+
     @Override
     public void onPostExecute(Boolean result) {
       if (isCancelled()) {
         return;
-      }      
-            
-      if (result) { 
+      }
+
+      if (result) {
         onLoginSuccess();
       } else {
         onLoginFailure();
-      }      
+      }
     }
   }
-    
+
 }
