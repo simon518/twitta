@@ -124,8 +124,7 @@ public class LoginActivity extends Activity {
   }
 
   void launchTwitterActivity() {
-    Intent intent = new Intent(this, TwitterActivity.class);
-    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    Intent intent = TwitterActivity.createIntent(this);
     startActivity(intent);
     finish();
   }
