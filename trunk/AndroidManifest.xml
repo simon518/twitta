@@ -15,11 +15,9 @@
             </intent-filter>
         </activity>                      
         <activity android:name=".TwitterActivity"
-                  android:launchMode="singleTop"
                   android:label="@string/app_name">
         </activity>
         <activity android:name=".DmActivity"
-                  android:launchMode="singleTop"
                   android:label="@string/direct_messages">
         </activity>                                        
         <activity android:name=".PreferencesActivity"  
