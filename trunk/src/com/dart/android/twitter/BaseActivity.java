@@ -35,8 +35,8 @@ public class BaseActivity extends Activity {
 
     manageUpdateChecks();
     
-    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
+    String username = getUsername();
+    String password = getPassword();
     
     mApi = new TwitterApi();
     mApi.setCredentials(username, password);
@@ -45,6 +45,24 @@ public class BaseActivity extends Activity {
     mDb = TwitterApplication.mDb;
   }
   
+  private String getUsername() {
+    return mPreferences.getString(Preferences.USERNAME_KEY, "");
+  }
+
+  private String getPassword() {
+    return mPreferences.getString(Preferences.PASSWORD_KEY, "");
+  }
+  
+  @Override
+  protected void onResume() {
+    super.onResume();
+
+    // Is the user still logged in?
+    if (!TwitterApi.isValidCredentials(getUsername(), getPassword())) {
+      finish();
+    }    
+  }
+    
   @Override
   protected void onDestroy() {
     super.onDestroy();
@@ -66,9 +84,7 @@ public class BaseActivity extends Activity {
     // Let's cleanup files while we're at it.
     mImageManager.clear();
 
-    Intent intent = new Intent();
-    intent.setClass(this, LoginActivity.class);
-    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);    
+    Intent intent = new Intent(this, LoginActivity.class);
     startActivity(intent);
     finish();
   }
@@ -93,6 +109,7 @@ public class BaseActivity extends Activity {
   protected static final int OPTIONS_MENU_ID_REFRESH = 4;
   protected static final int OPTIONS_MENU_ID_REPLIES = 5;  
   protected static final int OPTIONS_MENU_ID_DM = 6;
+  protected static final int OPTIONS_MENU_ID_TWEETS = 7;
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {

@@ -69,13 +69,17 @@ public class TwitterActivity extends BaseActivity {
   // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
     
+  public static Intent createIntent(Context context) {
+    Intent intent = new Intent(context, TwitterActivity.class);
+    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    
+    return intent;
+  }
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    // TODO:
-    // int mode = getExtra(INTENT_MODE);
-    
     setContentView(R.layout.main);
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
@@ -128,7 +132,7 @@ public class TwitterActivity extends BaseActivity {
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
   }
-
+  
   private static final String SIS_RUNNING_KEY = "running";
 
   @Override
@@ -571,8 +575,7 @@ public class TwitterActivity extends BaseActivity {
       startActivity(repliesIntent);
       return true;
     case OPTIONS_MENU_ID_DM:
-      Intent dmIntent = new Intent(this, DmActivity.class);
-      startActivity(dmIntent);
+      startActivity(DmActivity.createIntent(this));
       return true;            
     }
 

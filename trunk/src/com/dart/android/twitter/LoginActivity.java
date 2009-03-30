@@ -124,12 +124,13 @@ public class LoginActivity extends Activity {
   }
 
   void launchTwitterActivity() {
-    Intent intent = new Intent();
-    intent.setClass(this, TwitterActivity.class);
+    Intent intent = new Intent(this, TwitterActivity.class);
+    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     startActivity(intent);
     finish();
   }
 
+  /*
   void launchDmActivity() {
     Intent intent = new Intent();
     intent.setClass(this, DmActivity.class);
@@ -137,7 +138,6 @@ public class LoginActivity extends Activity {
     finish();
   }
 
-  /*
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     // This was caused by the back button in TwitterActivity.
     finish();

@@ -62,9 +62,16 @@ public class DmActivity extends BaseActivity {
   private static final String EXTRA_USER = "user";
 
   public static void show(Context context, String user) {
-    Intent intent = new Intent(context, DmActivity.class);
+    Intent intent = createIntent(context);
     intent.putExtra(EXTRA_USER, user);
     context.startActivity(intent);
+  }
+  
+  public static Intent createIntent(Context context) {
+    Intent intent = new Intent(context, DmActivity.class);
+    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    
+    return intent;
   }
 
   @Override
@@ -600,6 +607,9 @@ public class DmActivity extends BaseActivity {
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
 
+    item = menu.add(0, OPTIONS_MENU_ID_TWEETS, 0, R.string.tweets);
+    item.setIcon(android.R.drawable.ic_menu_view);
+    
     return super.onCreateOptionsMenu(menu);
   }
 
@@ -609,6 +619,9 @@ public class DmActivity extends BaseActivity {
     case OPTIONS_MENU_ID_REFRESH:
       doRetrieve();
       return true;
+    case OPTIONS_MENU_ID_TWEETS:
+      startActivity(TwitterActivity.createIntent(this));
+      return true;                  
     }
 
     return super.onOptionsItemSelected(item);
