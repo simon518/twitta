@@ -70,9 +70,6 @@ public class LoginActivity extends Activity {
 
   private static final String SIS_RUNNING_KEY = "running";
 
-  public static final String EXTRA_START_ACTIVITY = "start";
-  public static final String EXTRA_DM_ACTIVITY = "dm";
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -112,17 +109,6 @@ public class LoginActivity extends Activity {
     String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
 
     if (TwitterApi.isValidCredentials(username, password)) {
-      Bundle extras = getIntent().getExtras();
-
-      if (extras != null) {
-        String startActivity = extras.getString(EXTRA_START_ACTIVITY);
-        if (!Utils.isEmpty(startActivity)
-            && startActivity.equals(EXTRA_DM_ACTIVITY)) {
-          launchDmActivity();
-          return;
-        }
-      }
-      
       launchTwitterActivity();     
       return;
     }
@@ -140,23 +126,23 @@ public class LoginActivity extends Activity {
   void launchTwitterActivity() {
     Intent intent = new Intent();
     intent.setClass(this, TwitterActivity.class);
-    startActivityForResult(intent, 0);
-    // Keep the activity around so we can return to it later
-    // in case of logout. See BaseActivity.logout().
+    startActivity(intent);
+    finish();
   }
 
   void launchDmActivity() {
     Intent intent = new Intent();
     intent.setClass(this, DmActivity.class);
-    startActivityForResult(intent, 0);
-    // Keep the activity around so we can return to it later
-    // in case of logout. See BaseActivity.logout().
+    startActivity(intent);
+    finish();
   }
-  
+
+  /*
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     // This was caused by the back button in TwitterActivity.
     finish();
   }
+  */
 
   @Override
   protected void onSaveInstanceState(Bundle outState) {
