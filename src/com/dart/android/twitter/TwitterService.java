@@ -134,17 +134,17 @@ public class TwitterService extends Service {
       text = MessageFormat.format(text, count);
     }
 
-    PendingIntent intent = PendingIntent.getActivity(this, 0, new Intent(this,
-        TwitterActivity.class), 0);
+    PendingIntent intent = PendingIntent.getActivity(this, 0, TwitterActivity
+        .createIntent(this), 0);
 
     notify(intent, TWEET_NOTIFICATION_ID, latestTweet.text, title, text);
   }
 
   private static int TWEET_NOTIFICATION_ID = 0;
   private static int DM_NOTIFICATION_ID = 1;
-  
-  private void notify(PendingIntent intent, int notificationId, String tickerText, String title,
-      String text) {
+
+  private void notify(PendingIntent intent, int notificationId,
+      String tickerText, String title, String text) {
     Notification notification = new Notification(
         android.R.drawable.stat_notify_chat, tickerText, System
             .currentTimeMillis());
@@ -200,8 +200,8 @@ public class TwitterService extends Service {
       text = MessageFormat.format(text, count);
     }
 
-    Intent intent = new Intent(this, DmActivity.class);
-    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+    PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, DmActivity
+        .createIntent(this), 0);
 
     notify(pendingIntent, DM_NOTIFICATION_ID, latest.text, title, text);
   }
