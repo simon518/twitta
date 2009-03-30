@@ -107,8 +107,6 @@ public class TwitterService extends Service {
     mRetrieveTask = new RetrieveTask().execute();
   }
 
-  private static final int NOTIFICATION_ID = 0;
-
   private void processNewTweets() {
     if (mNewTweets.size() <= 0) {
       return;
@@ -137,12 +135,15 @@ public class TwitterService extends Service {
     }
 
     PendingIntent intent = PendingIntent.getActivity(this, 0, new Intent(this,
-        LoginActivity.class), 0);
+        TwitterActivity.class), 0);
 
-    notify(intent, latestTweet.text, title, text);
+    notify(intent, TWEET_NOTIFICATION_ID, latestTweet.text, title, text);
   }
 
-  private void notify(PendingIntent intent, String tickerText, String title,
+  private static int TWEET_NOTIFICATION_ID = 0;
+  private static int DM_NOTIFICATION_ID = 1;
+  
+  private void notify(PendingIntent intent, int notificationId, String tickerText, String title,
       String text) {
     Notification notification = new Notification(
         android.R.drawable.stat_notify_chat, tickerText, System
@@ -169,7 +170,7 @@ public class TwitterService extends Service {
       notification.defaults |= Notification.DEFAULT_VIBRATE;
     }
 
-    mNotificationManager.notify(NOTIFICATION_ID, notification);
+    mNotificationManager.notify(notificationId, notification);
   }
 
   private void processNewDms() {
@@ -199,13 +200,10 @@ public class TwitterService extends Service {
       text = MessageFormat.format(text, count);
     }
 
-    Intent intent = new Intent(this, LoginActivity.class);
-    intent.putExtra(LoginActivity.EXTRA_START_ACTIVITY,
-        LoginActivity.EXTRA_DM_ACTIVITY);
-
+    Intent intent = new Intent(this, DmActivity.class);
     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
 
-    notify(pendingIntent, latest.text, title, text);
+    notify(pendingIntent, DM_NOTIFICATION_ID, latest.text, title, text);
   }
 
   @Override
