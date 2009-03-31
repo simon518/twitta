@@ -35,9 +35,10 @@ public class Tweet extends Message {
     JSONObject user = jsonObject.getJSONObject("user");
     tweet.screenName = Utils.decodeTwitterJson(user.getString("screen_name"));
     tweet.profileImageUrl = user.getString("profile_image_url");
+    tweet.userId = user.getString("id");
     tweet.source = Utils.decodeTwitterJson(jsonObject.getString("source")).
         replaceAll("\\<.*?>", "");
-    
+        
     return tweet;
   }
     

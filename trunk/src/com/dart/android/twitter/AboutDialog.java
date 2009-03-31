@@ -32,6 +32,6 @@ public class AboutDialog {
     builder.setTitle(R.string.about_title);
     builder.setPositiveButton(R.string.cool, null);
     builder.create().show();
-  }
-  
+  }  
+ 
 }

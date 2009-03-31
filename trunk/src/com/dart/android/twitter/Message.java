@@ -9,5 +9,6 @@ public class Message {
   public String text;
   public String profileImageUrl;
   public Date createdAt;
+  public String userId;
   
 }

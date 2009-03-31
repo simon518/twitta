@@ -39,14 +39,15 @@ public class TwitterDbAdapter {
   public static final String KEY_CREATED_AT = "created_at";
   public static final String KEY_SOURCE = "source";
   public static final String KEY_IS_SENT = "is_sent";
+  public static final String KEY_USER_ID = "user_id";
 
   public static final String[] TWEET_COLUMNS = new String[] { KEY_ID, KEY_USER,
       KEY_TEXT, KEY_PROFILE_IMAGE_URL, KEY_IS_UNREAD, KEY_CREATED_AT,
-      KEY_SOURCE };
+      KEY_SOURCE, KEY_USER_ID };
 
   public static final String[] DM_COLUMNS = new String[] { KEY_ID, KEY_USER,
       KEY_TEXT, KEY_PROFILE_IMAGE_URL, KEY_IS_UNREAD, KEY_IS_SENT,
-      KEY_CREATED_AT };
+      KEY_CREATED_AT, KEY_USER_ID };
 
   private DatabaseHelper mDbHelper;
   private SQLiteDatabase mDb;
@@ -55,7 +56,7 @@ public class TwitterDbAdapter {
   private static final String TWEET_TABLE = "tweets";
   private static final String DM_TABLE = "dms";
 
-  private static final int DATABASE_VERSION = 4;
+  private static final int DATABASE_VERSION = 6;
 
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
@@ -65,14 +66,14 @@ public class TwitterDbAdapter {
       + " text not null, " + KEY_TEXT + " text not null, "
       + KEY_PROFILE_IMAGE_URL + " text not null, " + KEY_IS_UNREAD
       + " boolean not null, " + KEY_CREATED_AT + " date not null, "
-      + KEY_SOURCE + " text not null)";
+      + KEY_SOURCE + " text not null, " + KEY_USER_ID + " integer)";
 
   private static final String DM_TABLE_CREATE = "create table dms (" + KEY_ID
       + " integer primary key on conflict replace, " + KEY_USER
       + " text not null, " + KEY_TEXT + " text not null, "
       + KEY_PROFILE_IMAGE_URL + " text not null, " + KEY_IS_UNREAD
       + " boolean not null, " + KEY_IS_SENT + " boolean not null, "
-      + KEY_CREATED_AT + " date not null)";
+      + KEY_CREATED_AT + " date not null, " + KEY_USER_ID + " integer)";
 
   private final Context mContext;
 
@@ -126,7 +127,8 @@ public class TwitterDbAdapter {
     initialValues
         .put(KEY_CREATED_AT, DB_DATE_FORMATTER.format(tweet.createdAt));
     initialValues.put(KEY_SOURCE, tweet.source);
-
+    initialValues.put(KEY_USER_ID, tweet.userId);
+  
     return mDb.insert(TWEET_TABLE, null, initialValues);
   }
 
@@ -139,6 +141,7 @@ public class TwitterDbAdapter {
     initialValues.put(KEY_IS_UNREAD, isUnread);
     initialValues.put(KEY_IS_SENT, dm.isSent);
     initialValues.put(KEY_CREATED_AT, DB_DATE_FORMATTER.format(dm.createdAt));
+    initialValues.put(KEY_USER_ID, dm.userId);    
 
     return mDb.insert(DM_TABLE, null, initialValues);
   }
