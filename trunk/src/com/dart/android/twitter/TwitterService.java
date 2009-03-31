@@ -272,22 +272,6 @@ public class TwitterService extends Service {
       int maxId = mDb.fetchMaxId();
       Log.i(TAG, "Max id is:" + maxId);
       
-      // TODO: must remove. This is just for testing.
-      try {
-        ArrayList<Integer> followers = mApi.getFollowersIds();
-        mDb.syncFollowers(followers);
-        Log.i(TAG, followers.size() + "");
-      } catch (IOException e) {
-        Log.e(TAG, e.getMessage(), e);
-        return RetrieveResult.IO_ERROR;
-      } catch (AuthException e) {
-        Log.i(TAG, "Invalid authorization.");
-        return RetrieveResult.AUTH_ERROR;
-      } catch (ApiException e) {
-        Log.e(TAG, e.getMessage(), e);
-        return RetrieveResult.IO_ERROR;
-      }
-      
       JSONArray jsonArray;
       
       try {
