@@ -366,7 +366,7 @@ public class DmActivity extends BaseActivity {
         return TaskResult.CANCELLED;
       }
 
-      mDb.syncDms(dms);
+      mDb.addDms(dms);
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
