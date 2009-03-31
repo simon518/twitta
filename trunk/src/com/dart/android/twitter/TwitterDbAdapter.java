@@ -377,7 +377,7 @@ public class TwitterDbAdapter {
 
     if (mCursor == null) {
       return result;
-    }
+    }    
 
     mCursor.moveToFirst();
     result = mCursor.getInt(0);
@@ -386,4 +386,47 @@ public class TwitterDbAdapter {
     return result;
   }
 
+  // TODO: merge these with sync* methods.
+  public void addTweets(List<Tweet> tweets) {
+    try {
+      mDb.beginTransaction();
+
+      for (Tweet tweet : tweets) {
+        createTweet(tweet, false);
+      }
+
+      limitRows(TWEET_TABLE, TwitterApi.RETRIEVE_LIMIT);          
+      mDb.setTransactionSuccessful();
+    } finally {
+      mDb.endTransaction();
+    }    
+  }
+
+  public void addDms(List<Dm> dms) {
+    try {
+      mDb.beginTransaction();
+
+      for (Dm dm : dms) {
+        createDm(dm, false);
+      }
+
+      limitRows(DM_TABLE, TwitterApi.RETRIEVE_LIMIT);
+      mDb.setTransactionSuccessful();
+    } finally {
+      mDb.endTransaction();
+    }
+  }
+
+  public void limitRows(String tablename, int limit) {
+    Cursor cursor = mDb.rawQuery("SELECT " + KEY_ID + " FROM " + tablename
+        + " ORDER BY " + KEY_ID + " DESC LIMIT 1 OFFSET ?", new String[] { limit - 1 + "" });
+    
+    if (cursor.moveToFirst()) {
+      int limitId = cursor.getInt(0);
+      mDb.delete(tablename, KEY_ID + "<" + limitId, null);                
+    }    
+
+    cursor.close();
+  }
+  
 }

@@ -68,6 +68,8 @@ public class TwitterApi {
   private static final String METHOD_POST = "POST";
   private static final String METHOD_DELETE = "DELETE";
 
+  public static final int RETRIEVE_LIMIT = 50;
+  
   public class AuthException extends Exception {
     private static final long serialVersionUID = 1703735789572778599L;
   }
@@ -196,7 +198,7 @@ public class TwitterApi {
     Log.i(TAG, "Requesting friends timeline.");
 
     String url = FRIENDS_TIMELINE_URL + "?count="
-        + URLEncoder.encode(50 + "", HTTP.UTF_8);
+        + URLEncoder.encode(RETRIEVE_LIMIT + "", HTTP.UTF_8);
 
     InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
@@ -217,8 +219,11 @@ public class TwitterApi {
       AuthException, ApiException {
     Log.i(TAG, "Requesting friends timeline since id.");
 
-    String url = FRIENDS_TIMELINE_URL + "?since_id="
-        + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+    String url = FRIENDS_TIMELINE_URL;
+    
+    if (sinceId > 0) {
+      url += "?since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+    }
 
     InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
@@ -344,9 +349,12 @@ public class TwitterApi {
       AuthException, ApiException {
     Log.i(TAG, "Requesting DMs since id.");
 
-    String url = DIRECT_MESSAGES_URL + "?since_id="
-        + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+    String url = DIRECT_MESSAGES_URL;
 
+    if (sinceId > 0) {
+      url += "?since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+    }
+    
     InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
 
