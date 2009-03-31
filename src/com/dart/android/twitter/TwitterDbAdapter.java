@@ -50,12 +50,12 @@ public class TwitterDbAdapter {
       KEY_CREATED_AT, KEY_USER_ID };
 
   public static final String[] FOLLOWER_COLUMNS = new String[] { KEY_ID };
-  
+
   private DatabaseHelper mDbHelper;
   private SQLiteDatabase mDb;
 
   private static final String DATABASE_NAME = "data";
-  
+
   private static final String TWEET_TABLE = "tweets";
   private static final String DM_TABLE = "dms";
   private static final String FOLLOWER_TABLE = "followers";
@@ -160,7 +160,7 @@ public class TwitterDbAdapter {
     initialValues.put(KEY_ID, userId);
     return mDb.insert(FOLLOWER_TABLE, null, initialValues);
   }
-  
+
   public void syncTweets(List<Tweet> tweets) {
     try {
       mDb.beginTransaction();
@@ -208,7 +208,7 @@ public class TwitterDbAdapter {
       mDb.endTransaction();
     }
   }
-  
+
   public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
     int unreadCount = 0;
 
@@ -239,14 +239,17 @@ public class TwitterDbAdapter {
   }
 
   public Cursor fetchAllFollowers() {
-    return mDb.query(DM_TABLE, DM_COLUMNS, null, null, null, null, KEY_ID
-        + " DESC");
+    return mDb.query(FOLLOWER_TABLE, FOLLOWER_COLUMNS, null, null, null, null,
+        null);
   }
 
   public Cursor getFollowerUsernames() {
-    return mDb.rawQuery("SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id ORDER BY user COLLATE NOCASE", null);
+    return mDb
+        .rawQuery(
+            "SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id ORDER BY user COLLATE NOCASE",
+            null);
   }
-  
+
   // TODO: this seems a bit messy.
   public Cursor getRecentRecipients(String filter) {
     String likeFilter = '%' + filter + '%';
@@ -274,7 +277,7 @@ public class TwitterDbAdapter {
   public boolean deleteAllFollowers() {
     return mDb.delete(FOLLOWER_TABLE, null, null) > 0;
   }
-  
+
   public boolean deleteDm(int id) {
     return mDb.delete(DM_TABLE, KEY_ID + "=" + id, null) > 0;
   }
