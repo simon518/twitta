@@ -164,38 +164,22 @@ public class TwitterDbAdapter {
   }
 
   /*
-  public void syncTweets(List<Tweet> tweets) {
-    try {
-      mDb.beginTransaction();
-
-      deleteAllTweets();
-
-      for (Tweet tweet : tweets) {
-        createTweet(tweet, false);
-      }
-
-      mDb.setTransactionSuccessful();
-    } finally {
-      mDb.endTransaction();
-    }
-  }
-
-  public void syncDms(List<Dm> dms) {
-    try {
-      mDb.beginTransaction();
-
-      deleteAllDms();
-
-      for (Dm dm : dms) {
-        createDm(dm, false);
-      }
-
-      mDb.setTransactionSuccessful();
-    } finally {
-      mDb.endTransaction();
-    }
-  }
-  */
+   * public void syncTweets(List<Tweet> tweets) { try { mDb.beginTransaction();
+   * 
+   * deleteAllTweets();
+   * 
+   * for (Tweet tweet : tweets) { createTweet(tweet, false); }
+   * 
+   * mDb.setTransactionSuccessful(); } finally { mDb.endTransaction(); } }
+   * 
+   * public void syncDms(List<Dm> dms) { try { mDb.beginTransaction();
+   * 
+   * deleteAllDms();
+   * 
+   * for (Dm dm : dms) { createDm(dm, false); }
+   * 
+   * mDb.setTransactionSuccessful(); } finally { mDb.endTransaction(); } }
+   */
 
   public void syncFollowers(List<Integer> followers) {
     try {
@@ -215,7 +199,7 @@ public class TwitterDbAdapter {
 
   public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
     addTweets(tweets);
-    
+
     return fetchUnreadCount();
   }
 
@@ -236,12 +220,25 @@ public class TwitterDbAdapter {
 
   public Cursor getFollowerUsernames(String filter) {
     String likeFilter = '%' + filter + '%';
-    
+
     // TODO: clean this up.
     return mDb
         .rawQuery(
             "SELECT user_id AS _id, user FROM (SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id) WHERE user LIKE ? ORDER BY user COLLATE NOCASE",
             new String[] { likeFilter });
+  }
+
+  public boolean isFollower(int userId) {
+    Cursor cursor = mDb.query(FOLLOWER_TABLE, FOLLOWER_COLUMNS, KEY_ID + "="
+        + userId, null, null, null, null);
+
+    boolean result = false;
+    
+    if (cursor != null && cursor.moveToFirst()) {
+      result = true;
+    }
+    
+    return result;
   }
 
   public void clearData() {
@@ -280,8 +277,8 @@ public class TwitterDbAdapter {
   }
 
   public int fetchMaxId() {
-    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM " + TWEET_TABLE,
-        null);
+    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM "
+        + TWEET_TABLE, null);
 
     int result = 0;
 
@@ -297,8 +294,8 @@ public class TwitterDbAdapter {
   }
 
   public int fetchUnreadCount() {
-    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + TWEET_TABLE
-        + " WHERE " + KEY_IS_UNREAD + " = 1", null);
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM "
+        + TWEET_TABLE + " WHERE " + KEY_IS_UNREAD + " = 1", null);
 
     int result = 0;
 
@@ -314,8 +311,8 @@ public class TwitterDbAdapter {
   }
 
   public int fetchMaxDmId() {
-    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID
-        + ") FROM " + DM_TABLE + " WHERE " + KEY_IS_SENT + " = 0", null);
+    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM " + DM_TABLE
+        + " WHERE " + KEY_IS_SENT + " = 0", null);
 
     int result = 0;
 
@@ -332,19 +329,19 @@ public class TwitterDbAdapter {
 
   public int addNewDmsAndCountUnread(List<Dm> dms) {
     addDms(dms);
-    
+
     return fetchUnreadDmCount();
   }
 
   private int fetchUnreadDmCount() {
-    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + DM_TABLE
-        + " WHERE " + KEY_IS_UNREAD + " = 1", null);
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM "
+        + DM_TABLE + " WHERE " + KEY_IS_UNREAD + " = 1", null);
 
     int result = 0;
 
     if (mCursor == null) {
       return result;
-    }    
+    }
 
     mCursor.moveToFirst();
     result = mCursor.getInt(0);
@@ -361,11 +358,11 @@ public class TwitterDbAdapter {
         createTweet(tweet, false);
       }
 
-      limitRows(TWEET_TABLE, TwitterApi.RETRIEVE_LIMIT);          
+      limitRows(TWEET_TABLE, TwitterApi.RETRIEVE_LIMIT);
       mDb.setTransactionSuccessful();
     } finally {
       mDb.endTransaction();
-    }    
+    }
   }
 
   public void addDms(List<Dm> dms) {
@@ -385,18 +382,19 @@ public class TwitterDbAdapter {
 
   public int limitRows(String tablename, int limit) {
     Cursor cursor = mDb.rawQuery("SELECT " + KEY_ID + " FROM " + tablename
-        + " ORDER BY " + KEY_ID + " DESC LIMIT 1 OFFSET ?", new String[] { limit - 1 + "" });
-    
+        + " ORDER BY " + KEY_ID + " DESC LIMIT 1 OFFSET ?",
+        new String[] { limit - 1 + "" });
+
     int deleted = 0;
-    
+
     if (cursor != null && cursor.moveToFirst()) {
       int limitId = cursor.getInt(0);
-      deleted = mDb.delete(tablename, KEY_ID + "<" + limitId, null);                
-    }    
+      deleted = mDb.delete(tablename, KEY_ID + "<" + limitId, null);
+    }
 
     cursor.close();
-    
+
     return deleted;
   }
-  
+
 }
