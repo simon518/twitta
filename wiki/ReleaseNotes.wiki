@@ -2,6 +2,11 @@
 
 = Release Notes =
 
+== Version 4 ==
+
+  * Faster refreshes.
+  * Read and send direct messages.
+
 == Version 3 ==
 
   * Automatically mark all as read when app is opened.
