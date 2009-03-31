@@ -65,10 +65,14 @@ public class TwitterActivity extends BaseActivity {
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, Void, SendResult> mSendTask;
+  private UserTask<Void, Void, RetrieveResult> mFollowersRetrieveTask;
 
   // Refresh data at startup if last refresh was this long ago or greater.   
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
-    
+
+  // Refresh followers if last refresh was this long ago or greater.   
+  private static final long FOLLOWERS_REFRESH_THRESHOLD = 12 * 60 * 60 * 1000;
+  
   public static Intent createIntent(Context context) {
     Intent intent = new Intent(context, TwitterActivity.class);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -127,12 +131,33 @@ public class TwitterActivity extends BaseActivity {
     if (shouldRetrieve) {
       doRetrieve();      
     }
+
+    long lastFollowersRefreshTime = mPreferences.getLong(
+        Preferences.LAST_FOLLOWERS_REFRESH_KEY, 0);
     
+    diff = nowTime - lastFollowersRefreshTime;
+    Log.i(TAG, "Last followers refresh was " + diff + " ms ago.");
+    
+    if (diff > FOLLOWERS_REFRESH_THRESHOLD) {
+      doRetrieveFollowers();
+    }
+        
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
   }
   
+  private void doRetrieveFollowers() {
+    Log.i(TAG, "Attempting followers retrieve.");
+
+    if (mFollowersRetrieveTask != null
+        && mFollowersRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already retrieving.");
+    } else {
+      mFollowersRetrieveTask = new FollowersTask().execute();
+    }
+  }
+
   private static final String SIS_RUNNING_KEY = "running";
 
   @Override
@@ -169,6 +194,8 @@ public class TwitterActivity extends BaseActivity {
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
     }
+    
+    // Don't need to cancel FollowersTask (assuming it ends properly).
 
     super.onDestroy();
   }
@@ -547,6 +574,39 @@ public class TwitterActivity extends BaseActivity {
     }
   }
 
+  private class FollowersTask extends UserTask<Void, Void, RetrieveResult> {
+    @Override
+    public RetrieveResult doInBackground(Void... params) {
+      try {
+        ArrayList<Integer> followers = mApi.getFollowersIds();
+        mDb.syncFollowers(followers);
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return RetrieveResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return RetrieveResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return RetrieveResult.IO_ERROR;
+      }
+            
+      return RetrieveResult.OK;
+    }
+
+    @Override
+    public void onPostExecute(RetrieveResult result) {
+      if (result == RetrieveResult.OK) {
+        SharedPreferences.Editor editor = mPreferences.edit();
+        editor.putLong(Preferences.LAST_FOLLOWERS_REFRESH_KEY, 
+            Utils.getNowTime());
+        editor.commit();        
+      } else {
+        // Do nothing.
+      }
+    }
+  }
+  
   // Menu.
 
   @Override

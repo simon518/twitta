@@ -30,5 +30,7 @@ public class Preferences {
   
   public static final String LAST_TWEET_REFRESH_KEY = "last_tweet_refresh";
   public static final String LAST_DM_REFRESH_KEY = "last_dm_refresh";
+  public static final String LAST_FOLLOWERS_REFRESH_KEY =
+      "last_followers_refresh";
   
 }
