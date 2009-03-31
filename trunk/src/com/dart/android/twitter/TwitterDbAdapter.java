@@ -60,7 +60,7 @@ public class TwitterDbAdapter {
   private static final String DM_TABLE = "dms";
   private static final String FOLLOWER_TABLE = "followers";
 
-  private static final int DATABASE_VERSION = 7;
+  private static final int DATABASE_VERSION = 8;
 
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
@@ -316,7 +316,7 @@ public class TwitterDbAdapter {
 
   public int fetchUnreadCount() {
     Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + TWEET_TABLE
-        + " WHERE is_unread = 1", null);
+        + " WHERE " + KEY_IS_UNREAD + " = 1", null);
 
     int result = 0;
 
@@ -333,7 +333,7 @@ public class TwitterDbAdapter {
 
   public int fetchMaxDmId() {
     Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID
-        + ") FROM " + DM_TABLE + " WHERE is_sent = 0", null);
+        + ") FROM " + DM_TABLE + " WHERE " + KEY_IS_SENT + " = 0", null);
 
     int result = 0;
 
@@ -369,7 +369,7 @@ public class TwitterDbAdapter {
 
   private int fetchUnreadDmCount() {
     Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + DM_TABLE
-        + " WHERE is_unread = 1", null);
+        + " WHERE " + KEY_IS_UNREAD + " = 1", null);
 
     int result = 0;
 
