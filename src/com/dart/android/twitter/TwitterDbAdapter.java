@@ -163,24 +163,6 @@ public class TwitterDbAdapter {
     return mDb.insert(FOLLOWER_TABLE, null, initialValues);
   }
 
-  /*
-   * public void syncTweets(List<Tweet> tweets) { try { mDb.beginTransaction();
-   * 
-   * deleteAllTweets();
-   * 
-   * for (Tweet tweet : tweets) { createTweet(tweet, false); }
-   * 
-   * mDb.setTransactionSuccessful(); } finally { mDb.endTransaction(); } }
-   * 
-   * public void syncDms(List<Dm> dms) { try { mDb.beginTransaction();
-   * 
-   * deleteAllDms();
-   * 
-   * for (Dm dm : dms) { createDm(dm, false); }
-   * 
-   * mDb.setTransactionSuccessful(); } finally { mDb.endTransaction(); } }
-   */
-
   public void syncFollowers(List<Integer> followers) {
     try {
       mDb.beginTransaction();
@@ -237,6 +219,8 @@ public class TwitterDbAdapter {
     if (cursor != null && cursor.moveToFirst()) {
       result = true;
     }
+    
+    cursor.close();
     
     return result;
   }
