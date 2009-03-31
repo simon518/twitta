@@ -2,6 +2,10 @@
 
 = Release Notes =
 
+== Version 5 ==
+
+  * TweetPic support
+
 == Version 4 ==
 
   * Faster refreshes.
