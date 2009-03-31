@@ -38,6 +38,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -67,19 +68,19 @@ public class TwitterActivity extends BaseActivity {
   private UserTask<Void, Void, SendResult> mSendTask;
   private UserTask<Void, Void, RetrieveResult> mFollowersRetrieveTask;
 
-  // Refresh data at startup if last refresh was this long ago or greater.   
+  // Refresh data at startup if last refresh was this long ago or greater.
   private static final long REFRESH_THRESHOLD = 5 * 60 * 1000;
 
-  // Refresh followers if last refresh was this long ago or greater.   
+  // Refresh followers if last refresh was this long ago or greater.
   private static final long FOLLOWERS_REFRESH_THRESHOLD = 12 * 60 * 60 * 1000;
-  
+
   public static Intent createIntent(Context context) {
     Intent intent = new Intent(context, TwitterActivity.class);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    
+
     return intent;
   }
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -90,7 +91,7 @@ public class TwitterActivity extends BaseActivity {
 
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
         (TextView) findViewById(R.id.chars_text));
-            
+
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
@@ -103,19 +104,19 @@ public class TwitterActivity extends BaseActivity {
     });
 
     // Mark all as read.
-    mDb.markAllTweetsRead();    
-    
+    mDb.markAllTweetsRead();
+
     setupAdapter();
-    
+
     boolean shouldRetrieve = false;
 
     long lastRefreshTime = mPreferences.getLong(
         Preferences.LAST_TWEET_REFRESH_KEY, 0);
     long nowTime = Utils.getNowTime();
-    
+
     long diff = nowTime - lastRefreshTime;
     Log.i(TAG, "Last refresh was " + diff + " ms ago.");
-    
+
     if (diff > REFRESH_THRESHOLD) {
       shouldRetrieve = true;
     } else if (savedInstanceState != null
@@ -127,26 +128,26 @@ public class TwitterActivity extends BaseActivity {
       Log.i(TAG, "Was last running a retrieve or send task. Let's refresh.");
       shouldRetrieve = true;
     }
-    
+
     if (shouldRetrieve) {
-      doRetrieve();      
+      doRetrieve();
     }
 
     long lastFollowersRefreshTime = mPreferences.getLong(
         Preferences.LAST_FOLLOWERS_REFRESH_KEY, 0);
-    
+
     diff = nowTime - lastFollowersRefreshTime;
     Log.i(TAG, "Last followers refresh was " + diff + " ms ago.");
-    
+
     if (diff > FOLLOWERS_REFRESH_THRESHOLD) {
       doRetrieveFollowers();
     }
-        
+
     // Want to be able to focus on the items with the trackball.
     // That way, we can navigate up and down by changing item focus.
     mTweetList.setItemsCanFocus(true);
   }
-  
+
   private void doRetrieveFollowers() {
     Log.i(TAG, "Attempting followers retrieve.");
 
@@ -194,7 +195,7 @@ public class TwitterActivity extends BaseActivity {
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
     }
-    
+
     // Don't need to cancel FollowersTask (assuming it ends properly).
 
     super.onDestroy();
@@ -218,15 +219,22 @@ public class TwitterActivity extends BaseActivity {
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
   private static final int CONTEXT_DM_ID = 2;
-  
+
   @Override
   public void onCreateContextMenu(ContextMenu menu, View v,
       ContextMenuInfo menuInfo) {
     super.onCreateContextMenu(menu, v, menuInfo);
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
-    // TODO: would result in too many "not following" errors.
-    // menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);    
+
+    AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+    Cursor cursor = (Cursor) mTweetAdapter.getItem(info.position);
+    int userId = cursor.getInt(cursor
+        .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER_ID));
+    
+    if (mDb.isFollower(userId)) { 
+      menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
+    }
   }
 
   @Override
@@ -240,75 +248,75 @@ public class TwitterActivity extends BaseActivity {
     }
 
     switch (item.getItemId()) {
-      case CONTEXT_REPLY_ID:
-        int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
-        // TODO: this isn't quite perfect. It leaves extra empty spaces if you
-        // perform the reply action again.
-        String replyTo = "@" + cursor.getString(userIndex);
-        String text = mTweetEdit.getText();
-        text = replyTo + " " + text.replace(replyTo, "");
-        mTweetEdit.setTextAndFocus(text);
-  
-        return true;
-      case CONTEXT_RETWEET_ID:
-        String retweet = "RT @" +
-            cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER)) +
-            " " +
-            cursor.getString(cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT));
-        mTweetEdit.setTextAndFocus(retweet);
-  
-        return true;
-      case CONTEXT_DM_ID:
-        String user = cursor.getString(
-            cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
-        DmActivity.show(this, user);        
-        return true;                
-      default:
-        return super.onContextItemSelected(item);
+    case CONTEXT_REPLY_ID:
+      int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+      // TODO: this isn't quite perfect. It leaves extra empty spaces if you
+      // perform the reply action again.
+      String replyTo = "@" + cursor.getString(userIndex);
+      String text = mTweetEdit.getText();
+      text = replyTo + " " + text.replace(replyTo, "");
+      mTweetEdit.setTextAndFocus(text);
+
+      return true;
+    case CONTEXT_RETWEET_ID:
+      String retweet = "RT @"
+          + cursor.getString(cursor
+              .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER))
+          + " "
+          + cursor.getString(cursor
+              .getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT));
+      mTweetEdit.setTextAndFocus(retweet);
+
+      return true;
+    case CONTEXT_DM_ID:
+      String user = cursor.getString(cursor
+          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
+      DmActivity.show(this, user);
+      return true;
+    default:
+      return super.onContextItemSelected(item);
     }
   }
-  
+
   private class TweetAdapter extends CursorAdapter {
 
     public TweetAdapter(Context context, Cursor cursor) {
       super(context, cursor);
-      
+
       mInflater = LayoutInflater.from(context);
-      
-      mUserTextColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
+
+      mUserTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
       mTextColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_TEXT);
       mProfileImageUrlColumn = cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_PROFILE_IMAGE_URL);
       mCreatedAtColumn = cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_CREATED_AT);
-      mSourceColumn = cursor
-          .getColumnIndexOrThrow(TwitterDbAdapter.KEY_SOURCE);
-      
+      mSourceColumn = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_SOURCE);
+
       mMetaBuilder = new StringBuilder();
     }
 
     private LayoutInflater mInflater;
-    
-    private int mUserTextColumn; 
+
+    private int mUserTextColumn;
     private int mTextColumn;
     private int mProfileImageUrlColumn;
     private int mCreatedAtColumn;
     private int mSourceColumn;
-    
+
     private StringBuilder mMetaBuilder;
-    
+
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
       View view = mInflater.inflate(R.layout.tweet, parent, false);
-      
-      ViewHolder holder = new ViewHolder();      
+
+      ViewHolder holder = new ViewHolder();
       holder.tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
       holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
       holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
-      holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);      
+      holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       view.setTag(holder);
-      
+
       return view;
     }
 
@@ -316,9 +324,9 @@ public class TwitterActivity extends BaseActivity {
       public TextView tweetUserText;
       public TextView tweetText;
       public ImageView profileImage;
-      public TextView metaText;      
+      public TextView metaText;
     }
-    
+
     @Override
     public void bindView(View view, Context context, Cursor cursor) {
       ViewHolder holder = (ViewHolder) view.getTag();
@@ -335,9 +343,9 @@ public class TwitterActivity extends BaseActivity {
       mMetaBuilder.setLength(0);
 
       try {
-        mMetaBuilder.append(Utils.getRelativeDate(
-            TwitterDbAdapter.DB_DATE_FORMATTER.parse(
-                cursor.getString(mCreatedAtColumn))));
+        mMetaBuilder.append(Utils
+            .getRelativeDate(TwitterDbAdapter.DB_DATE_FORMATTER.parse(cursor
+                .getString(mCreatedAtColumn))));
         mMetaBuilder.append(" ");
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
@@ -400,7 +408,7 @@ public class TwitterActivity extends BaseActivity {
         String status = mTweetEdit.getText().toString();
         JSONObject jsonObject = mApi.update(status);
         Tweet tweet = Tweet.create(jsonObject);
-        
+
         if (!Utils.isEmpty(tweet.profileImageUrl)
             && !mImageManager.contains(tweet.profileImageUrl)) {
           // Fetch image to cache.
@@ -410,7 +418,7 @@ public class TwitterActivity extends BaseActivity {
             Log.e(TAG, e.getMessage(), e);
           }
         }
-                
+
         mDb.createTweet(tweet, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
@@ -425,7 +433,7 @@ public class TwitterActivity extends BaseActivity {
         Log.e(TAG, e.getMessage(), e);
         return SendResult.IO_ERROR;
       }
-      
+
       return SendResult.OK;
     }
 
@@ -499,7 +507,7 @@ public class TwitterActivity extends BaseActivity {
       JSONArray jsonArray;
 
       int maxId = mDb.fetchMaxId();
-      
+
       try {
         jsonArray = mApi.getTimelineSinceId(maxId);
       } catch (IOException e) {
@@ -566,7 +574,7 @@ public class TwitterActivity extends BaseActivity {
       } else if (result == RetrieveResult.OK) {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_TWEET_REFRESH_KEY, Utils.getNowTime());
-        editor.commit();        
+        editor.commit();
         update();
       } else {
         // Do nothing.
@@ -592,7 +600,7 @@ public class TwitterActivity extends BaseActivity {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
       }
-            
+
       return RetrieveResult.OK;
     }
 
@@ -600,15 +608,15 @@ public class TwitterActivity extends BaseActivity {
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.OK) {
         SharedPreferences.Editor editor = mPreferences.edit();
-        editor.putLong(Preferences.LAST_FOLLOWERS_REFRESH_KEY, 
-            Utils.getNowTime());
-        editor.commit();        
+        editor.putLong(Preferences.LAST_FOLLOWERS_REFRESH_KEY, Utils
+            .getNowTime());
+        editor.commit();
       } else {
         // Do nothing.
       }
     }
   }
-  
+
   // Menu.
 
   @Override
@@ -618,13 +626,13 @@ public class TwitterActivity extends BaseActivity {
 
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
-        
-    return super.onCreateOptionsMenu(menu);    
+
+    return super.onCreateOptionsMenu(menu);
   }
 
-  private static final String INTENT_MODE = "mode";  
+  private static final String INTENT_MODE = "mode";
   private static final int MODE_REPLIES = 1;
-  
+
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
@@ -638,7 +646,7 @@ public class TwitterActivity extends BaseActivity {
       return true;
     case OPTIONS_MENU_ID_DM:
       startActivity(DmActivity.createIntent(this));
-      return true;            
+      return true;
     }
 
     return super.onOptionsItemSelected(item);
