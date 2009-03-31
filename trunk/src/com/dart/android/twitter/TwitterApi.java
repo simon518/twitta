@@ -57,6 +57,7 @@ public class TwitterApi {
   private static final String DIRECT_MESSAGES_SENT_URL = "http://twitter.com/direct_messages/sent.json";
   private static final String DIRECT_MESSAGES_DESTROY_URL = "http://twitter.com/direct_messages/destroy/%d.json";
   private static final String DIRECT_MESSAGES_NEW_URL = "http://twitter.com/direct_messages/new.json";
+  private static final String FOLLOWERS_IDS_URL = "http://twitter.com/followers/ids.json";
 
   private static final String TWITTER_HOST = "twitter.com";
 
@@ -359,6 +360,28 @@ public class TwitterApi {
     }
 
     return json;
+  }
+
+  public ArrayList<Integer> getFollowersIds() throws IOException,
+      AuthException, ApiException {
+    Log.i(TAG, "Requesting followers ids.");
+
+    InputStream data = requestData(FOLLOWERS_IDS_URL, METHOD_GET, null);
+    ArrayList<Integer> followers = new ArrayList<Integer>();
+
+    try {
+      JSONArray jsonArray = new JSONArray(Utils.stringifyStream(data));
+      for (int i = 0; i < jsonArray.length(); ++i) {
+        followers.add(jsonArray.getInt(i));
+      }
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
+    return followers;
   }
 
 }
