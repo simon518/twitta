@@ -49,14 +49,18 @@ public class TwitterDbAdapter {
       KEY_TEXT, KEY_PROFILE_IMAGE_URL, KEY_IS_UNREAD, KEY_IS_SENT,
       KEY_CREATED_AT, KEY_USER_ID };
 
+  public static final String[] FOLLOWER_COLUMNS = new String[] { KEY_ID };
+  
   private DatabaseHelper mDbHelper;
   private SQLiteDatabase mDb;
 
   private static final String DATABASE_NAME = "data";
+  
   private static final String TWEET_TABLE = "tweets";
   private static final String DM_TABLE = "dms";
+  private static final String FOLLOWER_TABLE = "followers";
 
-  private static final int DATABASE_VERSION = 6;
+  private static final int DATABASE_VERSION = 7;
 
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
@@ -75,6 +79,9 @@ public class TwitterDbAdapter {
       + " boolean not null, " + KEY_IS_SENT + " boolean not null, "
       + KEY_CREATED_AT + " date not null, " + KEY_USER_ID + " integer)";
 
+  private static final String FOLLOWER_TABLE_CREATE = "create table followers ("
+      + KEY_ID + " integer primary key on conflict replace)";
+
   private final Context mContext;
 
   private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -86,6 +93,7 @@ public class TwitterDbAdapter {
     public void onCreate(SQLiteDatabase db) {
       db.execSQL(TWEET_TABLE_CREATE);
       db.execSQL(DM_TABLE_CREATE);
+      db.execSQL(FOLLOWER_TABLE_CREATE);
     }
 
     @Override
@@ -94,6 +102,7 @@ public class TwitterDbAdapter {
           + newVersion + " which destroys all old data");
       db.execSQL("DROP TABLE IF EXISTS " + TWEET_TABLE);
       db.execSQL("DROP TABLE IF EXISTS " + DM_TABLE);
+      db.execSQL("DROP TABLE IF EXISTS " + FOLLOWER_TABLE);
       onCreate(db);
     }
   }
@@ -128,7 +137,7 @@ public class TwitterDbAdapter {
         .put(KEY_CREATED_AT, DB_DATE_FORMATTER.format(tweet.createdAt));
     initialValues.put(KEY_SOURCE, tweet.source);
     initialValues.put(KEY_USER_ID, tweet.userId);
-  
+
     return mDb.insert(TWEET_TABLE, null, initialValues);
   }
 
@@ -141,11 +150,17 @@ public class TwitterDbAdapter {
     initialValues.put(KEY_IS_UNREAD, isUnread);
     initialValues.put(KEY_IS_SENT, dm.isSent);
     initialValues.put(KEY_CREATED_AT, DB_DATE_FORMATTER.format(dm.createdAt));
-    initialValues.put(KEY_USER_ID, dm.userId);    
+    initialValues.put(KEY_USER_ID, dm.userId);
 
     return mDb.insert(DM_TABLE, null, initialValues);
   }
 
+  public long createFollower(int userId) {
+    ContentValues initialValues = new ContentValues();
+    initialValues.put(KEY_ID, userId);
+    return mDb.insert(FOLLOWER_TABLE, null, initialValues);
+  }
+  
   public void syncTweets(List<Tweet> tweets) {
     try {
       mDb.beginTransaction();
@@ -178,6 +193,22 @@ public class TwitterDbAdapter {
     }
   }
 
+  public void syncFollowers(List<Integer> followers) {
+    try {
+      mDb.beginTransaction();
+
+      deleteAllFollowers();
+
+      for (Integer userId : followers) {
+        createFollower(userId);
+      }
+
+      mDb.setTransactionSuccessful();
+    } finally {
+      mDb.endTransaction();
+    }
+  }
+  
   public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
     int unreadCount = 0;
 
@@ -207,6 +238,15 @@ public class TwitterDbAdapter {
         + " DESC");
   }
 
+  public Cursor fetchAllFollowers() {
+    return mDb.query(DM_TABLE, DM_COLUMNS, null, null, null, null, KEY_ID
+        + " DESC");
+  }
+
+  public Cursor getFollowerUsernames() {
+    return mDb.rawQuery("SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id ORDER BY user COLLATE NOCASE", null);
+  }
+  
   // TODO: this seems a bit messy.
   public Cursor getRecentRecipients(String filter) {
     String likeFilter = '%' + filter + '%';
@@ -220,6 +260,7 @@ public class TwitterDbAdapter {
   public void clearData() {
     deleteAllTweets();
     deleteAllDms();
+    deleteAllFollowers();
   }
 
   public boolean deleteAllTweets() {
@@ -230,6 +271,10 @@ public class TwitterDbAdapter {
     return mDb.delete(DM_TABLE, null, null) > 0;
   }
 
+  public boolean deleteAllFollowers() {
+    return mDb.delete(FOLLOWER_TABLE, null, null) > 0;
+  }
+  
   public boolean deleteDm(int id) {
     return mDb.delete(DM_TABLE, KEY_ID + "=" + id, null) > 0;
   }
