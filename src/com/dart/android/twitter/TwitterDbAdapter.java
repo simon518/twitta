@@ -65,22 +65,24 @@ public class TwitterDbAdapter {
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
   // the old row upon conflict.
-  private static final String TWEET_TABLE_CREATE = "create table tweets ("
-      + KEY_ID + " integer primary key on conflict replace, " + KEY_USER
+  private static final String TWEET_TABLE_CREATE = "create table "
+      + TWEET_TABLE + " (" + KEY_ID
+      + " integer primary key on conflict replace, " + KEY_USER
       + " text not null, " + KEY_TEXT + " text not null, "
       + KEY_PROFILE_IMAGE_URL + " text not null, " + KEY_IS_UNREAD
       + " boolean not null, " + KEY_CREATED_AT + " date not null, "
       + KEY_SOURCE + " text not null, " + KEY_USER_ID + " integer)";
 
-  private static final String DM_TABLE_CREATE = "create table dms (" + KEY_ID
-      + " integer primary key on conflict replace, " + KEY_USER
+  private static final String DM_TABLE_CREATE = "create table " + DM_TABLE
+      + " (" + KEY_ID + " integer primary key on conflict replace, " + KEY_USER
       + " text not null, " + KEY_TEXT + " text not null, "
       + KEY_PROFILE_IMAGE_URL + " text not null, " + KEY_IS_UNREAD
       + " boolean not null, " + KEY_IS_SENT + " boolean not null, "
       + KEY_CREATED_AT + " date not null, " + KEY_USER_ID + " integer)";
 
-  private static final String FOLLOWER_TABLE_CREATE = "create table followers ("
-      + KEY_ID + " integer primary key on conflict replace)";
+  private static final String FOLLOWER_TABLE_CREATE = "create table "
+      + FOLLOWER_TABLE + " (" + KEY_ID
+      + " integer primary key on conflict replace)";
 
   private final Context mContext;
 
@@ -244,6 +246,7 @@ public class TwitterDbAdapter {
   }
 
   public Cursor getFollowerUsernames() {
+    // TODO: clean this up.
     return mDb
         .rawQuery(
             "SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id ORDER BY user COLLATE NOCASE",
@@ -295,7 +298,7 @@ public class TwitterDbAdapter {
   }
 
   public int fetchMaxId() {
-    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM tweets",
+    Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM " + TWEET_TABLE,
         null);
 
     int result = 0;
@@ -312,8 +315,8 @@ public class TwitterDbAdapter {
   }
 
   public int fetchUnreadCount() {
-    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM tweets "
-        + "WHERE is_unread = 1", null);
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + TWEET_TABLE
+        + " WHERE is_unread = 1", null);
 
     int result = 0;
 
@@ -330,7 +333,7 @@ public class TwitterDbAdapter {
 
   public int fetchMaxDmId() {
     Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID
-        + ") FROM dms WHERE is_sent = 0", null);
+        + ") FROM " + DM_TABLE + " WHERE is_sent = 0", null);
 
     int result = 0;
 
@@ -365,8 +368,8 @@ public class TwitterDbAdapter {
   }
 
   private int fetchUnreadDmCount() {
-    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM dms "
-        + "WHERE is_unread = 1", null);
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM " + DM_TABLE
+        + " WHERE is_unread = 1", null);
 
     int result = 0;
 
