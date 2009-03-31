@@ -21,6 +21,7 @@ public class Dm extends Message {
     JSONObject user = dm.isSent ? jsonObject.getJSONObject("recipient")
         : jsonObject.getJSONObject("sender");
     dm.screenName = Utils.decodeTwitterJson(user.getString("screen_name"));
+    dm.userId = user.getString("id");    
     dm.profileImageUrl = user.getString("profile_image_url");
 
     return dm;
