@@ -245,12 +245,14 @@ public class TwitterDbAdapter {
         null);
   }
 
-  public Cursor getFollowerUsernames() {
+  public Cursor getFollowerUsernames(String filter) {
+    String likeFilter = '%' + filter + '%';
+    
     // TODO: clean this up.
     return mDb
         .rawQuery(
-            "SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id ORDER BY user COLLATE NOCASE",
-            null);
+            "SELECT user_id AS _id, user FROM (SELECT user_id, user FROM tweets INNER JOIN followers on tweets.user_id = followers._id UNION SELECT user_id, user FROM dms INNER JOIN followers on dms.user_id = followers._id) WHERE user LIKE ? ORDER BY user COLLATE NOCASE",
+            new String[] { likeFilter });
   }
 
   // TODO: this seems a bit messy.
