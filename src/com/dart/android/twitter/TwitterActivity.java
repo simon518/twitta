@@ -498,8 +498,10 @@ public class TwitterActivity extends BaseActivity {
     public RetrieveResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
+      int maxId = mDb.fetchMaxId();
+      
       try {
-        jsonArray = mApi.getTimeline();
+        jsonArray = mApi.getTimelineSinceId(maxId);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -548,7 +550,7 @@ public class TwitterActivity extends BaseActivity {
         return RetrieveResult.CANCELLED;
       }
 
-      mDb.syncTweets(tweets);
+      mDb.addTweets(tweets);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
