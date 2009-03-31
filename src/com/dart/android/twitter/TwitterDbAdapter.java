@@ -163,6 +163,7 @@ public class TwitterDbAdapter {
     return mDb.insert(FOLLOWER_TABLE, null, initialValues);
   }
 
+  /*
   public void syncTweets(List<Tweet> tweets) {
     try {
       mDb.beginTransaction();
@@ -194,6 +195,7 @@ public class TwitterDbAdapter {
       mDb.endTransaction();
     }
   }
+  */
 
   public void syncFollowers(List<Integer> followers) {
     try {
@@ -212,22 +214,9 @@ public class TwitterDbAdapter {
   }
 
   public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
-    int unreadCount = 0;
-
-    try {
-      mDb.beginTransaction();
-
-      for (Tweet tweet : tweets) {
-        createTweet(tweet, true);
-      }
-
-      unreadCount = fetchUnreadCount();
-      mDb.setTransactionSuccessful();
-    } finally {
-      mDb.endTransaction();
-    }
-
-    return unreadCount;
+    addTweets(tweets);
+    
+    return fetchUnreadCount();
   }
 
   public Cursor fetchAllTweets() {
@@ -255,17 +244,8 @@ public class TwitterDbAdapter {
             new String[] { likeFilter });
   }
 
-  // TODO: this seems a bit messy.
-  public Cursor getRecentRecipients(String filter) {
-    String likeFilter = '%' + filter + '%';
-
-    return mDb.rawQuery("SELECT " + KEY_USER + " as _id, " + KEY_USER + " "
-        + "FROM " + DM_TABLE + " " + "WHERE " + KEY_USER + " LIKE ? " + "AND "
-        + KEY_IS_SENT + " = 1 GROUP BY " + KEY_USER,
-        new String[] { likeFilter });
-  }
-
   public void clearData() {
+    // TODO: just wipe the database.
     deleteAllTweets();
     deleteAllDms();
     deleteAllFollowers();
@@ -351,22 +331,9 @@ public class TwitterDbAdapter {
   }
 
   public int addNewDmsAndCountUnread(List<Dm> dms) {
-    int unreadCount = 0;
-
-    try {
-      mDb.beginTransaction();
-
-      for (Dm dm : dms) {
-        createDm(dm, true);
-      }
-
-      unreadCount = fetchUnreadDmCount();
-      mDb.setTransactionSuccessful();
-    } finally {
-      mDb.endTransaction();
-    }
-
-    return unreadCount;
+    addDms(dms);
+    
+    return fetchUnreadDmCount();
   }
 
   private int fetchUnreadDmCount() {
@@ -386,7 +353,6 @@ public class TwitterDbAdapter {
     return result;
   }
 
-  // TODO: merge these with sync* methods.
   public void addTweets(List<Tweet> tweets) {
     try {
       mDb.beginTransaction();
@@ -417,16 +383,20 @@ public class TwitterDbAdapter {
     }
   }
 
-  public void limitRows(String tablename, int limit) {
+  public int limitRows(String tablename, int limit) {
     Cursor cursor = mDb.rawQuery("SELECT " + KEY_ID + " FROM " + tablename
         + " ORDER BY " + KEY_ID + " DESC LIMIT 1 OFFSET ?", new String[] { limit - 1 + "" });
     
-    if (cursor.moveToFirst()) {
+    int deleted = 0;
+    
+    if (cursor != null && cursor.moveToFirst()) {
       int limitId = cursor.getInt(0);
-      mDb.delete(tablename, KEY_ID + "<" + limitId, null);                
+      deleted = mDb.delete(tablename, KEY_ID + "<" + limitId, null);                
     }    
 
     cursor.close();
+    
+    return deleted;
   }
   
 }
