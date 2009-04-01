@@ -16,6 +16,7 @@
 
 package com.dart.android.twitter;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -34,6 +35,9 @@ import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.mime.MultipartEntity;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.entity.mime.content.StringBody;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.auth.BasicSchemeFactory;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -59,17 +63,22 @@ public class TwitterApi {
   private static final String DIRECT_MESSAGES_NEW_URL = "http://twitter.com/direct_messages/new.json";
   private static final String FOLLOWERS_IDS_URL = "http://twitter.com/followers/ids.json";
 
+  private static final String UPLOAD_AND_POST_URL = "http://twitpic.com/api/uploadAndPost";
+
   private static final String TWITTER_HOST = "twitter.com";
 
   private DefaultHttpClient mClient;
   private AuthScope mAuthScope;
+
+  private String mUsername;
+  private String mPassword;
 
   private static final String METHOD_GET = "GET";
   private static final String METHOD_POST = "POST";
   private static final String METHOD_DELETE = "DELETE";
 
   public static final int RETRIEVE_LIMIT = 50;
-  
+
   public class AuthException extends Exception {
     private static final long serialVersionUID = 1703735789572778599L;
   }
@@ -109,8 +118,55 @@ public class TwitterApi {
   }
 
   public void setCredentials(String username, String password) {
+    mUsername = username;
+    mPassword = password;
     mClient.getCredentialsProvider().setCredentials(mAuthScope,
         new UsernamePasswordCredentials(username, password));
+  }
+
+  public void postTwitPic(File file, String message) throws IOException,
+      AuthException, ApiException {
+    URI uri;
+
+    try {
+      uri = new URI(UPLOAD_AND_POST_URL);
+    } catch (URISyntaxException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Invalid URL.");
+    }
+
+    DefaultHttpClient client = new DefaultHttpClient();
+    HttpPost post = new HttpPost(uri);
+    MultipartEntity entity = new MultipartEntity();
+    entity.addPart("username", new StringBody(mUsername));
+    entity.addPart("password", new StringBody(mPassword));
+    // Don't try this. Server does not appear to support chunking.
+    // entity.addPart("media", new InputStreamBody(imageStream, "media"));
+    entity.addPart("media", new FileBody(file));
+    entity.addPart("message", new StringBody(message));
+    post.setEntity(entity);
+    
+    HttpConnectionParams.setConnectionTimeout(post.getParams(),
+        CONNECTION_TIMEOUT_MS);
+    HttpConnectionParams.setSoTimeout(post.getParams(), SOCKET_TIMEOUT_MS);
+
+    HttpResponse response;
+
+    try {
+      response = client.execute(post);
+    } catch (ClientProtocolException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("HTTP protocol error.");
+    }
+
+    int statusCode = response.getStatusLine().getStatusCode();
+
+    if (statusCode != 200) {
+      Log.e(TAG, Utils.stringifyStream(response.getEntity().getContent()));
+      throw new IOException("Non OK response code: " + statusCode);
+    }
+    
+    // TODO: error handling.
   }
 
   // TODO: return a custom object that has a finish method
@@ -220,7 +276,7 @@ public class TwitterApi {
     Log.i(TAG, "Requesting friends timeline since id.");
 
     String url = FRIENDS_TIMELINE_URL;
-    
+
     if (sinceId > 0) {
       url += "?since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
     }
@@ -345,16 +401,16 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONArray getDmsSinceId(int sinceId, boolean isSent) throws IOException,
-      AuthException, ApiException {
+  public JSONArray getDmsSinceId(int sinceId, boolean isSent)
+      throws IOException, AuthException, ApiException {
     Log.i(TAG, "Requesting DMs since id.");
 
-    String url = isSent? DIRECT_MESSAGES_SENT_URL : DIRECT_MESSAGES_URL;
+    String url = isSent ? DIRECT_MESSAGES_SENT_URL : DIRECT_MESSAGES_URL;
 
     if (sinceId > 0) {
       url += "?since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
     }
-    
+
     InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
 
@@ -366,10 +422,10 @@ public class TwitterApi {
     } finally {
       data.close();
     }
-    
-    return json;        
-  }  
-  
+
+    return json;
+  }
+
   public ArrayList<Integer> getFollowersIds() throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Requesting followers ids.");
