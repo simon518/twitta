@@ -270,8 +270,10 @@ public class DmActivity extends BaseActivity {
 
       ArrayList<Dm> dms = new ArrayList<Dm>();
 
+      int maxId = mDb.fetchMaxDmId(false);
+      
       try {
-        jsonArray = mApi.getDirectMessages();
+        jsonArray = mApi.getDmsSinceId(maxId, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -317,8 +319,10 @@ public class DmActivity extends BaseActivity {
         return TaskResult.CANCELLED;
       }
 
+      maxId = mDb.fetchMaxDmId(true);
+      
       try {
-        jsonArray = mApi.getDirectMessagesSent();
+        jsonArray = mApi.getDmsSinceId(maxId, true);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
