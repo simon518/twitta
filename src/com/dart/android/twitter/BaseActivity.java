@@ -80,7 +80,7 @@ public class BaseActivity extends Activity {
     SharedPreferences.Editor editor = mPreferences.edit();
     editor.clear();
     editor.commit();
-
+    
     // Let's cleanup files while we're at it.
     mImageManager.clear();
 
