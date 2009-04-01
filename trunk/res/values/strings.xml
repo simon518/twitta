@@ -3,6 +3,7 @@
     <string name="app_name">Twitta</string>
     
     <string name="direct_messages">Direct Messages</string>
+    <string name="post_picture">Post picture</string>
     
     <string name="username_label">Username:</string>    
     <string name="password_label">Password:</string>
