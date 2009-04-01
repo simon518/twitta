@@ -118,9 +118,14 @@ public class ImageManager {
   }
   
   // Downloads and stores an image to disk.
-  public Bitmap put(String url) throws IOException {
+  public void put(String url) throws IOException {
+    if (contains(url)) {
+      Log.i(TAG, "Image already exists: " + url);      
+      return;
+    }
+
     Log.i(TAG, "Fetching image: " + url);
-            
+       
     HttpGet get = new HttpGet(url);
     HttpConnectionParams.setConnectionTimeout(get.getParams(),
         CONNECTION_TIMEOUT_MS);
@@ -156,8 +161,6 @@ public class ImageManager {
               
       writeFile(url, bitmap);    
     }
-    
-    return bitmap;    
   }
 
   private void writeFile(String url, Bitmap bitmap) {
@@ -246,5 +249,5 @@ public class ImageManager {
       }
     }          
   }
-  
+
 }

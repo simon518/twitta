@@ -180,7 +180,7 @@ public class TwitterDbAdapter {
   }
 
   public int addNewTweetsAndCountUnread(List<Tweet> tweets) {
-    addTweets(tweets);
+    addTweets(tweets, true);
 
     return fetchUnreadCount();
   }
@@ -312,7 +312,7 @@ public class TwitterDbAdapter {
   }
 
   public int addNewDmsAndCountUnread(List<Dm> dms) {
-    addDms(dms);
+    addDms(dms, true);
 
     return fetchUnreadDmCount();
   }
@@ -334,7 +334,7 @@ public class TwitterDbAdapter {
     return result;
   }
 
-  public void addTweets(List<Tweet> tweets) {
+  public void addTweets(List<Tweet> tweets, boolean isUnread) {
     try {
       mDb.beginTransaction();
 
@@ -349,12 +349,12 @@ public class TwitterDbAdapter {
     }
   }
 
-  public void addDms(List<Dm> dms) {
+  public void addDms(List<Dm> dms, boolean isUnread) {
     try {
       mDb.beginTransaction();
 
       for (Dm dm : dms) {
-        createDm(dm, false);
+        createDm(dm, isUnread);
       }
 
       limitRows(DM_TABLE, TwitterApi.RETRIEVE_LIMIT);

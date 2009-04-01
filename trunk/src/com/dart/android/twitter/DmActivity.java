@@ -303,8 +303,7 @@ public class DmActivity extends BaseActivity {
           return TaskResult.CANCELLED;
         }
 
-        if (!Utils.isEmpty(dm.profileImageUrl)
-            && !mImageManager.contains(dm.profileImageUrl)) {
+        if (!Utils.isEmpty(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.put(dm.profileImageUrl);
@@ -351,8 +350,7 @@ public class DmActivity extends BaseActivity {
           return TaskResult.CANCELLED;
         }
 
-        if (!Utils.isEmpty(dm.profileImageUrl)
-            && !mImageManager.contains(dm.profileImageUrl)) {
+        if (!Utils.isEmpty(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.put(dm.profileImageUrl);
@@ -366,7 +364,7 @@ public class DmActivity extends BaseActivity {
         return TaskResult.CANCELLED;
       }
 
-      mDb.addDms(dms);
+      mDb.addDms(dms, false);
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
@@ -490,8 +488,7 @@ public class DmActivity extends BaseActivity {
         JSONObject jsonObject = mApi.sendDirectMessage(user, text);
         Dm dm = Dm.create(jsonObject, true);
 
-        if (!Utils.isEmpty(dm.profileImageUrl)
-            && !mImageManager.contains(dm.profileImageUrl)) {
+        if (!Utils.isEmpty(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.put(dm.profileImageUrl);
