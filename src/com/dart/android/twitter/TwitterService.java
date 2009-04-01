@@ -115,7 +115,18 @@ public class TwitterService extends Service {
     Log.i(TAG, mNewTweets.size() + " new tweets.");
 
     int count = mDb.addNewTweetsAndCountUnread(mNewTweets);
-
+    
+    for (Tweet tweet : mNewTweets) {
+      if (!Utils.isEmpty(tweet.profileImageUrl)) {
+        // Fetch image to cache.
+        try {
+          TwitterApplication.mImageManager.put(tweet.profileImageUrl);
+        } catch (IOException e) {
+          Log.e(TAG, e.getMessage(), e);
+        }
+      }
+    }        
+    
     if (count <= 0) {
       return;
     }
@@ -182,10 +193,21 @@ public class TwitterService extends Service {
 
     int count = mDb.addNewDmsAndCountUnread(mNewDms);
 
+    for (Dm dm : mNewDms) {
+      if (!Utils.isEmpty(dm.profileImageUrl)) {
+        // Fetch image to cache.
+        try {
+          TwitterApplication.mImageManager.put(dm.profileImageUrl);
+        } catch (IOException e) {
+          Log.e(TAG, e.getMessage(), e);
+        }
+      }
+    }        
+    
     if (count <= 0) {
       return;
     }
-
+    
     Dm latest = mNewDms.get(0);
 
     String title;

@@ -409,8 +409,7 @@ public class TwitterActivity extends BaseActivity {
         JSONObject jsonObject = mApi.update(status);
         Tweet tweet = Tweet.create(jsonObject);
 
-        if (!Utils.isEmpty(tweet.profileImageUrl)
-            && !mImageManager.contains(tweet.profileImageUrl)) {
+        if (!Utils.isEmpty(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.put(tweet.profileImageUrl);
@@ -543,8 +542,7 @@ public class TwitterActivity extends BaseActivity {
           return RetrieveResult.CANCELLED;
         }
 
-        if (!Utils.isEmpty(tweet.profileImageUrl)
-            && !mImageManager.contains(tweet.profileImageUrl)) {
+        if (!Utils.isEmpty(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
             mImageManager.put(tweet.profileImageUrl);
@@ -558,7 +556,7 @@ public class TwitterActivity extends BaseActivity {
         return RetrieveResult.CANCELLED;
       }
 
-      mDb.addTweets(tweets);
+      mDb.addTweets(tweets ,false);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
