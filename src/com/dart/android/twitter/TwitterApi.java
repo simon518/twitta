@@ -345,11 +345,11 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONArray getDmsSinceId(int sinceId) throws IOException,
+  public JSONArray getDmsSinceId(int sinceId, boolean isSent) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Requesting DMs since id.");
 
-    String url = DIRECT_MESSAGES_URL;
+    String url = isSent? DIRECT_MESSAGES_SENT_URL : DIRECT_MESSAGES_URL;
 
     if (sinceId > 0) {
       url += "?since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
@@ -366,10 +366,10 @@ public class TwitterApi {
     } finally {
       data.close();
     }
-
-    return json;
-  }
-
+    
+    return json;        
+  }  
+  
   public ArrayList<Integer> getFollowersIds() throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Requesting followers ids.");

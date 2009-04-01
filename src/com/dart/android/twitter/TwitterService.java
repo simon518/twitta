@@ -330,11 +330,11 @@ public class TwitterService extends Service {
         return RetrieveResult.CANCELLED;
       }
 
-      maxId = mDb.fetchMaxDmId();
+      maxId = mDb.fetchMaxDmId(false);
       Log.i(TAG, "Max DM id is:" + maxId);
 
       try {
-        jsonArray = mApi.getDmsSinceId(maxId);
+        jsonArray = mApi.getDmsSinceId(maxId, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;

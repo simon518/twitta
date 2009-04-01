@@ -294,9 +294,9 @@ public class TwitterDbAdapter {
     return result;
   }
 
-  public int fetchMaxDmId() {
+  public int fetchMaxDmId(boolean isSent) {
     Cursor mCursor = mDb.rawQuery("SELECT MAX(" + KEY_ID + ") FROM " + DM_TABLE
-        + " WHERE " + KEY_IS_SENT + " = 0", null);
+        + " WHERE " + KEY_IS_SENT + " = ?", new String[] { isSent ? "1" : "0" });
 
     int result = 0;
 
