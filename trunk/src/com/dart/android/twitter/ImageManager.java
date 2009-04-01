@@ -120,7 +120,7 @@ public class ImageManager {
   // Downloads and stores an image to disk.
   public void put(String url) throws IOException {
     if (contains(url)) {
-      Log.i(TAG, "Image already exists: " + url);      
+      // Image already exists.      
       return;
     }
 
