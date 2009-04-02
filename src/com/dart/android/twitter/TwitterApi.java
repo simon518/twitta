@@ -115,6 +115,10 @@ public class TwitterApi {
     return !Utils.isEmpty(username) && !Utils.isEmpty(password);
   }
 
+  public boolean isLoggedIn() {
+    return isValidCredentials(mUsername, mPassword);
+  }
+  
   private void prepareHttpClient() {
     mAuthScope = new AuthScope(TWITTER_HOST, AuthScope.ANY_PORT);
     mClient = new DefaultHttpClient();
