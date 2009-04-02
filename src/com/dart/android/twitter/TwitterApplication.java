@@ -3,7 +3,9 @@ package com.dart.android.twitter;
 import java.util.HashSet;
 
 import android.app.Application;
+import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.preference.PreferenceManager;
 
 public class TwitterApplication extends Application {
   
@@ -11,6 +13,7 @@ public class TwitterApplication extends Application {
   
   public static ImageManager mImageManager;
   public static TwitterDbAdapter mDb; 
+  public static TwitterApi mApi;
 
   @Override
   public void onCreate() {
@@ -19,8 +22,18 @@ public class TwitterApplication extends Application {
     mImageManager = new ImageManager(this);
     mDb = new TwitterDbAdapter(this);
     mDb.open();
+    mApi = new TwitterApi();
+    
+    SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);        
+
+    String username = preferences.getString(Preferences.USERNAME_KEY, "");
+    String password = preferences.getString(Preferences.PASSWORD_KEY, "");
+    
+    if (TwitterApi.isValidCredentials(username, password)) {
+      mApi.setCredentials(username, password);
+    }
   }
-  
+
   @Override
   public void onTerminate() {
     cleanupImages();
