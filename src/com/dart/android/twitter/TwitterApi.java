@@ -147,8 +147,8 @@ public class TwitterApi {
     DefaultHttpClient client = new DefaultHttpClient();
     HttpPost post = new HttpPost(uri);
     MultipartEntity entity = new MultipartEntity();
-    entity.addPart("username", new StringBody(""));
-    entity.addPart("password", new StringBody(""));
+    entity.addPart("username", new StringBody(mUsername));
+    entity.addPart("password", new StringBody(mPassword));
     // Don't try this. Server does not appear to support chunking.
     // entity.addPart("media", new InputStreamBody(imageStream, "media"));
     entity.addPart("media", new FileBody(file));

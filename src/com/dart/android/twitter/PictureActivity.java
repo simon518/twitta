@@ -129,7 +129,7 @@ public class PictureActivity extends BaseActivity {
   }
 
   private class SendTask extends UserTask<Void, Void, TaskResult> {
-    private String errorMessage;
+    private String apiErrorMessage;
     
     @Override
     public void onPreExecute() {
@@ -150,7 +150,7 @@ public class PictureActivity extends BaseActivity {
         return TaskResult.AUTH_ERROR;
       } catch (ApiException e) {
         Log.e(TAG, e.getMessage(), e);
-        errorMessage = e.getMessage();
+        apiErrorMessage = e.getMessage();
         return TaskResult.API_ERROR;
       }
 
@@ -169,7 +169,7 @@ public class PictureActivity extends BaseActivity {
       if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == TaskResult.API_ERROR) {
-        updateProgress(errorMessage);        
+        updateProgress(apiErrorMessage);        
       } else if (result == TaskResult.OK) {
         updateProgress("Picture has been posted");
       } else if (result == TaskResult.IO_ERROR) {
@@ -179,12 +179,6 @@ public class PictureActivity extends BaseActivity {
     }
   }
   
-  private void launchTwitterActivity() {
-    Intent intent = TwitterActivity.createIntent(this);
-    startActivity(intent);
-    finish();    
-  }
-
   private void onAuthFailure() {
     logout();
   }
@@ -222,7 +216,9 @@ public class PictureActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_TWEETS:
-      startActivity(TwitterActivity.createIntent(this));
+      Intent intent = TwitterActivity.createIntent(this);
+      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+      startActivity(intent);
       return true;                  
     }
 
