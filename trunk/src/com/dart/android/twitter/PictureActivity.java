@@ -10,6 +10,8 @@ import android.os.Bundle;
 import android.provider.MediaStore.Images.ImageColumns;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -22,7 +24,7 @@ import com.google.android.photostream.UserTask;
 
 public class PictureActivity extends BaseActivity {
 
-  private static final String TAG = "DmActivity";
+  private static final String TAG = "PictureActivity";
 
   private ImageView mPreview;
   private TweetEdit mTweetEdit;
@@ -31,10 +33,9 @@ public class PictureActivity extends BaseActivity {
   private TextView mProgressText;
 
   private Uri mImageUri;
+  private File mFile;
 
   private UserTask<Void, Void, TaskResult> mSendTask;
-
-  private File mFile;
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -116,7 +117,7 @@ public class PictureActivity extends BaseActivity {
   }
 
   private enum TaskResult {
-    OK, IO_ERROR, AUTH_ERROR, CANCELLED
+    OK, IO_ERROR, AUTH_ERROR, CANCELLED, API_ERROR
   }
 
   private void doSend() {
@@ -128,10 +129,12 @@ public class PictureActivity extends BaseActivity {
   }
 
   private class SendTask extends UserTask<Void, Void, TaskResult> {
+    private String errorMessage;
+    
     @Override
     public void onPreExecute() {
       disableEntry();
-      updateProgress("Updating status...");
+      updateProgress("Posting pic...");
     }
 
     @Override
@@ -147,7 +150,8 @@ public class PictureActivity extends BaseActivity {
         return TaskResult.AUTH_ERROR;
       } catch (ApiException e) {
         Log.e(TAG, e.getMessage(), e);
-        return TaskResult.IO_ERROR;
+        errorMessage = e.getMessage();
+        return TaskResult.API_ERROR;
       }
 
       return TaskResult.OK;
@@ -164,12 +168,12 @@ public class PictureActivity extends BaseActivity {
 
       if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
+      } else if (result == TaskResult.API_ERROR) {
+        updateProgress(errorMessage);        
       } else if (result == TaskResult.OK) {
-        mTweetEdit.setText("");
-        updateProgress("");
-        launchTwitterActivity();        
+        updateProgress("Picture has been posted");
       } else if (result == TaskResult.IO_ERROR) {
-        updateProgress("Unable to update status");
+        updateProgress("Unable to post pic");
         enableEntry();
       }
     }
@@ -198,4 +202,31 @@ public class PictureActivity extends BaseActivity {
     }
   };
 
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    super.onCreateOptionsMenu(menu);
+
+    // What a hack!
+    menu.clear();
+
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_TWEETS, 0, R.string.tweets);
+    item.setIcon(android.R.drawable.ic_menu_view);    
+        
+    item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
+    item.setIcon(android.R.drawable.ic_menu_info_details);
+    
+    return true;
+  }
+  
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+    case OPTIONS_MENU_ID_TWEETS:
+      startActivity(TwitterActivity.createIntent(this));
+      return true;                  
+    }
+
+    return super.onOptionsItemSelected(item);
+  }
+  
 }

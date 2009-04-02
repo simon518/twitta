@@ -24,6 +24,10 @@ import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.auth.AuthSchemeRegistry;
@@ -48,6 +52,11 @@ import org.apache.http.protocol.HTTP;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import android.util.Log;
 
@@ -138,14 +147,14 @@ public class TwitterApi {
     DefaultHttpClient client = new DefaultHttpClient();
     HttpPost post = new HttpPost(uri);
     MultipartEntity entity = new MultipartEntity();
-    entity.addPart("username", new StringBody(mUsername));
-    entity.addPart("password", new StringBody(mPassword));
+    entity.addPart("username", new StringBody(""));
+    entity.addPart("password", new StringBody(""));
     // Don't try this. Server does not appear to support chunking.
     // entity.addPart("media", new InputStreamBody(imageStream, "media"));
     entity.addPart("media", new FileBody(file));
     entity.addPart("message", new StringBody(message));
     post.setEntity(entity);
-    
+
     HttpConnectionParams.setConnectionTimeout(post.getParams(),
         CONNECTION_TIMEOUT_MS);
     HttpConnectionParams.setSoTimeout(post.getParams(), SOCKET_TIMEOUT_MS);
@@ -165,8 +174,45 @@ public class TwitterApi {
       Log.e(TAG, Utils.stringifyStream(response.getEntity().getContent()));
       throw new IOException("Non OK response code: " + statusCode);
     }
-    
-    // TODO: error handling.
+
+    DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+    DocumentBuilder db;
+    Document doc;
+
+    try {
+      db = dbf.newDocumentBuilder();
+      doc = db.parse(response.getEntity().getContent());
+    } catch (ParserConfigurationException e) {
+      throw new IOException("Could not parse response.");
+    } catch (IllegalStateException e) {
+      throw new IOException("Could not parse response.");
+    } catch (SAXException e) {
+      throw new IOException("Could not parse response.");
+    }
+
+    Element root = doc.getDocumentElement();
+    root.normalize();
+
+    if (!"rsp".equals(root.getTagName())) {
+      throw new IOException("Could not parse response.");
+    }
+
+    String stat = root.getAttribute("stat");
+
+    if ("fail".equals(stat)) {
+      NodeList list = root.getChildNodes();
+
+      for (int i = 0; i < list.getLength(); i++) {
+        if (list.item(i).getNodeName().equals("err")) {
+          Node err = list.item(i);
+          String code = err.getAttributes().getNamedItem("code").getNodeValue();
+          String msg = err.getAttributes().getNamedItem("msg").getNodeValue();
+          throw new ApiException(Integer.parseInt(code), msg);
+        }
+      }
+            
+      throw new IOException("Could not parse error response.");      
+    }
   }
 
   // TODO: return a custom object that has a finish method
