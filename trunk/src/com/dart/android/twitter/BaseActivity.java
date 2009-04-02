@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -69,6 +70,8 @@ public class BaseActivity extends Activity {
   }
   
   protected void logout() {
+    Log.i(TAG, "here");
+    
     TwitterService.unschedule(this);
 
     mDb.clearData();
@@ -84,6 +87,8 @@ public class BaseActivity extends Activity {
     // Let's cleanup files while we're at it.
     mImageManager.clear();
 
+    Log.i(TAG, "here2");
+    
     Intent intent = new Intent(this, LoginActivity.class);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     startActivity(intent);
