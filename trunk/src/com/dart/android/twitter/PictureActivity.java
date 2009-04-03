@@ -216,7 +216,7 @@ public class PictureActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_TWEETS:
-      TwitterActivity.showNewTask(this);
+      launchActivity(TwitterActivity.createIntent(this));
       return true;                  
     }
 
