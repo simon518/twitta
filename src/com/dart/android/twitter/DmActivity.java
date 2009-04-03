@@ -62,23 +62,30 @@ public class DmActivity extends BaseActivity {
   private static final String EXTRA_USER = "user";
 
   public static Intent createIntent(Context context) {    
+    return createIntent(context, "");
+  }
+
+  public static Intent createIntent(Context context, String user) {    
     Intent intent = new Intent(context, DmActivity.class);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     
-    return intent;
-  }
-    
-  public static void show(Context context, String user) {
-    Intent intent = createIntent(context);
     if (!Utils.isEmpty(user)) {
       intent.putExtra(EXTRA_USER, user);
-    }
+    }    
+    
+    return intent;
+  }
+  
+  /*
+  public static void show(Context context, String user) {
+    Intent intent = createIntent(context);
     context.startActivity(intent);
   }
 
   public static void show(Context context) {
     show(context, "");
   }
+  */
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -633,7 +640,7 @@ public class DmActivity extends BaseActivity {
       doRetrieve();
       return true;
     case OPTIONS_MENU_ID_TWEETS:
-      TwitterActivity.show(this);
+      launchActivity(TwitterActivity.createIntent(this));
       return true;                  
     }
 

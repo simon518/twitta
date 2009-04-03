@@ -81,6 +81,7 @@ public class TwitterActivity extends BaseActivity {
     return intent;
   }
   
+  /*
   public static void show(Context context) {
     Intent intent = createIntent(context);
     context.startActivity(intent);
@@ -90,7 +91,8 @@ public class TwitterActivity extends BaseActivity {
     Intent intent = createIntent(context);
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     context.startActivity(intent);    
-  }  
+  } 
+  */ 
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -282,7 +284,7 @@ public class TwitterActivity extends BaseActivity {
     case CONTEXT_DM_ID:
       String user = cursor.getString(cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
-      launchActivity(DmActivity.createIntent(this));
+      launchActivity(DmActivity.createIntent(this, user));
       return true;
     default:
       return super.onContextItemSelected(item);
