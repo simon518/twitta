@@ -18,7 +18,6 @@ import android.view.MenuItem;
 
 public class BaseActivity extends Activity {
   
-  @SuppressWarnings("unused")
   private static final String TAG = "BaseActivity";
 
   protected SharedPreferences mPreferences;    
@@ -29,17 +28,10 @@ public class BaseActivity extends Activity {
    
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);   
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);    
-
-    if (!getApi().isLoggedIn()) {
-      Log.i(TAG, "Not logged in.");
-      handleLoggedOut();
-      return;
-    }        
   }
   
-  private void handleLoggedOut() {
+  protected void handleLoggedOut() {
     if (isTaskRoot()) {
-      // Would like to pass the pending intent to the login screen.
       showLogin();
     } else {
       setResult(RESULT_LOGOUT);
@@ -85,9 +77,11 @@ public class BaseActivity extends Activity {
         
     handleLoggedOut();    
   }
-
-  private void showLogin() {
+  
+  protected void showLogin() {
     Intent intent = new Intent(this, LoginActivity.class);
+    // TODO: might be a hack?
+    intent.putExtra(Intent.EXTRA_INTENT, getIntent());
     startActivity(intent);    
   }
   
@@ -152,6 +146,8 @@ public class BaseActivity extends Activity {
   }
 
   protected void launchActivity(Intent intent) {
+    // TODO: probably don't need this result chaining to finish upon logout.
+    // since the subclasses have to check in onResume.
     startActivityForResult(intent, REQUEST_CODE_LAUNCH_ACTIVITY);    
   }
   

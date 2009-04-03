@@ -80,6 +80,12 @@ public class DmActivity extends BaseActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    if (!getApi().isLoggedIn()) {
+      Log.i(TAG, "Not logged in.");
+      handleLoggedOut();
+      return;
+    }        
+    
     setContentView(R.layout.dm);
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
@@ -151,6 +157,17 @@ public class DmActivity extends BaseActivity {
     mTweetList.setItemsCanFocus(true);
   }
 
+  @Override
+  protected void onResume() {
+    super.onResume();
+    
+    if (!getApi().isLoggedIn()) {
+      Log.i(TAG, "Not logged in.");
+      handleLoggedOut();
+      return;
+    }               
+  }
+  
   private static final String SIS_RUNNING_KEY = "running";
 
   @Override

@@ -41,6 +41,15 @@ public class PictureActivity extends BaseActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
+    if (!getApi().isLoggedIn()) {
+      Log.i(TAG, "Not logged in.");
+      // handleLoggedOut();
+      showLogin();
+      finish();
+      
+      return;
+    }        
+    
     setContentView(R.layout.picture);
 
     mPreview = (ImageView) findViewById(R.id.preview);
@@ -87,6 +96,20 @@ public class PictureActivity extends BaseActivity {
     }
   }
 
+  @Override
+  protected void onResume() {
+    super.onResume();
+    
+    if (!getApi().isLoggedIn()) {
+      Log.i(TAG, "Not logged in.");
+      // handleLoggedOut();      
+      showLogin();
+      finish();
+      
+      return;
+    }               
+  }
+  
   @Override
   protected void onDestroy() {
     Log.i(TAG, "onDestroy.");
