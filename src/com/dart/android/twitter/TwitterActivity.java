@@ -81,19 +81,6 @@ public class TwitterActivity extends BaseActivity {
     return intent;
   }
   
-  /*
-  public static void show(Context context) {
-    Intent intent = createIntent(context);
-    context.startActivity(intent);
-  }
-  
-  public static void showNewTask(Context context) {
-    Intent intent = createIntent(context);
-    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    context.startActivity(intent);    
-  } 
-  */ 
-
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);

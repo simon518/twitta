@@ -76,17 +76,6 @@ public class DmActivity extends BaseActivity {
     return intent;
   }
   
-  /*
-  public static void show(Context context, String user) {
-    Intent intent = createIntent(context);
-    context.startActivity(intent);
-  }
-
-  public static void show(Context context) {
-    show(context, "");
-  }
-  */
-  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
