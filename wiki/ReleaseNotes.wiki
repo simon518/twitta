@@ -4,7 +4,7 @@
 
 == Version 5 ==
 
-  * TweetPic support
+  * TwitPic support
 
 == Version 4 ==
 
