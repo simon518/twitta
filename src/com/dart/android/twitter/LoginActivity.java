@@ -19,6 +19,7 @@ package com.dart.android.twitter;
 import java.io.IOException;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -104,14 +105,6 @@ public class LoginActivity extends Activity {
         doLogin();
       }
     });
-
-    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-
-    if (TwitterApi.isValidCredentials(username, password)) {
-      launchTwitterActivity();     
-      return;
-    }
   }
 
   @Override
@@ -122,26 +115,6 @@ public class LoginActivity extends Activity {
 
     super.onDestroy();
   }
-
-  void launchTwitterActivity() {
-    Intent intent = TwitterActivity.createIntent(this);
-    startActivity(intent);
-    finish();
-  }
-
-  /*
-  void launchDmActivity() {
-    Intent intent = new Intent();
-    intent.setClass(this, DmActivity.class);
-    startActivity(intent);
-    finish();
-  }
-
-  protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-    // This was caused by the back button in TwitterActivity.
-    finish();
-  }
-  */
 
   @Override
   protected void onSaveInstanceState(Bundle outState) {
@@ -198,7 +171,8 @@ public class LoginActivity extends Activity {
     editor.putString(Preferences.PASSWORD_KEY, password);
     editor.commit();
 
-    launchTwitterActivity();
+    // TODO: set result?
+    finish();
   }
 
   private void onLoginFailure() {
