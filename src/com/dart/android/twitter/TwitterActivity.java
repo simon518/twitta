@@ -82,8 +82,7 @@ public class TwitterActivity extends BaseActivity {
   }
 
   public static Intent createNewTaskIntent(Context context) {    
-    Intent intent = new Intent(context, TwitterActivity.class);
-    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    Intent intent = createIntent(context);
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
     
     return intent;
