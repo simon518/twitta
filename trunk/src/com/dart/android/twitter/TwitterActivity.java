@@ -74,12 +74,23 @@ public class TwitterActivity extends BaseActivity {
   // Refresh followers if last refresh was this long ago or greater.
   private static final long FOLLOWERS_REFRESH_THRESHOLD = 12 * 60 * 60 * 1000;
 
-  public static Intent createIntent(Context context) {
+  public static Intent createIntent(Context context) {    
     Intent intent = new Intent(context, TwitterActivity.class);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
+    
     return intent;
   }
+  
+  public static void show(Context context) {
+    Intent intent = createIntent(context);
+    context.startActivity(intent);
+  }
+  
+  public static void showNewTask(Context context) {
+    Intent intent = createIntent(context);
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    context.startActivity(intent);    
+  }  
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +115,7 @@ public class TwitterActivity extends BaseActivity {
     });
 
     // Mark all as read.
-    mDb.markAllTweetsRead();
+    getDb().markAllTweetsRead();
 
     setupAdapter();
 
@@ -207,8 +218,8 @@ public class TwitterActivity extends BaseActivity {
     mProgressText.setText(progress);
   }
 
-  private void setupAdapter() {
-    Cursor cursor = mDb.fetchAllTweets();
+  private void setupAdapter() {    
+    Cursor cursor = getDb().fetchAllTweets();
     startManagingCursor(cursor);
 
     mTweetAdapter = new TweetAdapter(this, cursor);
@@ -232,7 +243,7 @@ public class TwitterActivity extends BaseActivity {
     int userId = cursor.getInt(cursor
         .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER_ID));
     
-    if (mDb.isFollower(userId)) { 
+    if (getDb().isFollower(userId)) { 
       menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
     }
   }
@@ -337,7 +348,7 @@ public class TwitterActivity extends BaseActivity {
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
+        holder.profileImage.setImageBitmap(getImageManager().get(profileImageUrl));
       }
 
       mMetaBuilder.setLength(0);
@@ -406,19 +417,19 @@ public class TwitterActivity extends BaseActivity {
     public SendResult doInBackground(Void... params) {
       try {
         String status = mTweetEdit.getText().toString();
-        JSONObject jsonObject = mApi.update(status);
+        JSONObject jsonObject = getApi().update(status);
         Tweet tweet = Tweet.create(jsonObject);
 
         if (!Utils.isEmpty(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.put(tweet.profileImageUrl);
+            getImageManager().put(tweet.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
         }
 
-        mDb.createTweet(tweet, false);
+        getDb().createTweet(tweet, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return SendResult.IO_ERROR;
@@ -505,10 +516,10 @@ public class TwitterActivity extends BaseActivity {
     public RetrieveResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
-      int maxId = mDb.fetchMaxId();
+      int maxId = getDb().fetchMaxId();
 
       try {
-        jsonArray = mApi.getTimelineSinceId(maxId);
+        jsonArray = getApi().getTimelineSinceId(maxId);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -545,7 +556,7 @@ public class TwitterActivity extends BaseActivity {
         if (!Utils.isEmpty(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.put(tweet.profileImageUrl);
+            getImageManager().put(tweet.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
@@ -556,7 +567,7 @@ public class TwitterActivity extends BaseActivity {
         return RetrieveResult.CANCELLED;
       }
 
-      mDb.addTweets(tweets ,false);
+      getDb().addTweets(tweets ,false);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
@@ -586,8 +597,8 @@ public class TwitterActivity extends BaseActivity {
     @Override
     public RetrieveResult doInBackground(Void... params) {
       try {
-        ArrayList<Integer> followers = mApi.getFollowersIds();
-        mDb.syncFollowers(followers);
+        ArrayList<Integer> followers = getApi().getFollowersIds();
+        getDb().syncFollowers(followers);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -643,7 +654,7 @@ public class TwitterActivity extends BaseActivity {
       startActivity(repliesIntent);
       return true;
     case OPTIONS_MENU_ID_DM:
-      startActivity(DmActivity.createIntent(this));
+      DmActivity.show(this);
       return true;
     }
 
