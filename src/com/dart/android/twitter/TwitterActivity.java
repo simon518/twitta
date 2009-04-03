@@ -282,7 +282,7 @@ public class TwitterActivity extends BaseActivity {
     case CONTEXT_DM_ID:
       String user = cursor.getString(cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
-      DmActivity.show(this, user);
+      launchActivity(DmActivity.createIntent(this));
       return true;
     default:
       return super.onContextItemSelected(item);
@@ -654,7 +654,7 @@ public class TwitterActivity extends BaseActivity {
       startActivity(repliesIntent);
       return true;
     case OPTIONS_MENU_ID_DM:
-      DmActivity.show(this);
+      launchActivity(DmActivity.createIntent(this));      
       return true;
     }
 
