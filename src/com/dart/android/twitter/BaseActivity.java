@@ -22,9 +22,6 @@ public class BaseActivity extends Activity {
   private static final String TAG = "BaseActivity";
 
   protected SharedPreferences mPreferences;    
-  protected TwitterApi mApi;
-  protected TwitterDbAdapter mDb;
-  protected ImageManager mImageManager;
   
   @Override
   protected void onCreate(Bundle savedInstanceState) {
@@ -36,30 +33,30 @@ public class BaseActivity extends Activity {
 
     manageUpdateChecks();
     
-    String username = getUsername();
-    String password = getPassword();
-    
-    mApi = new TwitterApi();
-    mApi.setCredentials(username, password);
-        
-    mImageManager = TwitterApplication.mImageManager;    
-    mDb = TwitterApplication.mDb;
+    if (!isLoggedIn()) {
+      showLogin();      
+    }
   }
   
-  private String getUsername() {
-    return mPreferences.getString(Preferences.USERNAME_KEY, "");
+  protected ImageManager getImageManager() {
+    return TwitterApplication.mImageManager;
   }
 
-  private String getPassword() {
-    return mPreferences.getString(Preferences.PASSWORD_KEY, "");
+  protected TwitterDbAdapter getDb() {
+    return TwitterApplication.mDb;
   }
-  
+
+  protected TwitterApi getApi() {
+    return TwitterApplication.mApi;  
+  }
+
   @Override
-  protected void onResume() {
-    super.onResume();
+  protected void onRestart() {
+    super.onRestart();
 
     // Is the user still logged in?
-    if (!TwitterApi.isValidCredentials(getUsername(), getPassword())) {
+    if (!isLoggedIn()) {
+      Log.i(TAG, "Not logged in. Finish activity.");
       finish();
     }    
   }
@@ -69,32 +66,30 @@ public class BaseActivity extends Activity {
     super.onDestroy();
   }
   
+  protected boolean isLoggedIn() {
+    return getApi().isLoggedIn();
+  }
+  
   protected void logout() {
-    Log.i(TAG, "here");
-    
     TwitterService.unschedule(this);
 
-    mDb.clearData();
+    getDb().clearData();
+    getApi().logout();
 
-    // It is very important to clear preferences,
-    // in particular the username and password, or else
-    // LoginActivity may launch TwitterActivity again because
-    // it thinks there are valid credentials.
     SharedPreferences.Editor editor = mPreferences.edit();
     editor.clear();
     editor.commit();
     
-    // Let's cleanup files while we're at it.
-    mImageManager.clear();
-
-    Log.i(TAG, "here2");
+    getImageManager().clear();
     
-    Intent intent = new Intent(this, LoginActivity.class);
-    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    startActivity(intent);
-    finish();
+    showLogin();
   }
 
+  private void showLogin() {
+    Intent intent = new Intent(this, LoginActivity.class);
+    startActivity(intent);    
+  }
+  
   protected void manageUpdateChecks() {
     boolean isEnabled = mPreferences.getBoolean(
         Preferences.CHECK_UPDATES_KEY, false);
