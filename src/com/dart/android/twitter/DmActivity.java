@@ -61,19 +61,25 @@ public class DmActivity extends BaseActivity {
 
   private static final String EXTRA_USER = "user";
 
-  public static void show(Context context, String user) {
-    Intent intent = createIntent(context);
-    intent.putExtra(EXTRA_USER, user);
-    context.startActivity(intent);
-  }
-  
-  public static Intent createIntent(Context context) {
+  public static Intent createIntent(Context context) {    
     Intent intent = new Intent(context, DmActivity.class);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     
     return intent;
   }
+    
+  public static void show(Context context, String user) {
+    Intent intent = createIntent(context);
+    if (!Utils.isEmpty(user)) {
+      intent.putExtra(EXTRA_USER, user);
+    }
+    context.startActivity(intent);
+  }
 
+  public static void show(Context context) {
+    show(context, "");
+  }
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -82,8 +88,10 @@ public class DmActivity extends BaseActivity {
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
 
+    TwitterDbAdapter db = getDb();
+    
     mToEdit = (AutoCompleteTextView) findViewById(R.id.to_edit);
-    Cursor cursor = mDb.getFollowerUsernames("");
+    Cursor cursor = db.getFollowerUsernames("");
     // startManagingCursor(cursor);
     mFriendsAdapter = new FriendsAdapter(this, cursor);
     mToEdit.setAdapter(mFriendsAdapter);
@@ -103,7 +111,7 @@ public class DmActivity extends BaseActivity {
     });
 
     // Mark all as read.
-    mDb.markAllDmsRead();
+    db.markAllDmsRead();
 
     setupAdapter();
 
@@ -197,7 +205,7 @@ public class DmActivity extends BaseActivity {
   }
 
   private void setupAdapter() {
-    Cursor cursor = mDb.fetchAllDms();
+    Cursor cursor = getDb().fetchAllDms();
     startManagingCursor(cursor);
 
     mAdapter = new Adapter(this, cursor);
@@ -270,10 +278,14 @@ public class DmActivity extends BaseActivity {
 
       ArrayList<Dm> dms = new ArrayList<Dm>();
 
-      int maxId = mDb.fetchMaxDmId(false);
+      TwitterDbAdapter db = getDb();
+      TwitterApi api = getApi();
+      ImageManager imageManager = getImageManager();
+      
+      int maxId = db.fetchMaxDmId(false);
       
       try {
-        jsonArray = mApi.getDmsSinceId(maxId, false);
+        jsonArray = api.getDmsSinceId(maxId, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -308,7 +320,7 @@ public class DmActivity extends BaseActivity {
         if (!Utils.isEmpty(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.put(dm.profileImageUrl);
+            imageManager.put(dm.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
@@ -319,10 +331,10 @@ public class DmActivity extends BaseActivity {
         return TaskResult.CANCELLED;
       }
 
-      maxId = mDb.fetchMaxDmId(true);
+      maxId = db.fetchMaxDmId(true);
       
       try {
-        jsonArray = mApi.getDmsSinceId(maxId, true);
+        jsonArray = api.getDmsSinceId(maxId, true);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -357,7 +369,7 @@ public class DmActivity extends BaseActivity {
         if (!Utils.isEmpty(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.put(dm.profileImageUrl);
+            imageManager.put(dm.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
@@ -368,7 +380,7 @@ public class DmActivity extends BaseActivity {
         return TaskResult.CANCELLED;
       }
 
-      mDb.addDms(dms, false);
+      db.addDms(dms, false);
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
@@ -458,7 +470,7 @@ public class DmActivity extends BaseActivity {
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(mImageManager.get(profileImageUrl));
+        holder.profileImage.setImageBitmap(getImageManager().get(profileImageUrl));
       }
 
       try {
@@ -489,19 +501,19 @@ public class DmActivity extends BaseActivity {
         String user = mToEdit.getText().toString();
         String text = mTweetEdit.getText().toString();
 
-        JSONObject jsonObject = mApi.sendDirectMessage(user, text);
+        JSONObject jsonObject = getApi().sendDirectMessage(user, text);
         Dm dm = Dm.create(jsonObject, true);
 
         if (!Utils.isEmpty(dm.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            mImageManager.put(dm.profileImageUrl);
+            getImageManager().put(dm.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
         }
 
-        mDb.createDm(dm, false);
+        getDb().createDm(dm, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -587,7 +599,7 @@ public class DmActivity extends BaseActivity {
     public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
       String filter = constraint == null ? "" : constraint.toString();
 
-      return mDb.getFollowerUsernames(filter);
+      return getDb().getFollowerUsernames(filter);
     }
 
     @Override
@@ -621,7 +633,7 @@ public class DmActivity extends BaseActivity {
       doRetrieve();
       return true;
     case OPTIONS_MENU_ID_TWEETS:
-      startActivity(TwitterActivity.createIntent(this));
+      TwitterActivity.show(this);
       return true;                  
     }
 
@@ -690,9 +702,9 @@ public class DmActivity extends BaseActivity {
       Integer id = (Integer) params[0];
 
       try {
-        JSONObject json = mApi.destroyDirectMessage(id);
+        JSONObject json = getApi().destroyDirectMessage(id);
         Dm.create(json, false);
-        mDb.deleteDm(id);
+        getDb().deleteDm(id);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
