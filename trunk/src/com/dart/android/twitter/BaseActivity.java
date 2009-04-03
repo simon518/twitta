@@ -30,12 +30,6 @@ public class BaseActivity extends Activity {
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
     
     mPreferences = PreferenceManager.getDefaultSharedPreferences(this);        
-
-    manageUpdateChecks();
-    
-    if (!isLoggedIn()) {
-      showLogin();      
-    }
   }
   
   protected ImageManager getImageManager() {
@@ -51,17 +45,6 @@ public class BaseActivity extends Activity {
   }
 
   @Override
-  protected void onRestart() {
-    super.onRestart();
-
-    // Is the user still logged in?
-    if (!isLoggedIn()) {
-      Log.i(TAG, "Not logged in. Finish activity.");
-      finish();
-    }    
-  }
-    
-  @Override
   protected void onDestroy() {
     super.onDestroy();
   }
@@ -69,6 +52,8 @@ public class BaseActivity extends Activity {
   protected boolean isLoggedIn() {
     return getApi().isLoggedIn();
   }
+  
+  private static final int RESULT_LOGOUT = RESULT_FIRST_USER + 1;
   
   protected void logout() {
     TwitterService.unschedule(this);
@@ -82,7 +67,7 @@ public class BaseActivity extends Activity {
     
     getImageManager().clear();
     
-    showLogin();
+    setResult(RESULT_LOGOUT);
   }
 
   private void showLogin() {
@@ -128,6 +113,7 @@ public class BaseActivity extends Activity {
     return true;
   }
 
+  private static final int REQUEST_CODE_LAUNCH_ACTIVITY = 0;  
   private static final int REQUEST_CODE_PREFERENCES = 1;
   
   @Override
@@ -149,13 +135,25 @@ public class BaseActivity extends Activity {
     return super.onOptionsItemSelected(item);
   }
 
+  protected void launchActivity(Intent intent) {
+    startActivityForResult(intent, REQUEST_CODE_LAUNCH_ACTIVITY);    
+  }
+  
   @Override
   protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     super.onActivityResult(requestCode, resultCode, data);
 
     if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
       manageUpdateChecks();
+    } else if (requestCode == REQUEST_CODE_LAUNCH_ACTIVITY && resultCode == RESULT_LOGOUT) {
+      // If you're the root task. Go to login.
+      if (isTaskRoot()) {
+        // Would like to pass the pending intent to the login screen.
+        showLogin();              
+      }
+      finish();
     }
+    
   }
 
 }

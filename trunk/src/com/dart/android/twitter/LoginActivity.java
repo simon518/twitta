@@ -19,7 +19,6 @@ package com.dart.android.twitter;
 import java.io.IOException;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -170,8 +169,10 @@ public class LoginActivity extends Activity {
     editor.putString(Preferences.USERNAME_KEY, username);
     editor.putString(Preferences.PASSWORD_KEY, password);
     editor.commit();
+    
+    TwitterApplication.mApi.setCredentials(username, password);
 
-    // TODO: set result?
+    startActivity(new Intent(this, TwitterActivity.class));
     finish();
   }
 
