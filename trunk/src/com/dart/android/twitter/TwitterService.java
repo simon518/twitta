@@ -191,8 +191,15 @@ public class TwitterService extends Service {
 
     Log.i(TAG, mNewDms.size() + " new DMs.");
 
-    int count = mDb.addNewDmsAndCountUnread(mNewDms);
-
+    int count = 0;
+    
+    if (mDb.fetchDmCount() > 0) {
+      count = mDb.addNewDmsAndCountUnread(mNewDms);      
+    } else {
+      Log.i(TAG, "No existing DMs. Don't notify.");
+      mDb.addDms(mNewDms, false);
+    }
+    
     for (Dm dm : mNewDms) {
       if (!Utils.isEmpty(dm.profileImageUrl)) {
         // Fetch image to cache.
