@@ -27,9 +27,25 @@ public class BaseActivity extends Activity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
    
-    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+    PreferenceManager.setDefaultValues(this, R.xml.preferences, false);   
+    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);    
+
+    if (!getApi().isLoggedIn()) {
+      Log.i(TAG, "Not logged in.");
+      handleLoggedOut();
+      return;
+    }        
+  }
+  
+  private void handleLoggedOut() {
+    if (isTaskRoot()) {
+      // Would like to pass the pending intent to the login screen.
+      showLogin();
+    } else {
+      setResult(RESULT_LOGOUT);
+    }
     
-    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);        
+    finish();                              
   }
   
   protected ImageManager getImageManager() {
@@ -66,8 +82,8 @@ public class BaseActivity extends Activity {
     editor.commit();
     
     getImageManager().clear();
-    
-    setResult(RESULT_LOGOUT);
+        
+    handleLoggedOut();    
   }
 
   private void showLogin() {
@@ -146,14 +162,9 @@ public class BaseActivity extends Activity {
     if (requestCode == REQUEST_CODE_PREFERENCES && resultCode == RESULT_OK) {
       manageUpdateChecks();
     } else if (requestCode == REQUEST_CODE_LAUNCH_ACTIVITY && resultCode == RESULT_LOGOUT) {
-      // If you're the root task. Go to login.
-      if (isTaskRoot()) {
-        // Would like to pass the pending intent to the login screen.
-        showLogin();              
-      }
-      finish();
-    }
-    
+      Log.i(TAG, "Result logout.");
+      handleLoggedOut();
+    }    
   }
 
 }
