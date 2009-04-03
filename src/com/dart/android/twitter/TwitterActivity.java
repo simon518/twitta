@@ -80,7 +80,15 @@ public class TwitterActivity extends BaseActivity {
     
     return intent;
   }
-  
+
+  public static Intent createNewTaskIntent(Context context) {    
+    Intent intent = new Intent(context, TwitterActivity.class);
+    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    
+    return intent;
+  }
+      
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
