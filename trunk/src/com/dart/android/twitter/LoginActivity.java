@@ -172,7 +172,8 @@ public class LoginActivity extends Activity {
     
     TwitterApplication.mApi.setCredentials(username, password);
 
-    startActivity(new Intent(this, TwitterActivity.class));
+    Intent intent = getIntent().getParcelableExtra(Intent.EXTRA_INTENT);
+    startActivity(intent);
     finish();
   }
 
