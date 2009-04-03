@@ -317,6 +317,23 @@ public class TwitterDbAdapter {
     return fetchUnreadDmCount();
   }
 
+  int fetchDmCount() {
+    Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM "
+        + DM_TABLE, null);
+
+    int result = 0;
+
+    if (mCursor == null) {
+      return result;
+    }
+
+    mCursor.moveToFirst();
+    result = mCursor.getInt(0);
+    mCursor.close();
+
+    return result;
+  }
+  
   private int fetchUnreadDmCount() {
     Cursor mCursor = mDb.rawQuery("SELECT COUNT(" + KEY_ID + ") FROM "
         + DM_TABLE + " WHERE " + KEY_IS_UNREAD + " = 1", null);
