@@ -141,7 +141,7 @@ public class PictureActivity extends BaseActivity {
     public TaskResult doInBackground(Void... params) {
       try {
         String status = mTweetEdit.getText().toString();
-        mApi.postTwitPic(mFile, status);
+        getApi().postTwitPic(mFile, status);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -216,9 +216,7 @@ public class PictureActivity extends BaseActivity {
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_TWEETS:
-      Intent intent = TwitterActivity.createIntent(this);
-      intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-      startActivity(intent);
+      TwitterActivity.showNewTask(this);
       return true;                  
     }
 
