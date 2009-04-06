@@ -192,7 +192,8 @@ public class PictureActivity extends BaseActivity {
       if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == TaskResult.API_ERROR) {
-        updateProgress(apiErrorMessage);        
+        updateProgress(apiErrorMessage);
+        enableEntry();        
       } else if (result == TaskResult.OK) {
         updateProgress("Picture has been posted");
       } else if (result == TaskResult.IO_ERROR) {
@@ -223,7 +224,7 @@ public class PictureActivity extends BaseActivity {
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
 
-    // What a hack!
+    // TODO: What a hack!
     menu.clear();
 
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_TWEETS, 0, R.string.tweets);
