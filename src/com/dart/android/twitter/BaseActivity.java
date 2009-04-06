@@ -75,6 +75,8 @@ public class BaseActivity extends Activity {
     
     getImageManager().clear();
         
+    // TODO: cancel notifications.
+    
     handleLoggedOut();    
   }
   
@@ -82,6 +84,7 @@ public class BaseActivity extends Activity {
     Intent intent = new Intent(this, LoginActivity.class);
     // TODO: might be a hack?
     intent.putExtra(Intent.EXTRA_INTENT, getIntent());
+    
     startActivity(intent);    
   }
   
