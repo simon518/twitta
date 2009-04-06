@@ -173,13 +173,13 @@ public class LoginActivity extends Activity {
     TwitterApplication.mApi.setCredentials(username, password);
 
     Intent intent = getIntent().getParcelableExtra(Intent.EXTRA_INTENT);
+    String action = intent.getAction();
 
-    if (intent.getAction() == null) {
-      // TODO: sometimes the intent won't launch. Seems to be the case
-      // where TwitterActivity was launched as the main activity.
-      // This seems to work to detect that case, but we really should
-      // figure out what is going on.
-      intent = new Intent(this, TwitterActivity.class);      
+    if (intent.getAction() == null
+        || !Intent.ACTION_SEND.equals(action)) {
+      // We only want to reuse the intent if it was photo send.
+      // Or else default to the main activity.
+      intent = new Intent(this, TwitterActivity.class);            
     }
     
     startActivity(intent);       
