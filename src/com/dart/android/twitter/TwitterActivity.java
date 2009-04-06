@@ -158,9 +158,7 @@ public class TwitterActivity extends BaseActivity {
       doRetrieveFollowers();
     }
 
-    // Want to be able to focus on the items with the trackball.
-    // That way, we can navigate up and down by changing item focus.
-    mTweetList.setItemsCanFocus(true);
+    mTweetList.setItemsCanFocus(false);
   }
 
   @Override
@@ -342,6 +340,7 @@ public class TwitterActivity extends BaseActivity {
       holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
       holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       view.setTag(holder);
+      holder.tweetText.setFocusable(false);
 
       return view;
     }
