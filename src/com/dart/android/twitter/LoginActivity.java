@@ -173,7 +173,16 @@ public class LoginActivity extends Activity {
     TwitterApplication.mApi.setCredentials(username, password);
 
     Intent intent = getIntent().getParcelableExtra(Intent.EXTRA_INTENT);
-    startActivity(intent);
+
+    if (intent.getAction() == null) {
+      // TODO: sometimes the intent won't launch. Seems to be the case
+      // where TwitterActivity was launched as the main activity.
+      // This seems to work to detect that case, but we really should
+      // figure out what is going on.
+      intent = new Intent(this, TwitterActivity.class);      
+    }
+    
+    startActivity(intent);       
     finish();
   }
 
