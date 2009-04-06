@@ -74,8 +74,10 @@ public class TwitterActivity extends BaseActivity {
   // Refresh followers if last refresh was this long ago or greater.
   private static final long FOLLOWERS_REFRESH_THRESHOLD = 12 * 60 * 60 * 1000;
 
+  private static final String LAUNCH_ACTION = "com.dart.android.twitter.TWEETS";
+  
   public static Intent createIntent(Context context) {    
-    Intent intent = new Intent(context, TwitterActivity.class);
+    Intent intent = new Intent(LAUNCH_ACTION);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     
     return intent;

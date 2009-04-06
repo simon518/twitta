@@ -61,12 +61,14 @@ public class DmActivity extends BaseActivity {
 
   private static final String EXTRA_USER = "user";
 
+  private static final String LAUNCH_ACTION = "com.dart.android.twitter.DMS";
+  
   public static Intent createIntent(Context context) {    
     return createIntent(context, "");
   }
 
   public static Intent createIntent(Context context, String user) {    
-    Intent intent = new Intent(context, DmActivity.class);
+    Intent intent = new Intent(LAUNCH_ACTION);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
     
     if (!Utils.isEmpty(user)) {
