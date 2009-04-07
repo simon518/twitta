@@ -258,6 +258,7 @@ public class PictureActivity extends BaseActivity {
 
   private Bitmap createThumbnailBitmap(Uri uri, int size) {
     InputStream input = null;
+
     try {
       input = getContentResolver().openInputStream(uri);
       BitmapFactory.Options options = new BitmapFactory.Options();
@@ -287,7 +288,6 @@ public class PictureActivity extends BaseActivity {
         try {
           input.close();
         } catch (IOException e) {
-          // TODO Auto-generated catch block
           Log.w(TAG, e);
         }
       }
