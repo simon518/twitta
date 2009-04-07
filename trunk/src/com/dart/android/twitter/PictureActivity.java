@@ -2,9 +2,12 @@ package com.dart.android.twitter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore.Images.ImageColumns;
@@ -37,6 +40,8 @@ public class PictureActivity extends BaseActivity {
 
   private UserTask<Void, Void, TaskResult> mSendTask;
 
+  private static final int MAX_BITMAP_SIZE = 480;
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -46,10 +51,10 @@ public class PictureActivity extends BaseActivity {
       // handleLoggedOut();
       showLogin();
       finish();
-      
+
       return;
-    }        
-    
+    }
+
     setContentView(R.layout.picture);
 
     mPreview = (ImageView) findViewById(R.id.preview);
@@ -73,20 +78,24 @@ public class PictureActivity extends BaseActivity {
 
     mFile = null;
 
-    if (Intent.ACTION_SEND.equals(intent.getAction()) && (extras != null)
+    if (Intent.ACTION_SEND.equals(intent.getAction()) && extras != null
         && extras.containsKey(Intent.EXTRA_STREAM)) {
       mImageUri = (Uri) extras.getParcelable(Intent.EXTRA_STREAM);
       if (mImageUri != null) {
-        mPreview.setImageURI(mImageUri);
-
         Cursor cursor = getContentResolver().query(mImageUri, null, null, null,
             null);
 
         if (cursor.moveToFirst()) {
           String filename = cursor.getString(cursor
               .getColumnIndexOrThrow(ImageColumns.DATA));
+
           mFile = new File(filename);
         }
+
+        cursor.close();
+
+        mPreview.setImageBitmap(createThumbnailBitmap(mImageUri,
+            MAX_BITMAP_SIZE));
       }
     }
 
@@ -99,17 +108,17 @@ public class PictureActivity extends BaseActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    
+
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
-      // handleLoggedOut();      
+      // handleLoggedOut();
       showLogin();
       finish();
-      
+
       return;
-    }               
+    }
   }
-  
+
   @Override
   protected void onDestroy() {
     Log.i(TAG, "onDestroy.");
@@ -153,7 +162,7 @@ public class PictureActivity extends BaseActivity {
 
   private class SendTask extends UserTask<Void, Void, TaskResult> {
     private String apiErrorMessage;
-    
+
     @Override
     public void onPreExecute() {
       disableEntry();
@@ -193,7 +202,7 @@ public class PictureActivity extends BaseActivity {
         onAuthFailure();
       } else if (result == TaskResult.API_ERROR) {
         updateProgress(apiErrorMessage);
-        enableEntry();        
+        enableEntry();
       } else if (result == TaskResult.OK) {
         updateProgress("Picture has been posted");
       } else if (result == TaskResult.IO_ERROR) {
@@ -202,7 +211,7 @@ public class PictureActivity extends BaseActivity {
       }
     }
   }
-  
+
   private void onAuthFailure() {
     logout();
   }
@@ -228,23 +237,61 @@ public class PictureActivity extends BaseActivity {
     menu.clear();
 
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_TWEETS, 0, R.string.tweets);
-    item.setIcon(android.R.drawable.ic_menu_view);    
-        
+    item.setIcon(android.R.drawable.ic_menu_view);
+
     item = menu.add(0, OPTIONS_MENU_ID_ABOUT, 0, R.string.about);
     item.setIcon(android.R.drawable.ic_menu_info_details);
-    
+
     return true;
   }
-  
+
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_TWEETS:
       launchActivity(TwitterActivity.createNewTaskIntent(this));
-      return true;                  
+      return true;
     }
 
     return super.onOptionsItemSelected(item);
   }
-  
+
+  private Bitmap createThumbnailBitmap(Uri uri, int size) {
+    InputStream input = null;
+    try {
+      input = getContentResolver().openInputStream(uri);
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inJustDecodeBounds = true;
+      BitmapFactory.decodeStream(input, null, options);
+      input.close();
+
+      // Compute the scale.
+      int scale = 1;
+      while ((options.outWidth / scale > size)
+          || (options.outHeight / scale > size)) {
+        scale *= 2;
+      }
+
+      options.inJustDecodeBounds = false;
+      options.inSampleSize = scale;
+
+      input = getContentResolver().openInputStream(uri);
+
+      return BitmapFactory.decodeStream(input, null, options);
+    } catch (IOException e) {
+      Log.w(TAG, e);
+
+      return null;
+    } finally {
+      if (input != null) {
+        try {
+          input.close();
+        } catch (IOException e) {
+          // TODO Auto-generated catch block
+          Log.w(TAG, e);
+        }
+      }
+    }
+  }
+
 }
