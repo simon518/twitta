@@ -27,7 +27,9 @@ public class BaseActivity extends Activity {
     super.onCreate(savedInstanceState);
    
     PreferenceManager.setDefaultValues(this, R.xml.preferences, false);   
-    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);    
+    mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+    
+    manageUpdateChecks();
   }
   
   protected void handleLoggedOut() {
