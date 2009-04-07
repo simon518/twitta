@@ -340,7 +340,6 @@ public class TwitterActivity extends BaseActivity {
       holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
       holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       view.setTag(holder);
-      holder.tweetText.setFocusable(false);
 
       return view;
     }
