@@ -50,8 +50,6 @@ import com.google.android.photostream.UserTask;
 public class TwitterService extends Service {
   private static final String TAG = "TwitterService";
 
-  private TwitterApi mApi;
-  private TwitterDbAdapter mDb;
   private SharedPreferences mPreferences;
 
   private NotificationManager mNotificationManager;
@@ -68,6 +66,14 @@ public class TwitterService extends Service {
     return null;
   }
 
+  private TwitterDbAdapter getDb() {
+    return TwitterApplication.mDb;
+  }
+
+  private TwitterApi getApi() {
+    return TwitterApplication.mApi;  
+  }
+  
   @Override
   public void onCreate() {
     super.onCreate();
@@ -83,23 +89,16 @@ public class TwitterService extends Service {
       stopSelf();
       return;
     }
-
-    String username = mPreferences.getString(Preferences.USERNAME_KEY, "");
-    String password = mPreferences.getString(Preferences.PASSWORD_KEY, "");
-
-    if (!TwitterApi.isValidCredentials(username, password)) {
-      Log.i(TAG, "No credentials.");
+    
+    if (!getApi().isLoggedIn()) {
+      Log.i(TAG, "Not logged in.");
       stopSelf();
       return;
     }
 
-    mApi = new TwitterApi();
-    mApi.setCredentials(username, password);
-
+    schedule(TwitterService.this);    
+    
     mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
-    mDb = new TwitterDbAdapter(this);
-    mDb.open();
 
     mNewTweets = new ArrayList<Tweet>();
     mNewDms = new ArrayList<Dm>();
@@ -114,7 +113,7 @@ public class TwitterService extends Service {
 
     Log.i(TAG, mNewTweets.size() + " new tweets.");
 
-    int count = mDb.addNewTweetsAndCountUnread(mNewTweets);
+    int count = getDb().addNewTweetsAndCountUnread(mNewTweets);
     
     for (Tweet tweet : mNewTweets) {
       if (!Utils.isEmpty(tweet.profileImageUrl)) {
@@ -126,6 +125,8 @@ public class TwitterService extends Service {
         }
       }
     }        
+    
+    Log.i(TAG, "foo:" + count);
     
     if (count <= 0) {
       return;
@@ -193,11 +194,13 @@ public class TwitterService extends Service {
 
     int count = 0;
     
-    if (mDb.fetchDmCount() > 0) {
-      count = mDb.addNewDmsAndCountUnread(mNewDms);      
+    TwitterDbAdapter db = getDb();
+    
+    if (db.fetchDmCount() > 0) {
+      count = db.addNewDmsAndCountUnread(mNewDms);      
     } else {
       Log.i(TAG, "No existing DMs. Don't notify.");
-      mDb.addDms(mNewDms, false);
+      db.addDms(mNewDms, false);
     }
     
     for (Dm dm : mNewDms) {
@@ -242,10 +245,6 @@ public class TwitterService extends Service {
     if (mRetrieveTask != null
         && mRetrieveTask.getStatus() == UserTask.Status.RUNNING) {
       mRetrieveTask.cancel(true);
-    }
-
-    if (mDb != null) {
-      mDb.close();
     }
 
     mWakeLock.release();
@@ -297,13 +296,13 @@ public class TwitterService extends Service {
   private class RetrieveTask extends UserTask<Void, Void, RetrieveResult> {
     @Override
     public RetrieveResult doInBackground(Void... params) {
-      int maxId = mDb.fetchMaxId();
+      int maxId = getDb().fetchMaxId();
       Log.i(TAG, "Max id is:" + maxId);
       
       JSONArray jsonArray;
       
       try {
-        jsonArray = mApi.getTimelineSinceId(maxId);
+        jsonArray = getApi().getTimelineSinceId(maxId);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -337,11 +336,11 @@ public class TwitterService extends Service {
         return RetrieveResult.CANCELLED;
       }
 
-      maxId = mDb.fetchMaxDmId(false);
+      maxId = getDb().fetchMaxDmId(false);
       Log.i(TAG, "Max DM id is:" + maxId);
 
       try {
-        jsonArray = mApi.getDmsSinceId(maxId, false);
+        jsonArray = getApi().getDmsSinceId(maxId, false);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -383,9 +382,8 @@ public class TwitterService extends Service {
       if (result == RetrieveResult.OK) {
         processNewTweets();
         processNewDms();
-        schedule(TwitterService.this);
       } else if (result == RetrieveResult.IO_ERROR) {
-        schedule(TwitterService.this);
+        // Blah.
       }
 
       stopSelf();
