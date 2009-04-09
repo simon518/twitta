@@ -71,9 +71,9 @@ public class TwitterService extends Service {
   }
 
   private TwitterApi getApi() {
-    return TwitterApplication.mApi;  
+    return TwitterApplication.mApi;
   }
-  
+
   @Override
   public void onCreate() {
     super.onCreate();
@@ -89,15 +89,15 @@ public class TwitterService extends Service {
       stopSelf();
       return;
     }
-    
+
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
       stopSelf();
       return;
     }
 
-    schedule(TwitterService.this);    
-    
+    schedule(TwitterService.this);
+
     mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
     mNewTweets = new ArrayList<Tweet>();
@@ -114,7 +114,7 @@ public class TwitterService extends Service {
     Log.i(TAG, mNewTweets.size() + " new tweets.");
 
     int count = getDb().addNewTweetsAndCountUnread(mNewTweets);
-    
+
     for (Tweet tweet : mNewTweets) {
       if (!Utils.isEmpty(tweet.profileImageUrl)) {
         // Fetch image to cache.
@@ -124,10 +124,8 @@ public class TwitterService extends Service {
           Log.e(TAG, e.getMessage(), e);
         }
       }
-    }        
-    
-    Log.i(TAG, "foo:" + count);
-    
+    }
+
     if (count <= 0) {
       return;
     }
@@ -149,17 +147,17 @@ public class TwitterService extends Service {
     PendingIntent intent = PendingIntent.getActivity(this, 0, TwitterActivity
         .createIntent(this), 0);
 
-    notify(intent, TWEET_NOTIFICATION_ID, latestTweet.text, title, text);
+    notify(intent, TWEET_NOTIFICATION_ID, R.drawable.notify_tweet,
+        latestTweet.text, title, text);
   }
 
   private static int TWEET_NOTIFICATION_ID = 0;
   private static int DM_NOTIFICATION_ID = 1;
 
   private void notify(PendingIntent intent, int notificationId,
-      String tickerText, String title, String text) {
-    Notification notification = new Notification(
-        android.R.drawable.stat_notify_chat, tickerText, System
-            .currentTimeMillis());
+      int notifyIconId, String tickerText, String title, String text) {
+    Notification notification = new Notification(notifyIconId, tickerText,
+        System.currentTimeMillis());
 
     notification.setLatestEventInfo(this, title, text, intent);
 
@@ -193,16 +191,16 @@ public class TwitterService extends Service {
     Log.i(TAG, mNewDms.size() + " new DMs.");
 
     int count = 0;
-    
+
     TwitterDbAdapter db = getDb();
-    
+
     if (db.fetchDmCount() > 0) {
-      count = db.addNewDmsAndCountUnread(mNewDms);      
+      count = db.addNewDmsAndCountUnread(mNewDms);
     } else {
       Log.i(TAG, "No existing DMs. Don't notify.");
       db.addDms(mNewDms, false);
     }
-    
+
     for (Dm dm : mNewDms) {
       if (!Utils.isEmpty(dm.profileImageUrl)) {
         // Fetch image to cache.
@@ -212,12 +210,12 @@ public class TwitterService extends Service {
           Log.e(TAG, e.getMessage(), e);
         }
       }
-    }        
-    
+    }
+
     if (count <= 0) {
       return;
     }
-    
+
     Dm latest = mNewDms.get(0);
 
     String title;
@@ -235,7 +233,8 @@ public class TwitterService extends Service {
     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, DmActivity
         .createIntent(this), 0);
 
-    notify(pendingIntent, DM_NOTIFICATION_ID, latest.text, title, text);
+    notify(pendingIntent, DM_NOTIFICATION_ID, R.drawable.notify_dm,
+        latest.text, title, text);
   }
 
   @Override
@@ -298,9 +297,9 @@ public class TwitterService extends Service {
     public RetrieveResult doInBackground(Void... params) {
       int maxId = getDb().fetchMaxId();
       Log.i(TAG, "Max id is:" + maxId);
-      
+
       JSONArray jsonArray;
-      
+
       try {
         jsonArray = getApi().getTimelineSinceId(maxId);
       } catch (IOException e) {
@@ -382,8 +381,6 @@ public class TwitterService extends Service {
       if (result == RetrieveResult.OK) {
         processNewTweets();
         processNewDms();
-      } else if (result == RetrieveResult.IO_ERROR) {
-        // Blah.
       }
 
       stopSelf();
