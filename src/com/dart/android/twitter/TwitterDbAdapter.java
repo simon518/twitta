@@ -356,7 +356,7 @@ public class TwitterDbAdapter {
       mDb.beginTransaction();
 
       for (Tweet tweet : tweets) {
-        createTweet(tweet, false);
+        createTweet(tweet, isUnread);
       }
 
       limitRows(TWEET_TABLE, TwitterApi.RETRIEVE_LIMIT);
