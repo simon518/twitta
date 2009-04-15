@@ -23,6 +23,7 @@ public class Preferences {
   public static final String CHECK_UPDATE_INTERVAL_KEY =
       "check_update_interval";
   public static final String VIBRATE_KEY = "vibrate";
+  public static final String REPLIES_ONLY_KEY = "replies_only";
   
   public static String RINGTONE_KEY = "ringtone";
   public static final String RINGTONE_DEFAULT_KEY =
@@ -32,5 +33,8 @@ public class Preferences {
   public static final String LAST_DM_REFRESH_KEY = "last_dm_refresh";
   public static final String LAST_FOLLOWERS_REFRESH_KEY =
       "last_followers_refresh";
+
+  public static final String TWITTER_ACTIVITY_STATE_KEY =
+      "twitter_activity_state";
   
 }
