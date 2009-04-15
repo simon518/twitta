@@ -107,12 +107,8 @@ public class TwitterActivity extends BaseActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    if (savedInstanceState != null
-        && savedInstanceState.containsKey(SIS_STATE_KEY)) {
-      mState = savedInstanceState.getInt(SIS_STATE_KEY);
-    } else {
-      mState = STATE_ALL;
-    }     
+    mState = mPreferences.getInt(
+        Preferences.TWITTER_ACTIVITY_STATE_KEY, STATE_ALL);
 
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
@@ -206,7 +202,6 @@ public class TwitterActivity extends BaseActivity {
   }
 
   private static final String SIS_RUNNING_KEY = "running";
-  private static final String SIS_STATE_KEY = "state";
 
   @Override
   protected void onSaveInstanceState(Bundle outState) {
@@ -218,9 +213,7 @@ public class TwitterActivity extends BaseActivity {
     } else if (mSendTask != null
         && mSendTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
-    }
-    
-    outState.putInt(SIS_STATE_KEY, mState);
+    }    
   }
 
   @Override
@@ -719,8 +712,13 @@ public class TwitterActivity extends BaseActivity {
     return super.onPrepareOptionsMenu(menu);
   }
 
-  public void toggleShowReplies() {
+  public void toggleShowReplies() {    
     mState = mState == STATE_REPLIES ? STATE_ALL : STATE_REPLIES;
+    
+    SharedPreferences.Editor editor = mPreferences.edit();
+    editor.putInt(Preferences.TWITTER_ACTIVITY_STATE_KEY, mState);
+    editor.commit();
+    
     setupAdapter();
   }
 
