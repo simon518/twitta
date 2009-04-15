@@ -118,7 +118,7 @@ public class TwitterApi {
   public boolean isLoggedIn() {
     return isValidCredentials(mUsername, mPassword);
   }
-  
+
   private void prepareHttpClient() {
     mAuthScope = new AuthScope(TWITTER_HOST, AuthScope.ANY_PORT);
     mClient = new DefaultHttpClient();
@@ -214,8 +214,8 @@ public class TwitterApi {
           throw new ApiException(Integer.parseInt(code), msg);
         }
       }
-            
-      throw new IOException("Could not parse error response.");      
+
+      throw new IOException("Could not parse error response.");
     }
   }
 
@@ -325,10 +325,11 @@ public class TwitterApi {
       AuthException, ApiException {
     Log.i(TAG, "Requesting friends timeline since id.");
 
-    String url = FRIENDS_TIMELINE_URL;
+    String url = FRIENDS_TIMELINE_URL + "?count="
+        + URLEncoder.encode(RETRIEVE_LIMIT + "", HTTP.UTF_8);
 
     if (sinceId > 0) {
-      url += "?since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
+      url += "&since_id=" + URLEncoder.encode(sinceId + "", HTTP.UTF_8);
     }
 
     InputStream data = requestData(url, METHOD_GET, null);

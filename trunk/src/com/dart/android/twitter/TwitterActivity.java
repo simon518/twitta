@@ -19,6 +19,8 @@ package com.dart.android.twitter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,6 +31,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -63,6 +66,9 @@ public class TwitterActivity extends BaseActivity {
 
   private TextView mProgressText;
 
+  // State.
+  private boolean mIsReplies;
+
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
   private UserTask<Void, Void, SendResult> mSendTask;
@@ -75,31 +81,37 @@ public class TwitterActivity extends BaseActivity {
   private static final long FOLLOWERS_REFRESH_THRESHOLD = 12 * 60 * 60 * 1000;
 
   private static final String LAUNCH_ACTION = "com.dart.android.twitter.TWEETS";
-  
-  public static Intent createIntent(Context context) {    
+
+  public static Intent createIntent(Context context) {
     Intent intent = new Intent(LAUNCH_ACTION);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    
+
     return intent;
   }
 
-  public static Intent createNewTaskIntent(Context context) {    
+  public static Intent createNewTaskIntent(Context context) {
     Intent intent = createIntent(context);
     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-    
+
     return intent;
   }
-      
+
+  private boolean isReplies() {
+    return mIsReplies;
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
+
+    mIsReplies = false;
 
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
       handleLoggedOut();
       return;
-    }        
-    
+    }
+
     setContentView(R.layout.main);
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
@@ -164,14 +176,14 @@ public class TwitterActivity extends BaseActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    
+
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
       handleLoggedOut();
       return;
-    }               
+    }
   }
-  
+
   private void doRetrieveFollowers() {
     Log.i(TAG, "Attempting followers retrieve.");
 
@@ -231,7 +243,7 @@ public class TwitterActivity extends BaseActivity {
     mProgressText.setText(progress);
   }
 
-  private void setupAdapter() {    
+  private void setupAdapter() {
     Cursor cursor = getDb().fetchAllTweets();
     startManagingCursor(cursor);
 
@@ -255,8 +267,8 @@ public class TwitterActivity extends BaseActivity {
     Cursor cursor = (Cursor) mTweetAdapter.getItem(info.position);
     int userId = cursor.getInt(cursor
         .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER_ID));
-    
-    if (getDb().isFollower(userId)) { 
+
+    if (getDb().isFollower(userId)) {
       menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
     }
   }
@@ -301,6 +313,18 @@ public class TwitterActivity extends BaseActivity {
       return super.onContextItemSelected(item);
     }
   }
+
+  private static final Pattern NAME_MATCHER = Pattern
+      .compile("\\B\\@[A-Za-z0-9]+\\b");
+  private static final Linkify.TransformFilter NAME_MATCHER_TRANFORM = new Linkify.TransformFilter() {
+    @Override
+    public String transformUrl(Matcher matcher, String url) {
+      return url.replace("@", "");
+    }
+  };
+
+  // TODO: change to profile activity.
+  private static final String PROFILE_URL = "http://twitter.com/";
 
   private class TweetAdapter extends CursorAdapter {
 
@@ -356,12 +380,17 @@ public class TwitterActivity extends BaseActivity {
       ViewHolder holder = (ViewHolder) view.getTag();
 
       holder.tweetUserText.setText(cursor.getString(mUserTextColumn));
+
       holder.tweetText.setText(cursor.getString(mTextColumn));
+      Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
+      Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
+          NAME_MATCHER_TRANFORM);
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(getImageManager().get(profileImageUrl));
+        holder.profileImage.setImageBitmap(getImageManager().get(
+            profileImageUrl));
       }
 
       mMetaBuilder.setLength(0);
@@ -580,7 +609,7 @@ public class TwitterActivity extends BaseActivity {
         return RetrieveResult.CANCELLED;
       }
 
-      getDb().addTweets(tweets ,false);
+      getDb().addTweets(tweets, false);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
@@ -649,7 +678,31 @@ public class TwitterActivity extends BaseActivity {
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
 
+    item = menu.add(0, OPTIONS_MENU_ID_TOGGLE_REPLIES, 0,
+        R.string.show_at_replies);
+    item.setIcon(android.R.drawable.ic_menu_zoom);
+
     return super.onCreateOptionsMenu(menu);
+  }
+
+  @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    MenuItem item = menu.findItem(OPTIONS_MENU_ID_TOGGLE_REPLIES);
+
+    if (isReplies()) {
+      item.setIcon(android.R.drawable.ic_notification_clear_all);
+      item.setTitle(R.string.show_all);
+    } else {
+      item.setIcon(android.R.drawable.ic_menu_zoom);
+      item.setTitle(R.string.show_at_replies);
+    }
+
+    return super.onPrepareOptionsMenu(menu);
+  }
+
+  public void toggleShowReplies() {
+    Log.i(TAG, "argh");
+    mIsReplies = !mIsReplies;
   }
 
   private static final String INTENT_MODE = "mode";
@@ -667,7 +720,10 @@ public class TwitterActivity extends BaseActivity {
       startActivity(repliesIntent);
       return true;
     case OPTIONS_MENU_ID_DM:
-      launchActivity(DmActivity.createIntent(this));      
+      launchActivity(DmActivity.createIntent(this));
+      return true;
+    case OPTIONS_MENU_ID_TOGGLE_REPLIES:
+      toggleShowReplies();
       return true;
     }
 

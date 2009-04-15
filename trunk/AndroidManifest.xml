@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="com.dart.android.twitter"
-      android:versionCode="5"
-      android:versionName="5">
+      android:versionCode="7"
+      android:versionName="7">
     <application
         android:name=".TwitterApplication"    
         android:icon="@drawable/icon"
@@ -28,6 +28,10 @@
                 <action android:name="com.dart.android.twitter.TWEETS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>                                                            
+            <intent-filter>
+                <action android:name="com.dart.android.twitter.REPLIES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>                                                                        
         </activity>
         <activity android:name=".DmActivity"
                   android:label="@string/direct_messages">

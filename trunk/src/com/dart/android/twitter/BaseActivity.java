@@ -111,6 +111,7 @@ public class BaseActivity extends Activity {
   protected static final int OPTIONS_MENU_ID_REPLIES = 5;  
   protected static final int OPTIONS_MENU_ID_DM = 6;
   protected static final int OPTIONS_MENU_ID_TWEETS = 7;
+  protected static final int OPTIONS_MENU_ID_TOGGLE_REPLIES = 8;
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
