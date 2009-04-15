@@ -10,6 +10,17 @@
             android:summary="@string/pref_check_updates_summary"
             />  
 
+<!--  Take out for now. May not be worth it. -->
+<!-- 
+   <CheckBoxPreference  
+            android:key="replies_only"
+            android:dependency="check_updates"  
+            android:defaultValue="false"
+            android:title="@string/replies_only_title"
+            android:summary="@string/replies_only_summary"
+            />  
+ -->
+ 
    <ListPreference  
             android:key="check_update_interval"
             android:dependency="check_updates"  
