@@ -67,7 +67,10 @@ public class TwitterActivity extends BaseActivity {
   private TextView mProgressText;
 
   // State.
-  private boolean mIsReplies;
+  private int mState;
+  
+  private static final int STATE_ALL = 0;
+  private static final int STATE_REPLIES = 1;
 
   // Tasks.
   private UserTask<Void, Void, RetrieveResult> mRetrieveTask;
@@ -97,14 +100,19 @@ public class TwitterActivity extends BaseActivity {
   }
 
   private boolean isReplies() {
-    return mIsReplies;
+    return mState == STATE_REPLIES;
   }
 
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    mIsReplies = false;
+    if (savedInstanceState != null
+        && savedInstanceState.containsKey(SIS_STATE_KEY)) {
+      mState = savedInstanceState.getInt(SIS_STATE_KEY);
+    } else {
+      mState = STATE_ALL;
+    }     
 
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
@@ -196,6 +204,7 @@ public class TwitterActivity extends BaseActivity {
   }
 
   private static final String SIS_RUNNING_KEY = "running";
+  private static final String SIS_STATE_KEY = "state";
 
   @Override
   protected void onSaveInstanceState(Bundle outState) {
@@ -208,6 +217,8 @@ public class TwitterActivity extends BaseActivity {
         && mSendTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
     }
+    
+    outState.putInt(SIS_STATE_KEY, mState);
   }
 
   @Override
@@ -315,7 +326,7 @@ public class TwitterActivity extends BaseActivity {
   }
 
   private static final Pattern NAME_MATCHER = Pattern
-      .compile("\\B\\@[A-Za-z0-9]+\\b");
+      .compile("\\B\\@\\w+\\b");
   private static final Linkify.TransformFilter NAME_MATCHER_TRANFORM = new Linkify.TransformFilter() {
     @Override
     public String transformUrl(Matcher matcher, String url) {
@@ -701,8 +712,7 @@ public class TwitterActivity extends BaseActivity {
   }
 
   public void toggleShowReplies() {
-    Log.i(TAG, "argh");
-    mIsReplies = !mIsReplies;
+    mState = mState == STATE_REPLIES ? STATE_ALL : STATE_REPLIES;
   }
 
   private static final String INTENT_MODE = "mode";
