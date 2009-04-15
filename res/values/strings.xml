@@ -16,6 +16,8 @@
     <string name="replies">\@Replies</string>
     <string name="dm">DM</string>
     <string name="tweets">Tweets</string>
+    <string name="show_at_replies">Show @replies</string>
+    <string name="show_all">Show all</string>
 
     <string name="pref_check_updates_title">Enable notifications?</string>
     <string name="pref_check_updates_summary">Check for new tweets and DMs when application is not running</string>
