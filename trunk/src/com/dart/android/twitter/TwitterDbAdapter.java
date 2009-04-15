@@ -40,10 +40,11 @@ public class TwitterDbAdapter {
   public static final String KEY_SOURCE = "source";
   public static final String KEY_IS_SENT = "is_sent";
   public static final String KEY_USER_ID = "user_id";
-
+  public static final String KEY_IS_REPLY = "is_reply";
+  
   public static final String[] TWEET_COLUMNS = new String[] { KEY_ID, KEY_USER,
       KEY_TEXT, KEY_PROFILE_IMAGE_URL, KEY_IS_UNREAD, KEY_CREATED_AT,
-      KEY_SOURCE, KEY_USER_ID };
+      KEY_SOURCE, KEY_USER_ID, KEY_IS_REPLY };
 
   public static final String[] DM_COLUMNS = new String[] { KEY_ID, KEY_USER,
       KEY_TEXT, KEY_PROFILE_IMAGE_URL, KEY_IS_UNREAD, KEY_IS_SENT,
@@ -60,7 +61,7 @@ public class TwitterDbAdapter {
   private static final String DM_TABLE = "dms";
   private static final String FOLLOWER_TABLE = "followers";
 
-  private static final int DATABASE_VERSION = 8;
+  private static final int DATABASE_VERSION = 9;
 
   // NOTE: the twitter ID is used as the row ID.
   // Furthermore, if a row already exists, an insert will replace
@@ -71,7 +72,7 @@ public class TwitterDbAdapter {
       + " text not null, " + KEY_TEXT + " text not null, "
       + KEY_PROFILE_IMAGE_URL + " text not null, " + KEY_IS_UNREAD
       + " boolean not null, " + KEY_CREATED_AT + " date not null, "
-      + KEY_SOURCE + " text not null, " + KEY_USER_ID + " integer)";
+      + KEY_SOURCE + " text not null, " + KEY_USER_ID + " integer, " + KEY_IS_REPLY + " boolean not null)";
 
   private static final String DM_TABLE_CREATE = "create table " + DM_TABLE
       + " (" + KEY_ID + " integer primary key on conflict replace, " + KEY_USER
@@ -135,6 +136,7 @@ public class TwitterDbAdapter {
     initialValues.put(KEY_TEXT, tweet.text);
     initialValues.put(KEY_PROFILE_IMAGE_URL, tweet.profileImageUrl);
     initialValues.put(KEY_IS_UNREAD, isUnread);
+    initialValues.put(KEY_IS_REPLY, tweet.isReply());
     initialValues
         .put(KEY_CREATED_AT, DB_DATE_FORMATTER.format(tweet.createdAt));
     initialValues.put(KEY_SOURCE, tweet.source);
@@ -190,6 +192,11 @@ public class TwitterDbAdapter {
         + " DESC");
   }
 
+  public Cursor fetchReplies() {
+    return mDb.query(TWEET_TABLE, TWEET_COLUMNS, KEY_IS_REPLY + "=1", null,
+        null, null, KEY_ID + " DESC");
+  }
+  
   public Cursor fetchAllDms() {
     return mDb.query(DM_TABLE, DM_COLUMNS, null, null, null, null, KEY_ID
         + " DESC");

@@ -16,6 +16,9 @@
 
 package com.dart.android.twitter;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -24,6 +27,15 @@ public class Tweet extends Message {
   private static final String TAG = "Tweet";
   
   public String source;
+  
+  public boolean isReply() {
+    // TODO: this is so wrong.
+    String username = TwitterApplication.mApi.getUsername();    
+    Pattern namePattern = Pattern.compile("\\B\\@\\Q" + username + "\\E\\b");
+    Matcher matcher = namePattern.matcher(text);
+    
+    return matcher.find();
+  }
   
   public static Tweet create(JSONObject jsonObject) throws JSONException {
     Tweet tweet = new Tweet();
