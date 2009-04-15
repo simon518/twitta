@@ -137,7 +137,7 @@ public class TwitterActivity extends BaseActivity {
     // Mark all as read.
     getDb().markAllTweetsRead();
 
-    setupAdapter();
+    setupState();
     
     registerForContextMenu(mTweetList);
 
@@ -249,13 +249,15 @@ public class TwitterActivity extends BaseActivity {
     mProgressText.setText(progress);
   }
 
-  private void setupAdapter() {
+  private void setupState() {
     Cursor cursor;
     
     if (isReplies()) {
       cursor = getDb().fetchReplies();
+      setTitle("@" + getApi().getUsername());
     } else {
-      cursor = getDb().fetchAllTweets();    
+      cursor = getDb().fetchAllTweets();
+      setTitle(R.string.app_name);
     }
     
     startManagingCursor(cursor);
@@ -702,7 +704,7 @@ public class TwitterActivity extends BaseActivity {
     MenuItem item = menu.findItem(OPTIONS_MENU_ID_TOGGLE_REPLIES);
 
     if (isReplies()) {
-      item.setIcon(android.R.drawable.ic_notification_clear_all);
+      item.setIcon(R.drawable.ic_menu_zoom_out);
       item.setTitle(R.string.show_all);
     } else {
       item.setIcon(android.R.drawable.ic_menu_zoom);
@@ -719,7 +721,7 @@ public class TwitterActivity extends BaseActivity {
     editor.putInt(Preferences.TWITTER_ACTIVITY_STATE_KEY, mState);
     editor.commit();
     
-    setupAdapter();
+    setupState();
   }
 
   private static final String INTENT_MODE = "mode";
