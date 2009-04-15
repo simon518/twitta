@@ -118,6 +118,10 @@ public class TwitterApi {
   public boolean isLoggedIn() {
     return isValidCredentials(mUsername, mPassword);
   }
+  
+  public String getUsername() {
+    return mUsername;
+  }
 
   private void prepareHttpClient() {
     mAuthScope = new AuthScope(TWITTER_HOST, AuthScope.ANY_PORT);

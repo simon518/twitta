@@ -142,6 +142,8 @@ public class TwitterActivity extends BaseActivity {
     getDb().markAllTweetsRead();
 
     setupAdapter();
+    
+    registerForContextMenu(mTweetList);
 
     boolean shouldRetrieve = false;
 
@@ -255,12 +257,18 @@ public class TwitterActivity extends BaseActivity {
   }
 
   private void setupAdapter() {
-    Cursor cursor = getDb().fetchAllTweets();
+    Cursor cursor;
+    
+    if (isReplies()) {
+      cursor = getDb().fetchReplies();
+    } else {
+      cursor = getDb().fetchAllTweets();    
+    }
+    
     startManagingCursor(cursor);
 
     mTweetAdapter = new TweetAdapter(this, cursor);
     mTweetList.setAdapter(mTweetAdapter);
-    registerForContextMenu(mTweetList);
   }
 
   private static final int CONTEXT_REPLY_ID = 0;
@@ -713,6 +721,7 @@ public class TwitterActivity extends BaseActivity {
 
   public void toggleShowReplies() {
     mState = mState == STATE_REPLIES ? STATE_ALL : STATE_REPLIES;
+    setupAdapter();
   }
 
   private static final String INTENT_MODE = "mode";
