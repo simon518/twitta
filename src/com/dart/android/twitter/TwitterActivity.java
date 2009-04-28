@@ -31,7 +31,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.text.method.ScrollingMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -39,7 +38,6 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -56,8 +54,7 @@ import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
-public class TwitterActivity extends BaseActivity implements
-    View.OnTouchListener {
+public class TwitterActivity extends BaseActivity {
   private static final String TAG = "TwitterActivity";
 
   // Views.
@@ -769,10 +766,5 @@ public class TwitterActivity extends BaseActivity implements
       return false;
     }
   };
-
-  @Override
-  public boolean onTouch(View v, MotionEvent event) {
-    return true;
-  }
 
 }
