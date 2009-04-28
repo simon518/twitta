@@ -31,6 +31,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -38,6 +39,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -54,7 +56,8 @@ import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
-public class TwitterActivity extends BaseActivity {
+public class TwitterActivity extends BaseActivity implements
+    View.OnTouchListener {
   private static final String TAG = "TwitterActivity";
 
   // Views.
@@ -101,8 +104,8 @@ public class TwitterActivity extends BaseActivity {
 
   private boolean isReplies() {
     return mState == STATE_REPLIES;
-  }
-
+  }  
+  
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -177,6 +180,7 @@ public class TwitterActivity extends BaseActivity {
     }
 
     mTweetList.setItemsCanFocus(false);
+    mTweetList.setFocusable(false);
   }
 
   @Override
@@ -398,7 +402,9 @@ public class TwitterActivity extends BaseActivity {
       holder.tweetText.setText(cursor.getString(mTextColumn));
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
       Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
-          NAME_MATCHER_TRANFORM);
+          NAME_MATCHER_TRANFORM);      
+      holder.tweetText.setMovementMethod(
+          LessClickyLinkMovementMethod.getInstance());
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
@@ -763,5 +769,10 @@ public class TwitterActivity extends BaseActivity {
       return false;
     }
   };
+
+  @Override
+  public boolean onTouch(View v, MotionEvent event) {
+    return true;
+  }
 
 }

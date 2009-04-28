@@ -4,10 +4,10 @@
       android:versionCode="7"
       android:versionName="7">
     <application
-        android:name=".TwitterApplication"    
+        android:name="TwitterApplication"    
         android:icon="@drawable/icon"
         android:label="@string/app_name">
-        <activity android:name=".LoginActivity"
+        <activity android:name="LoginActivity"
                   android:label="@string/app_name">
         </activity>
         <activity android:name="PictureActivity"
@@ -18,7 +18,7 @@
                 <data android:mimeType="image/*" />                
             </intent-filter>
         </activity>                              
-        <activity android:name=".TwitterActivity"
+        <activity android:name="TwitterActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,19 +33,19 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>                                                                        
         </activity>
-        <activity android:name=".DmActivity"
+        <activity android:name="DmActivity"
                   android:label="@string/direct_messages">
             <intent-filter>
                 <action android:name="com.dart.android.twitter.DMS" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>                              
         </activity>                                        
-        <activity android:name=".PreferencesActivity"  
+        <activity android:name="PreferencesActivity"  
                   android:label="@string/app_name" />
                                     
-        <service android:name=".TwitterService" />
+        <service android:name="TwitterService" />
 
-        <receiver android:name=".BootReceiver">
+        <receiver android:name="BootReceiver">
           <intent-filter>
             <action android:name="android.intent.action.BOOT_COMPLETED" />
           </intent-filter>
