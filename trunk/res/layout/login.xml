@@ -20,6 +20,7 @@
     android:textColor="@drawable/label_color"
     android:text="@string/username_label"
     />
+    <!--  TODO: disable auto correct. -->    
     <EditText
     android:id="@+id/username_edit"
     android:background="@drawable/edittext_background"
