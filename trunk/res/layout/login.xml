@@ -26,6 +26,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:singleLine="true"
+    android:inputType="text"
     />
     <TextView
     android:layout_marginTop="3px"            
@@ -41,6 +42,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:singleLine="true"
+    android:inputType="textPassword"    
     />	    
     <Button
     android:layout_marginTop="10px"        

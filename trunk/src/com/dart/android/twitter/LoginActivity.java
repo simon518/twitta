@@ -79,11 +79,11 @@ public class LoginActivity extends Activity {
     mApi = new TwitterApi();
 
     setContentView(R.layout.login);
-
+    
     mUsernameEdit = (EditText) findViewById(R.id.username_edit);
     mPasswordEdit = (EditText) findViewById(R.id.password_edit);
-    mUsernameEdit.setOnKeyListener(enterKeyHandler);
-    mPasswordEdit.setOnKeyListener(enterKeyHandler);
+//    mUsernameEdit.setOnKeyListener(enterKeyHandler);
+//    mPasswordEdit.setOnKeyListener(enterKeyHandler);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mProgressText.setFreezesText(true);
