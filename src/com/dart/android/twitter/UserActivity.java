@@ -163,7 +163,7 @@ public class UserActivity extends BaseActivity {
       ImageManager imageManager = getImageManager();
       
       try {
-        jsonArray = api.getTimeline();
+        jsonArray = api.getUserTimeline(mUser);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -195,16 +195,14 @@ public class UserActivity extends BaseActivity {
           return TaskResult.CANCELLED;
         }
 
-        /*
-        if (!Utils.isEmpty(dm.profileImageUrl)) {
+        if (!Utils.isEmpty(tweet.profileImageUrl)) {
           // Fetch image to cache.
           try {
-            imageManager.put(dm.profileImageUrl);
+            imageManager.put(tweet.profileImageUrl);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
         }
-        */
       }
 
       if (isCancelled()) {
