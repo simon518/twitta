@@ -12,6 +12,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -29,7 +30,9 @@ public class UserActivity extends BaseActivity {
   
   // Views.
   private ListView mTweetList;
-  private TextView mProgressText;
+  private TextView mProgressText;  
+  private TextView mUserText;
+  private ImageView mProfileImage;
   
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
@@ -57,10 +60,11 @@ public class UserActivity extends BaseActivity {
     
     setContentView(R.layout.user);
     
-    mTweetList = (ListView) findViewById(R.id.tweet_list);    
-    
+    mTweetList = (ListView) findViewById(R.id.tweet_list);        
     mProgressText = (TextView) findViewById(R.id.progress_text);
-
+    mUserText = (TextView) findViewById(R.id.tweet_user_text);
+    mProfileImage = (ImageView) findViewById(R.id.profile_image);
+    
     Intent intent = getIntent();
     Uri data = intent.getData();
     
@@ -70,6 +74,9 @@ public class UserActivity extends BaseActivity {
       mUser = data.getLastPathSegment();
     }        
 
+    setTitle(mUser);
+    mUserText.setText(mUser);
+    
     mAdapter = new TweetArrayAdapter(this);
     mTweetList.setAdapter(mAdapter);
     
@@ -119,6 +126,14 @@ public class UserActivity extends BaseActivity {
   }
     
   private void update(ArrayList<Tweet> tweets) {
+    if (tweets.size() > 0) {
+      String imageUrl = tweets.get(0).profileImageUrl;
+      
+      if (!TextUtils.isEmpty(imageUrl)) {
+        mProfileImage.setImageBitmap(getImageManager().get(imageUrl));
+      }
+    }
+    
     mAdapter.refresh(tweets);
     mTweetList.setSelection(0);
   }
