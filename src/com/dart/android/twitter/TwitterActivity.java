@@ -400,11 +400,8 @@ public class TwitterActivity extends BaseActivity {
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
       Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
           NAME_MATCHER_TRANFORM);
-      // TODO: replace with custom movement method that is less 'clicky'.
-      /*
       holder.tweetText.setMovementMethod(
-          TestMovementMethod.getInstance());
-          */
+          LessClickyLinkMovementMethod.getInstance());
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
@@ -415,9 +412,9 @@ public class TwitterActivity extends BaseActivity {
       
       try {
         Date createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(cursor
-                .getString(mCreatedAtColumn));
-        holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
-            createdAt, cursor.getString(mSourceColumn)));                      
+            .getString(mCreatedAtColumn));
+        holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder, createdAt,
+            cursor.getString(mSourceColumn)));                      
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
