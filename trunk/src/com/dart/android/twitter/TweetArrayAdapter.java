@@ -43,9 +43,7 @@ public class TweetArrayAdapter extends BaseAdapter {
   }
 
   private static class ViewHolder {
-    public TextView tweetUserText;
     public TextView tweetText;
-    public ImageView profileImage;
     public TextView metaText;
   }
   
@@ -54,12 +52,10 @@ public class TweetArrayAdapter extends BaseAdapter {
     View view;
     
     if (convertView == null) {
-      view = mInflater.inflate(R.layout.tweet, parent, false);
+      view = mInflater.inflate(R.layout.uniform_tweet, parent, false);
       
       ViewHolder holder = new ViewHolder();
-      holder.tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
       holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
-      holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
       holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       view.setTag(holder);
     } else {
@@ -70,8 +66,6 @@ public class TweetArrayAdapter extends BaseAdapter {
 
     Tweet tweet = mTweets.get(position);
     
-    holder.tweetUserText.setText(tweet.screenName);
-
     holder.tweetText.setText(tweet.text);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
     // TODO: @ matcher.
@@ -83,11 +77,6 @@ public class TweetArrayAdapter extends BaseAdapter {
         LessClickyLinkMovementMethod.getInstance());
 
     String profileImageUrl = tweet.profileImageUrl;
-
-    if (!Utils.isEmpty(profileImageUrl)) {
-      holder.profileImage.setImageBitmap(TwitterApplication.mImageManager.get(
-          profileImageUrl));
-    }
 
     holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
         tweet.createdAt, tweet.source));        
