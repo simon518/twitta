@@ -25,8 +25,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import android.text.util.Linkify;
 import android.util.Log;
+import android.widget.TextView;
 
 public class Utils {
   
@@ -106,5 +110,22 @@ public class Utils {
   public static long getNowTime() {
     return Calendar.getInstance().getTime().getTime();    
   }
+
+  private static final Pattern NAME_MATCHER = Pattern.compile("\\B\\@\\w+\\b");
+  private static final Linkify.TransformFilter NAME_MATCHER_TRANFORM = new Linkify.TransformFilter() {
+    @Override
+    public String transformUrl(Matcher matcher, String url) {
+      return url.replace("@", "");
+    }
+  };
+
+  private static final String TWITTA_USER_URL = "twitta://users/";
+  
+  public static void linkifyUsers(TextView view) {
+    Linkify.addLinks(view, NAME_MATCHER,
+        TWITTA_USER_URL, null,
+        NAME_MATCHER_TRANFORM);    
+  }
+
   
 }
