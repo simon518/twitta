@@ -71,6 +71,7 @@ public class TwitterApi {
   private static final String DIRECT_MESSAGES_DESTROY_URL = "http://twitter.com/direct_messages/destroy/%d.json";
   private static final String DIRECT_MESSAGES_NEW_URL = "http://twitter.com/direct_messages/new.json";
   private static final String FOLLOWERS_IDS_URL = "http://twitter.com/followers/ids.json";
+  private static final String USER_TIMELINE_URL = "http://twitter.com/statuses/user_timeline.json";
 
   private static final String UPLOAD_AND_POST_URL = "http://twitpic.com/api/uploadAndPost";
 
@@ -503,4 +504,26 @@ public class TwitterApi {
     return followers;
   }
 
+  public JSONArray getUserTimeline(String user) throws IOException,
+      AuthException, ApiException {
+    Log.i(TAG, "Requesting user timeline.");
+
+    String url = USER_TIMELINE_URL + "?screen_name="
+        + URLEncoder.encode(user, HTTP.UTF_8);
+
+    InputStream data = requestData(url, METHOD_GET, null);
+    JSONArray json = null;
+
+    try {
+      json = new JSONArray(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
+    return json;
+  }
+  
 }
