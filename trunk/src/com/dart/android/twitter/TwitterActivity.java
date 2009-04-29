@@ -19,6 +19,7 @@ package com.dart.android.twitter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -340,7 +341,7 @@ public class TwitterActivity extends BaseActivity {
 
   private static final String PROFILE_URL = "twitta://users/";
 
-  private class TweetAdapter extends CursorAdapter {
+  private static class TweetAdapter extends CursorAdapter {
 
     public TweetAdapter(Context context, Cursor cursor) {
       super(context, cursor);
@@ -382,7 +383,7 @@ public class TwitterActivity extends BaseActivity {
       return view;
     }
 
-    class ViewHolder {
+    private static class ViewHolder {
       public TextView tweetUserText;
       public TextView tweetText;
       public ImageView profileImage;
@@ -408,25 +409,18 @@ public class TwitterActivity extends BaseActivity {
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(getImageManager().get(
-            profileImageUrl));
+        holder.profileImage.setImageBitmap(TwitterApplication.mImageManager.get(
+            profileImageUrl));        
       }
-
-      mMetaBuilder.setLength(0);
-
+      
       try {
-        mMetaBuilder.append(Utils
-            .getRelativeDate(TwitterDbAdapter.DB_DATE_FORMATTER.parse(cursor
-                .getString(mCreatedAtColumn))));
-        mMetaBuilder.append(" ");
+        Date createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(cursor
+                .getString(mCreatedAtColumn));
+        holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
+            createdAt, cursor.getString(mSourceColumn)));                      
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
-
-      mMetaBuilder.append("from ");
-      mMetaBuilder.append(cursor.getString(mSourceColumn));
-
-      holder.metaText.setText(mMetaBuilder.toString());
     }
 
     public void refresh() {
