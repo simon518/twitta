@@ -12,14 +12,16 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class TweetArrayAdapter extends BaseAdapter {
+  @SuppressWarnings("unused")
   private static final String TAG = "TweetArrayAdapter";
   
-  private ArrayList<Tweet> mTweets = new ArrayList<Tweet>();
+  private ArrayList<Tweet> mTweets;
   private Context mContext;
   private LayoutInflater mInflater;
   private StringBuilder mMetaBuilder;
       
   public TweetArrayAdapter(Context context) {
+    mTweets = new ArrayList<Tweet>();
     mContext = context;
     mInflater = LayoutInflater.from(mContext);
     mMetaBuilder = new StringBuilder();
@@ -72,15 +74,13 @@ public class TweetArrayAdapter extends BaseAdapter {
 
     holder.tweetText.setText(tweet.text);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
+    // TODO: @ matcher.
     /*
     Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
         NAME_MATCHER_TRANFORM);
         */
-    // TODO: replace with custom movement method that is less 'clicky'.
-    /*
     holder.tweetText.setMovementMethod(
-        TestMovementMethod.getInstance());
-        */
+        LessClickyLinkMovementMethod.getInstance());
 
     String profileImageUrl = tweet.profileImageUrl;
 
