@@ -330,17 +330,6 @@ public class TwitterActivity extends BaseActivity {
     }
   }
 
-  private static final Pattern NAME_MATCHER = Pattern
-      .compile("\\B\\@\\w+\\b");
-  private static final Linkify.TransformFilter NAME_MATCHER_TRANFORM = new Linkify.TransformFilter() {
-    @Override
-    public String transformUrl(Matcher matcher, String url) {
-      return url.replace("@", "");
-    }
-  };
-
-  private static final String PROFILE_URL = "twitta://users/";
-
   private static class TweetAdapter extends CursorAdapter {
 
     public TweetAdapter(Context context, Cursor cursor) {
@@ -398,8 +387,7 @@ public class TwitterActivity extends BaseActivity {
 
       holder.tweetText.setText(cursor.getString(mTextColumn));
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
-      Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
-          NAME_MATCHER_TRANFORM);
+      Utils.linkifyUsers(holder.tweetText);
       holder.tweetText.setMovementMethod(
           LessClickyLinkMovementMethod.getInstance());
 

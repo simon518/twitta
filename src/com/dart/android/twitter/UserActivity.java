@@ -12,6 +12,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -239,6 +241,31 @@ public class UserActivity extends BaseActivity {
 
       updateProgress("");
     }    
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
+    item.setIcon(R.drawable.refresh);
+
+    // TODO:
+    /*
+    item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
+    item.setIcon(android.R.drawable.ic_menu_send);
+    */
+
+    return super.onCreateOptionsMenu(menu);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+    case OPTIONS_MENU_ID_REFRESH:
+      doRetrieve();
+      return true;
+    }
+
+    return super.onOptionsItemSelected(item);
   }
   
 }

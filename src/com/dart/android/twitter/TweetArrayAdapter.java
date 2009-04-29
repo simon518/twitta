@@ -8,7 +8,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class TweetArrayAdapter extends BaseAdapter {
@@ -68,15 +67,9 @@ public class TweetArrayAdapter extends BaseAdapter {
     
     holder.tweetText.setText(tweet.text);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
-    // TODO: @ matcher.
-    /*
-    Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
-        NAME_MATCHER_TRANFORM);
-        */
+    Utils.linkifyUsers(holder.tweetText);
     holder.tweetText.setMovementMethod(
         LessClickyLinkMovementMethod.getInstance());
-
-    String profileImageUrl = tweet.profileImageUrl;
 
     holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
         tweet.createdAt, tweet.source));        
