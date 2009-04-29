@@ -338,8 +338,7 @@ public class TwitterActivity extends BaseActivity {
     }
   };
 
-  // TODO: change to profile activity.
-  private static final String PROFILE_URL = "http://twitter.com/";
+  private static final String PROFILE_URL = "twitta://users/";
 
   private class TweetAdapter extends CursorAdapter {
 
@@ -399,9 +398,12 @@ public class TwitterActivity extends BaseActivity {
       holder.tweetText.setText(cursor.getString(mTextColumn));
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
       Linkify.addLinks(holder.tweetText, NAME_MATCHER, PROFILE_URL, null,
-          NAME_MATCHER_TRANFORM);      
+          NAME_MATCHER_TRANFORM);
+      // TODO: replace with custom movement method that is less 'clicky'.
+      /*
       holder.tweetText.setMovementMethod(
-          LessClickyLinkMovementMethod.getInstance());
+          TestMovementMethod.getInstance());
+          */
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
