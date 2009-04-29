@@ -5,7 +5,6 @@
   android:layout_height="fill_parent"
   android:background="@drawable/user_background"
   >
-    <!-- Input area. -->    
     <LinearLayout
     android:orientation="horizontal"
     android:layout_width="fill_parent"
@@ -15,21 +14,21 @@
     android:paddingLeft="7px"
     android:paddingRight="9px"        
     >    
-			<ImageView
-			  android:id="@+id/profile_image"
-			  android:layout_marginTop="2px"
-			  android:layout_marginLeft="2px"
-			  android:layout_marginBottom="2px"
-			  android:layout_marginRight="4px"
-			  android:layout_width="48px"
-			  android:layout_height="48px"
-			/>
-			<TextView
-			  android:id="@+id/tweet_user_text" 
-			  android:layout_width="fill_parent"
-			  android:layout_height="wrap_content"
-			  android:textColor="@drawable/tweet_user_color"
-			/>    
+      <ImageView
+        android:id="@+id/profile_image"
+        android:layout_marginTop="2px"
+        android:layout_marginLeft="2px"
+        android:layout_marginBottom="2px"
+        android:layout_marginRight="4px"
+        android:layout_width="48px"
+        android:layout_height="48px"
+      />
+      <TextView
+        android:id="@+id/tweet_user_text" 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@drawable/tweet_user_color"
+      />    
     </LinearLayout>
 
     <!-- Main content area. -->
