@@ -8,6 +8,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.ListView;
@@ -32,7 +33,7 @@ public class UserActivity extends BaseActivity {
 
   private static final String EXTRA_USER = "user";
 
-  private static final String LAUNCH_ACTION = "com.dart.android.twitter.DMS";
+  private static final String LAUNCH_ACTION = "com.dart.android.twitter.USER";
 
   public static Intent createIntent(String user) {    
     Intent intent = new Intent(LAUNCH_ACTION);    
@@ -50,6 +51,11 @@ public class UserActivity extends BaseActivity {
       handleLoggedOut();
       return;
     }
+    
+    Intent intent = getIntent();
+    Uri data = intent.getData();
+    
+    Log.i(TAG, data.getLastPathSegment());
           
     setContentView(R.layout.user);
     
