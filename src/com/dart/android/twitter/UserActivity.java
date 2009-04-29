@@ -1,16 +1,25 @@
 package com.dart.android.twitter;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.text.TextUtils;
+import android.text.util.Linkify;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -23,6 +32,8 @@ public class UserActivity extends BaseActivity {
   private static final String TAG = "UserActivity";
 
   private String mUser;
+  
+  private TweetArrayAdapter mAdapter;
   
   // Views.
   private ListView mTweetList;
@@ -52,20 +63,23 @@ public class UserActivity extends BaseActivity {
       return;
     }
     
-    Intent intent = getIntent();
-    Uri data = intent.getData();
-    
-    Log.i(TAG, data.getLastPathSegment());
-          
     setContentView(R.layout.user);
     
     mTweetList = (ListView) findViewById(R.id.tweet_list);    
     
     mProgressText = (TextView) findViewById(R.id.progress_text);
-    
-    Bundle extras = getIntent().getExtras();
 
-    mUser = extras.getString(EXTRA_USER);
+    Intent intent = getIntent();
+    Uri data = intent.getData();
+    
+    mUser = intent.getStringExtra(EXTRA_USER);
+    
+    if (TextUtils.isEmpty(mUser)) {    
+      mUser = data.getLastPathSegment();
+    }        
+
+    mAdapter = new TweetArrayAdapter(this);
+    mTweetList.setAdapter(mAdapter);
     
     doRetrieve();    
   }
@@ -112,9 +126,9 @@ public class UserActivity extends BaseActivity {
     mProgressText.setText(progress);
   }
     
-  private void update() {
-    // mAdapter.refresh();
-    // mTweetList.setSelection(0);
+  private void update(ArrayList<Tweet> tweets) {
+    mAdapter.refresh(tweets);
+    mTweetList.setSelection(0);
   }
   
   
@@ -147,11 +161,11 @@ public class UserActivity extends BaseActivity {
       onRetrieveBegin();
     }
 
+    ArrayList<Tweet> mTweets = new ArrayList<Tweet>();
+
     @Override
     public TaskResult doInBackground(Void... params) {
       JSONArray jsonArray;
-
-      ArrayList<Tweet> tweets = new ArrayList<Tweet>();
 
       TwitterApi api = getApi();
       ImageManager imageManager = getImageManager();
@@ -179,7 +193,7 @@ public class UserActivity extends BaseActivity {
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           tweet = Tweet.create(jsonObject);
-          tweets.add(tweet);
+          mTweets.add(tweet);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
           return TaskResult.IO_ERROR;
@@ -213,7 +227,7 @@ public class UserActivity extends BaseActivity {
       if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == TaskResult.OK) {
-        update();
+        update(mTweets);
       } else {
         // Do nothing.
       }

@@ -16,6 +16,7 @@
 
 package com.dart.android.twitter;
 
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -53,5 +54,18 @@ public class Tweet extends Message {
         
     return tweet;
   }
+
+  public static String buildMetaText(StringBuilder builder, 
+      Date createdAt, String source) {
+    builder.setLength(0);
+
+    builder.append(Utils.getRelativeDate(createdAt));
+    builder.append(" ");
+
+    builder.append("from ");
+    builder.append(source);
     
+    return builder.toString();      
+  }
+
 }
