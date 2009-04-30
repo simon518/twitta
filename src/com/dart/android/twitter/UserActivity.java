@@ -272,6 +272,14 @@ public class UserActivity extends BaseActivity {
   }
 
   @Override
+  public boolean onPrepareOptionsMenu(Menu menu) {
+    MenuItem item = menu.findItem(OPTIONS_MENU_ID_DM);
+    item.setEnabled(mIsFollower);
+
+    return super.onPrepareOptionsMenu(menu);
+  }
+  
+  @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_REFRESH:
@@ -296,8 +304,8 @@ public class UserActivity extends BaseActivity {
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
 
-    // TODO:
-    menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
+    MenuItem item = menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
+    item.setEnabled(mIsFollower);
   }
 
   @Override
