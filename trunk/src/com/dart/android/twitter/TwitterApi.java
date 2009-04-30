@@ -72,6 +72,7 @@ public class TwitterApi {
   private static final String DIRECT_MESSAGES_NEW_URL = "http://twitter.com/direct_messages/new.json";
   private static final String FOLLOWERS_IDS_URL = "http://twitter.com/followers/ids.json";
   private static final String USER_TIMELINE_URL = "http://twitter.com/statuses/user_timeline.json";
+  private static final String FRIENDSHIPS_EXISTS_URL = "http://twitter.com/friendships/exists.json";
 
   private static final String UPLOAD_AND_POST_URL = "http://twitpic.com/api/uploadAndPost";
 
@@ -526,4 +527,21 @@ public class TwitterApi {
     return json;
   }
   
+  public boolean isFollows(String a, String b) throws IOException,
+      AuthException, ApiException {
+    Log.i(TAG, "Check follows.");
+
+    String url = FRIENDSHIPS_EXISTS_URL + "?user_a="
+        + URLEncoder.encode(a, HTTP.UTF_8)
+        + "&user_b="
+        + URLEncoder.encode(b, HTTP.UTF_8);
+
+    InputStream data = requestData(url, METHOD_GET, null);
+    
+    try {
+      return "true".equals(Utils.stringifyStream(data));
+    } finally {
+      data.close();
+    }
+  }  
 }

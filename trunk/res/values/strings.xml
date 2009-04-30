@@ -48,7 +48,9 @@
     <string name="pref_ringtone_summary"></string>
     
     <string name="about_title">About Twitta</string>
-    <string name="about_message">Twitta is not endorsed by Twitter.
+    <string name="about_message">
+    Crafted with care since 2009
+    \n\nTwitta is not endorsed by Twitter.
     \n\nTwitta is open sourced under the Apache 2.0 license. 
     \n\nPlease visit the project page at http://code.google.com/p/twitta/ to contribute code or report issues.
     </string>
