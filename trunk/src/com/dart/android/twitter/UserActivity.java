@@ -39,6 +39,10 @@ public class UserActivity extends BaseActivity {
   private boolean mIsFollowing = false;
   private boolean mIsFollower = false;
   
+  private boolean hasData() {
+    return mUser != null;
+  }
+  
   private static class State {
     State(UserActivity activity) {      
       mTweets = activity.mTweets;
@@ -187,8 +191,15 @@ public class UserActivity extends BaseActivity {
       }
     }
     
-    if (mUser != null) {
+    if (hasData()) {
       mNameText.setText(mUser.name);
+      mFollowButton.setVisibility(View.VISIBLE);
+      
+      if (mIsFollowing) {
+        mFollowButton.setText(R.string.unfollow);
+      } else {
+        mFollowButton.setText(R.string.follow);        
+      }
     }
     
     mAdapter.refresh(mTweets);
