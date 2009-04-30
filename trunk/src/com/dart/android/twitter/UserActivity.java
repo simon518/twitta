@@ -288,13 +288,7 @@ public class UserActivity extends BaseActivity {
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
 
     // TODO:
-    /*
-    int userId = tweet.id;
-
-    if (getDb().isFollower(userId)) {
-      menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
-    }
-    */
+    menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
   }
 
   @Override
