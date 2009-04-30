@@ -539,7 +539,7 @@ public class TwitterApi {
     InputStream data = requestData(url, METHOD_GET, null);
     
     try {
-      return "true".equals(Utils.stringifyStream(data));
+      return "true".equals(Utils.stringifyStream(data).trim());
     } finally {
       data.close();
     }
