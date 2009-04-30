@@ -17,6 +17,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -56,7 +57,9 @@ public class UserActivity extends BaseActivity {
   private ListView mTweetList;
   private TextView mProgressText;  
   private TextView mUserText;
+  private TextView mNameText;
   private ImageView mProfileImage;
+  private Button mFollowButton;
   
   private TweetArrayAdapter mAdapter;
   
@@ -90,7 +93,9 @@ public class UserActivity extends BaseActivity {
     mTweetList = (ListView) findViewById(R.id.tweet_list);        
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mUserText = (TextView) findViewById(R.id.tweet_user_text);
+    mNameText = (TextView) findViewById(R.id.realname_text);
     mProfileImage = (ImageView) findViewById(R.id.profile_image);
+    mFollowButton = (Button) findViewById(R.id.follow_button);
     
     Intent intent = getIntent();
     Uri data = intent.getData();
@@ -119,7 +124,7 @@ public class UserActivity extends BaseActivity {
       mUser = state.mUser;
       mIsFollowing = state.mIsFollowing;
       mIsFollower = state.mIsFollower;
-      drawList();
+      draw();
     } else {   
       doRetrieve();
     }
@@ -173,13 +178,17 @@ public class UserActivity extends BaseActivity {
     mProgressText.setText(progress);
   }
     
-  private void drawList() {
+  private void draw() {
     if (mTweets.size() > 0) {
       String imageUrl = mTweets.get(0).profileImageUrl;
       
       if (!TextUtils.isEmpty(imageUrl)) {
         mProfileImage.setImageBitmap(getImageManager().get(imageUrl));
       }
+    }
+    
+    if (mUser != null) {
+      mNameText.setText(mUser.name);
     }
     
     mAdapter.refresh(mTweets);
@@ -288,7 +297,7 @@ public class UserActivity extends BaseActivity {
       } else if (result == TaskResult.OK) {
         // Bad style! But learned something.
         UserActivity.this.mTweets = mTweets;
-        drawList();
+        draw();
       } else {
         // Do nothing.
       }
