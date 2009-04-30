@@ -7,6 +7,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -99,7 +103,13 @@ public class UserActivity extends BaseActivity {
     mUserText = (TextView) findViewById(R.id.tweet_user_text);
     mNameText = (TextView) findViewById(R.id.realname_text);
     mProfileImage = (ImageView) findViewById(R.id.profile_image);
+    
     mFollowButton = (Button) findViewById(R.id.follow_button);
+    mFollowButton.setOnClickListener(new OnClickListener() {
+      public void onClick(View v) {
+        confirmFollow();
+      }
+    });    
     
     Intent intent = getIntent();
     Uri data = intent.getData();
@@ -396,5 +406,65 @@ public class UserActivity extends BaseActivity {
   private void launchNewTweetActivity(String text) {    
     launchActivity(TwitterActivity.createNewTweetIntent(text));
   }
+
+  
+  private static final int DIALOG_CONFIRM = 0;
+  
+  private void confirmFollow() {
+    showDialog(DIALOG_CONFIRM);
+  }
+  
+  @Override
+  protected Dialog onCreateDialog(int id) {
+    AlertDialog mConfirmDialog = new AlertDialog.Builder(this).create();
+
+    String action = mIsFollowing ? getString(R.string.unfollow) :
+        getString(R.string.follow);
+    String message = action + " " + mUsername + "?";
+    
+    mConfirmDialog.setTitle(R.string.friendship);
+    mConfirmDialog.setButton(action, mConfirmListener);
+    mConfirmDialog.setButton2(getString(R.string.cancel), mCancelListener);        
+    mConfirmDialog.setMessage(message);
+    
+    return mConfirmDialog;
+  }
+
+  @Override
+  protected void onPrepareDialog(int id, Dialog dialog) {
+    // TODO: WTF, why this not called?
+    AlertDialog mConfirmDialog = (AlertDialog) dialog;
+    
+    String action = mIsFollowing ? getString(R.string.unfollow) :
+        getString(R.string.follow);
+    String message = action + " " + mUsername + "?";
+    
+    mConfirmDialog.setButton(action, mConfirmListener);
+    mConfirmDialog.setButton2(getString(R.string.cancel), mCancelListener);        
+    mConfirmDialog.setMessage(message);
+  }
+      
+  private DialogInterface.OnClickListener mConfirmListener = new DialogInterface.OnClickListener() {
+    public void onClick(DialogInterface dialog, int whichButton) {
+      toggleFollow();
+    }
+  };
+
+  private DialogInterface.OnClickListener mCancelListener = new DialogInterface.OnClickListener() {
+    public void onClick(DialogInterface dialog, int whichButton) {
+    }
+  };
+  
+  private void toggleFollow() {
+    if (mIsFollowing) {
+    } else {
+      
+    }
+    
+    mIsFollowing = !mIsFollowing;
+    draw();
+    
+    // TODO: should we do a timeline refresh here?
+  }  
   
 }
