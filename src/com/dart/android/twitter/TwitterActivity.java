@@ -283,6 +283,7 @@ public class TwitterActivity extends BaseActivity {
     mTweetList.setAdapter(mTweetAdapter);
   }
 
+  private static final int CONTEXT_MORE_ID = 4;
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
   private static final int CONTEXT_DM_ID = 2;
@@ -291,17 +292,20 @@ public class TwitterActivity extends BaseActivity {
   public void onCreateContextMenu(ContextMenu menu, View v,
       ContextMenuInfo menuInfo) {
     super.onCreateContextMenu(menu, v, menuInfo);
-    menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
-    menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
 
     AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
     Cursor cursor = (Cursor) mTweetAdapter.getItem(info.position);
     int userId = cursor.getInt(cursor
         .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER_ID));
+    String user = cursor.getString(cursor
+        .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
 
-    if (getDb().isFollower(userId)) {
-      menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
-    }
+    menu.add(0, CONTEXT_MORE_ID, 0, user);
+    menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
+    menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
+    
+    MenuItem item = menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
+    item.setEnabled(getDb().isFollower(userId));
   }
 
   @Override
@@ -315,6 +319,12 @@ public class TwitterActivity extends BaseActivity {
     }
 
     switch (item.getItemId()) {
+    case CONTEXT_MORE_ID:
+      String who = cursor.getString(
+          cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
+      launchActivity(UserActivity.createIntent(who));      
+
+      return true;    
     case CONTEXT_REPLY_ID:
       int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
       // TODO: this isn't quite perfect. It leaves extra empty spaces if you
