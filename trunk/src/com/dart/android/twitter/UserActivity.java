@@ -286,8 +286,6 @@ public class UserActivity extends BaseActivity {
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
 
-    AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
-    Tweet tweet = (Tweet) mAdapter.getItem(info.position);
     // TODO:
     /*
     int userId = tweet.id;
@@ -326,7 +324,7 @@ public class UserActivity extends BaseActivity {
   }
   
   private void launchNewTweetActivity(String text) {    
-    launchActivity(TwitterActivity.createNewTweet(text));
+    launchActivity(TwitterActivity.createNewTweetIntent(text));
   }
   
 }

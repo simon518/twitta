@@ -101,9 +101,10 @@ public class TwitterActivity extends BaseActivity {
     return intent;
   }
 
-  public static Intent createNewTweet(String text) {
+  public static Intent createNewTweetIntent(String text) {
     Intent intent = new Intent(NEW_TWEET_ACTION);
-    intent.putExtra(EXTRA_TEXT, text);    
+    intent.putExtra(EXTRA_TEXT, text);
+    
     return intent;
   }
   
