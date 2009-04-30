@@ -8,15 +8,21 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
@@ -81,6 +87,7 @@ public class UserActivity extends BaseActivity {
     
     mAdapter = new TweetArrayAdapter(this);
     mTweetList.setAdapter(mAdapter);
+    registerForContextMenu(mTweetList);    
     
     doRetrieve();    
   }
@@ -266,6 +273,60 @@ public class UserActivity extends BaseActivity {
     }
 
     return super.onOptionsItemSelected(item);
+  }
+ 
+  private static final int CONTEXT_REPLY_ID = 0;
+  private static final int CONTEXT_RETWEET_ID = 1;
+  private static final int CONTEXT_DM_ID = 2;
+
+  @Override
+  public void onCreateContextMenu(ContextMenu menu, View v,
+      ContextMenuInfo menuInfo) {
+    super.onCreateContextMenu(menu, v, menuInfo);
+    menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
+    menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
+
+    AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+    Tweet tweet = (Tweet) mAdapter.getItem(info.position);
+    // TODO:
+    /*
+    int userId = tweet.id;
+
+    if (getDb().isFollower(userId)) {
+      menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
+    }
+    */
+  }
+
+  @Override
+  public boolean onContextItemSelected(MenuItem item) {
+    AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+    Tweet tweet = (Tweet) mAdapter.getItem(info.position);
+
+    if (tweet == null) {
+      Log.w(TAG, "Selected item not available.");
+      return super.onContextItemSelected(item);
+    }
+
+    switch (item.getItemId()) {
+    case CONTEXT_REPLY_ID:
+      String replyTo = "@" + tweet.screenName + " ";
+      launchNewTweetActivity(replyTo);
+      return true;
+    case CONTEXT_RETWEET_ID:
+      String retweet = "RT @" + tweet.screenName + " " + tweet.text;
+      launchNewTweetActivity(retweet);
+      return true;
+    case CONTEXT_DM_ID:
+      launchActivity(DmActivity.createIntent(this, tweet.userId));
+      return true;
+    default:
+      return super.onContextItemSelected(item);
+    }
+  }
+  
+  private void launchNewTweetActivity(String text) {    
+    launchActivity(TwitterActivity.createNewTweet(text));
   }
   
 }

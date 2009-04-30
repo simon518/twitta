@@ -83,7 +83,10 @@ public class TwitterActivity extends BaseActivity {
   private static final long FOLLOWERS_REFRESH_THRESHOLD = 12 * 60 * 60 * 1000;
 
   private static final String LAUNCH_ACTION = "com.dart.android.twitter.TWEETS";
-
+  private static final String NEW_TWEET_ACTION = "com.dart.android.twitter.NEW";
+  
+  private static final String EXTRA_TEXT = "text";
+  
   public static Intent createIntent(Context context) {
     Intent intent = new Intent(LAUNCH_ACTION);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -98,6 +101,12 @@ public class TwitterActivity extends BaseActivity {
     return intent;
   }
 
+  public static Intent createNewTweet(String text) {
+    Intent intent = new Intent(NEW_TWEET_ACTION);
+    intent.putExtra(EXTRA_TEXT, text);    
+    return intent;
+  }
+  
   private boolean isReplies() {
     return mState == STATE_REPLIES;
   }  
@@ -106,17 +115,20 @@ public class TwitterActivity extends BaseActivity {
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
 
-    mState = mPreferences.getInt(
-        Preferences.TWITTER_ACTIVITY_STATE_KEY, STATE_ALL);
-
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
       handleLoggedOut();
       return;
     }
-
+    
     setContentView(R.layout.main);
 
+    Intent intent = getIntent();
+    String action = intent.getAction();
+    
+    mState = mPreferences.getInt(
+        Preferences.TWITTER_ACTIVITY_STATE_KEY, STATE_ALL);
+    
     mTweetList = (ListView) findViewById(R.id.tweet_list);
 
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
@@ -124,6 +136,10 @@ public class TwitterActivity extends BaseActivity {
 
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
 
+    if (NEW_TWEET_ACTION.equals(action)) {
+      mTweetEdit.setText(intent.getStringExtra(EXTRA_TEXT));
+    }
+            
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     mSendButton = (ImageButton) findViewById(R.id.send_button);

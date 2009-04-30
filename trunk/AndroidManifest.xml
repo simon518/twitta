@@ -31,7 +31,11 @@
             <intent-filter>
                 <action android:name="com.dart.android.twitter.REPLIES" />
                 <category android:name="android.intent.category.DEFAULT" />
-            </intent-filter>                                                                        
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.dart.android.twitter.NEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>                                                                                                                                                            
         </activity>
         <activity android:name="DmActivity"
                   android:label="@string/direct_messages">
