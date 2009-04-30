@@ -255,11 +255,9 @@ public class UserActivity extends BaseActivity {
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
 
-    // TODO:
-    /*
+    // TODO: disable if not following.
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
-    */
 
     return super.onCreateOptionsMenu(menu);
   }
@@ -270,6 +268,9 @@ public class UserActivity extends BaseActivity {
     case OPTIONS_MENU_ID_REFRESH:
       doRetrieve();
       return true;
+    case OPTIONS_MENU_ID_DM:
+      launchActivity(DmActivity.createIntent(mUser));
+      return true;      
     }
 
     return super.onOptionsItemSelected(item);
@@ -316,7 +317,7 @@ public class UserActivity extends BaseActivity {
       launchNewTweetActivity(retweet);
       return true;
     case CONTEXT_DM_ID:
-      launchActivity(DmActivity.createIntent(this, tweet.userId));
+      launchActivity(DmActivity.createIntent(mUser));
       return true;
     default:
       return super.onContextItemSelected(item);

@@ -338,7 +338,7 @@ public class TwitterActivity extends BaseActivity {
     case CONTEXT_DM_ID:
       String user = cursor.getString(cursor
           .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
-      launchActivity(DmActivity.createIntent(this, user));
+      launchActivity(DmActivity.createIntent(user));
       return true;
     default:
       return super.onContextItemSelected(item);
@@ -738,7 +738,7 @@ public class TwitterActivity extends BaseActivity {
       startActivity(repliesIntent);
       return true;
     case OPTIONS_MENU_ID_DM:
-      launchActivity(DmActivity.createIntent(this));
+      launchActivity(DmActivity.createIntent());
       return true;
     case OPTIONS_MENU_ID_TOGGLE_REPLIES:
       toggleShowReplies();
