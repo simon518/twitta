@@ -25,10 +25,22 @@
       />
       <TextView
         android:id="@+id/tweet_user_text" 
-        android:layout_width="fill_parent"
+        android:layout_weight="1"
+        android:layout_width="0px"
         android:layout_height="wrap_content"
         android:textColor="@drawable/tweet_user_color"
       />    
+	    <Button
+		    android:id="@+id/follow_button"
+		    android:background="@drawable/button_background_selector"
+	      android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:textColor="@drawable/label_color"
+		    android:text="Follow"
+		    android:paddingLeft="5px"
+		    android:paddingRight="5px"        		    
+        android:layout_marginRight="2px"		    
+	    />          
     </LinearLayout>
 
     <!-- Main content area. -->

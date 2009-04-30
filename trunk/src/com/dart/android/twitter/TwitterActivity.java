@@ -283,7 +283,7 @@ public class TwitterActivity extends BaseActivity {
     mTweetList.setAdapter(mTweetAdapter);
   }
 
-  private static final int CONTEXT_MORE_ID = 4;
+  private static final int CONTEXT_MORE_ID = 3;
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
   private static final int CONTEXT_DM_ID = 2;
