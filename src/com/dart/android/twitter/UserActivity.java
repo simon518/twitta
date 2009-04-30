@@ -30,19 +30,35 @@ public class UserActivity extends BaseActivity {
 
   private static final String TAG = "UserActivity";
 
+  // State.  
   private String mUsername;
-  private String mMe;  
+  private String mMe;
+  private ArrayList<Tweet> mTweets;  
   private User mUser;
   private boolean mIsFollowing = false;
   private boolean mIsFollower = false;
   
-  private TweetArrayAdapter mAdapter;
-  
+  private static class State {
+    State(UserActivity activity) {      
+      mTweets = activity.mTweets;
+      mUser = activity.mUser;
+      mIsFollowing = activity.mIsFollowing;
+      mIsFollower = activity.mIsFollower;
+    }    
+    
+    public ArrayList<Tweet> mTweets;        
+    public User mUser;
+    public boolean mIsFollowing;
+    public boolean mIsFollower;   
+  }
+      
   // Views.
   private ListView mTweetList;
   private TextView mProgressText;  
   private TextView mUserText;
   private ImageView mProfileImage;
+  
+  private TweetArrayAdapter mAdapter;
   
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
@@ -92,7 +108,22 @@ public class UserActivity extends BaseActivity {
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);    
     
-    doRetrieve();    
+    State state = (State) getLastNonConfigurationInstance();
+    
+    boolean wasRunning = savedInstanceState != null
+        && savedInstanceState.containsKey(SIS_RUNNING_KEY)
+        && savedInstanceState.getBoolean(SIS_RUNNING_KEY);
+      
+    if (state != null && !wasRunning) {
+      mTweets = state.mTweets;
+      mUser = state.mUser;
+      mIsFollowing = state.mIsFollowing;
+      mIsFollower = state.mIsFollower;
+      drawList();
+    } else {   
+      doRetrieve();
+    }
+    
   }
   
   @Override
@@ -104,6 +135,11 @@ public class UserActivity extends BaseActivity {
       handleLoggedOut();
       return;
     }               
+  }
+  
+  @Override
+  public Object onRetainNonConfigurationInstance() {
+      return new State(this);
   }
   
   private static final String SIS_RUNNING_KEY = "running";
@@ -137,16 +173,16 @@ public class UserActivity extends BaseActivity {
     mProgressText.setText(progress);
   }
     
-  private void update(ArrayList<Tweet> tweets) {
-    if (tweets.size() > 0) {
-      String imageUrl = tweets.get(0).profileImageUrl;
+  private void drawList() {
+    if (mTweets.size() > 0) {
+      String imageUrl = mTweets.get(0).profileImageUrl;
       
       if (!TextUtils.isEmpty(imageUrl)) {
         mProfileImage.setImageBitmap(getImageManager().get(imageUrl));
       }
     }
     
-    mAdapter.refresh(tweets);
+    mAdapter.refresh(mTweets);
     mTweetList.setSelection(0);
   }
   
@@ -250,7 +286,9 @@ public class UserActivity extends BaseActivity {
       if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == TaskResult.OK) {
-        update(mTweets);
+        // Bad style! But learned something.
+        UserActivity.this.mTweets = mTweets;
+        drawList();
       } else {
         // Do nothing.
       }

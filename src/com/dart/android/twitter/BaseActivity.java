@@ -117,7 +117,7 @@ public class BaseActivity extends Activity {
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
 
-    MenuItem item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.preferences);
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.settings);
     item.setIcon(android.R.drawable.ic_menu_preferences);
     
     item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);

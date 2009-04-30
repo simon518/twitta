@@ -19,6 +19,8 @@
     <string name="tweets">Tweets</string>
     <string name="show_at_replies">Show @replies</string>
     <string name="show_all">Show all</string>
+    <string name="follow">Follow</string>
+    <string name="unfollow">Unfollow</string>
 
     <string name="replies_only_title">Only @replies?</string>
     <string name="replies_only_summary">Notify only of @replies</string>
