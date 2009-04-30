@@ -6,7 +6,6 @@
   android:background="@drawable/user_background"
   >
     <RelativeLayout
-    android:orientation="horizontal"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:paddingTop="8px"              
@@ -30,26 +29,26 @@
         android:layout_height="wrap_content"
         android:textColor="@drawable/tweet_user_color"
       />
-      <TextView      
+      <TextView
+        android:id="@+id/realname_text"            
         android:layout_toRightOf="@id/profile_image"      
-        android:id="@+id/realname_text"
         android:layout_below="@+id/tweet_user_text"        
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@drawable/tweet_color"
       />                    
-	    <Button
-		    android:id="@+id/follow_button"
-        android:layout_alignParentRight="true"		    
-		    android:background="@drawable/button_background_selector"
-	      android:layout_width="wrap_content"
-		    android:layout_height="wrap_content"
-		    android:textColor="@drawable/label_color"
-		    android:text="Follow"
-		    android:paddingLeft="5px"
-		    android:paddingRight="5px"        		    
-        android:layout_marginRight="2px"		    
-	    />          
+      <Button
+        android:id="@+id/follow_button"
+        android:layout_alignParentRight="true"        
+        android:background="@drawable/button_background_selector"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@drawable/label_color"
+        android:visibility="gone"
+        android:paddingLeft="5px"
+        android:paddingRight="5px"                
+        android:layout_marginRight="2px"        
+      />          
     </RelativeLayout>
 
     <!-- Main content area. -->
