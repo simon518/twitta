@@ -31,7 +31,10 @@ public class UserActivity extends BaseActivity {
   private static final String TAG = "UserActivity";
 
   private String mUsername;
+  private String mMe;  
   private User mUser;
+  private boolean mIsFollowing = false;
+  private boolean mIsFollower = false;
   
   private TweetArrayAdapter mAdapter;
   
@@ -67,6 +70,7 @@ public class UserActivity extends BaseActivity {
     
     setContentView(R.layout.user);
     
+    mMe = TwitterApplication.mApi.getUsername();    
     mTweetList = (ListView) findViewById(R.id.tweet_list);        
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mUserText = (TextView) findViewById(R.id.tweet_user_text);
@@ -184,8 +188,10 @@ public class UserActivity extends BaseActivity {
 
       TwitterApi api = getApi();
       ImageManager imageManager = getImageManager();
-      
+            
       try {
+        mIsFollowing = api.isFollows(mMe, mUsername);
+        mIsFollower = api.isFollows(mUsername, mMe);        
         jsonArray = api.getUserTimeline(mUsername);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
