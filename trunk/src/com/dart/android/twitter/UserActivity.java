@@ -8,7 +8,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -18,7 +17,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -32,7 +30,8 @@ public class UserActivity extends BaseActivity {
 
   private static final String TAG = "UserActivity";
 
-  private String mUser;
+  private String mUsername;
+  private User mUser;
   
   private TweetArrayAdapter mAdapter;
   
@@ -76,14 +75,14 @@ public class UserActivity extends BaseActivity {
     Intent intent = getIntent();
     Uri data = intent.getData();
     
-    mUser = intent.getStringExtra(EXTRA_USER);
+    mUsername = intent.getStringExtra(EXTRA_USER);
     
-    if (TextUtils.isEmpty(mUser)) {    
-      mUser = data.getLastPathSegment();
+    if (TextUtils.isEmpty(mUsername)) {    
+      mUsername = data.getLastPathSegment();
     }        
 
-    setTitle(mUser);
-    mUserText.setText(mUser);
+    setTitle(mUsername);
+    mUserText.setText(mUsername);
     
     mAdapter = new TweetArrayAdapter(this);
     mTweetList.setAdapter(mAdapter);
@@ -149,7 +148,7 @@ public class UserActivity extends BaseActivity {
   
   
   private enum TaskResult {
-    OK, IO_ERROR, AUTH_ERROR, CANCELLED, NOT_FOLLOWED_ERROR
+    OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
   
   private void doRetrieve() {
@@ -187,7 +186,7 @@ public class UserActivity extends BaseActivity {
       ImageManager imageManager = getImageManager();
       
       try {
-        jsonArray = api.getUserTimeline(mUser);
+        jsonArray = api.getUserTimeline(mUsername);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -210,6 +209,10 @@ public class UserActivity extends BaseActivity {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           tweet = Tweet.create(jsonObject);
           mTweets.add(tweet);
+          
+          if (mUser == null) {
+            mUser = User.create(jsonObject.getJSONObject("user"));
+          }
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
           return TaskResult.IO_ERROR;
@@ -269,7 +272,7 @@ public class UserActivity extends BaseActivity {
       doRetrieve();
       return true;
     case OPTIONS_MENU_ID_DM:
-      launchActivity(DmActivity.createIntent(mUser));
+      launchActivity(DmActivity.createIntent(mUsername));
       return true;      
     }
 
@@ -311,7 +314,7 @@ public class UserActivity extends BaseActivity {
       launchNewTweetActivity(retweet);
       return true;
     case CONTEXT_DM_ID:
-      launchActivity(DmActivity.createIntent(mUser));
+      launchActivity(DmActivity.createIntent(mUsername));
       return true;
     default:
       return super.onContextItemSelected(item);
