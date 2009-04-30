@@ -2,10 +2,20 @@
 
 = Release Notes =
 
+== Version 9 ==
+
+  * A surprise!
+
+== Version 8 ==
+
+  * @Replies filter 
+  * Performance
+
 == Version 7 ==
 
-  * @reply filter
-  * Profile view
+  * User profile + tweets 
+  * Cupcake fixes
+  * Follow/Unfollow
 
 == Version 6 ==
 
