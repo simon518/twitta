@@ -231,7 +231,7 @@ public class TwitterService extends Service {
     }
 
     PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, DmActivity
-        .createIntent(this), 0);
+        .createIntent(), 0);
 
     notify(pendingIntent, DM_NOTIFICATION_ID, R.drawable.notify_dm,
         latest.text, title, text);
