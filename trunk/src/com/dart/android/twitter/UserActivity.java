@@ -332,7 +332,6 @@ public class UserActivity extends BaseActivity {
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
     item.setIcon(R.drawable.refresh);
 
-    // TODO: disable if not following.
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
 
@@ -418,29 +417,27 @@ public class UserActivity extends BaseActivity {
   protected Dialog onCreateDialog(int id) {
     AlertDialog mConfirmDialog = new AlertDialog.Builder(this).create();
 
-    String action = mIsFollowing ? getString(R.string.unfollow) :
-        getString(R.string.follow);
-    String message = action + " " + mUsername + "?";
-    
     mConfirmDialog.setTitle(R.string.friendship);
-    mConfirmDialog.setButton(action, mConfirmListener);
-    mConfirmDialog.setButton2(getString(R.string.cancel), mCancelListener);        
+    mConfirmDialog.setButton(AlertDialog.BUTTON_POSITIVE, "", mConfirmListener);
+    mConfirmDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.cancel), mCancelListener);
+    /*
     mConfirmDialog.setMessage(message);
+    */
     
     return mConfirmDialog;
   }
 
   @Override
   protected void onPrepareDialog(int id, Dialog dialog) {
-    // TODO: WTF, why this not called?
+    super.onPrepareDialog(id, dialog);       
+    
     AlertDialog mConfirmDialog = (AlertDialog) dialog;
     
     String action = mIsFollowing ? getString(R.string.unfollow) :
         getString(R.string.follow);
     String message = action + " " + mUsername + "?";
-    
-    mConfirmDialog.setButton(action, mConfirmListener);
-    mConfirmDialog.setButton2(getString(R.string.cancel), mCancelListener);        
+
+    ((Button) mConfirmDialog.getButton(AlertDialog.BUTTON_POSITIVE)).setText(action);    
     mConfirmDialog.setMessage(message);
   }
       
