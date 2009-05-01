@@ -280,6 +280,15 @@ public class UserActivity extends BaseActivity {
           
           if (mUser == null) {
             mUser = User.create(jsonObject.getJSONObject("user"));
+            
+            if (!Utils.isEmpty(mUser.profileImageUrl)) {
+              // Fetch image to cache.
+              try {
+                imageManager.put(tweet.profileImageUrl);
+              } catch (IOException e) {
+                Log.e(TAG, e.getMessage(), e);
+              }
+            }            
           }
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
@@ -288,15 +297,6 @@ public class UserActivity extends BaseActivity {
 
         if (isCancelled()) {
           return TaskResult.CANCELLED;
-        }
-
-        if (!Utils.isEmpty(tweet.profileImageUrl)) {
-          // Fetch image to cache.
-          try {
-            imageManager.put(tweet.profileImageUrl);
-          } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-          }
         }
       }
 
@@ -308,6 +308,10 @@ public class UserActivity extends BaseActivity {
       }
       
       publishProgress();
+
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
       
       try {
         mIsFollowing = api.isFollows(mMe, mUsername);
