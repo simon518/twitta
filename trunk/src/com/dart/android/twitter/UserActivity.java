@@ -40,12 +40,8 @@ public class UserActivity extends BaseActivity {
   private String mMe;
   private ArrayList<Tweet> mTweets;  
   private User mUser;
-  private boolean mIsFollowing = false;
-  private boolean mIsFollower = false;
-  
-  private boolean hasData() {
-    return mUser != null;
-  }
+  private Boolean mIsFollowing;
+  private Boolean mIsFollower = false;
   
   private static class State {
     State(UserActivity activity) {      
@@ -201,8 +197,13 @@ public class UserActivity extends BaseActivity {
       }
     }
     
-    if (hasData()) {
+    mAdapter.refresh(mTweets);
+    
+    if (mUser != null) {
       mNameText.setText(mUser.name);
+    }
+    
+    if (mIsFollowing != null) {
       mFollowButton.setVisibility(View.VISIBLE);
       
       if (mIsFollowing) {
@@ -210,10 +211,7 @@ public class UserActivity extends BaseActivity {
       } else {
         mFollowButton.setText(R.string.follow);        
       }
-    }
-    
-    mAdapter.refresh(mTweets);
-    mTweetList.setSelection(0);
+    }    
   }
   
   
@@ -256,9 +254,7 @@ public class UserActivity extends BaseActivity {
       ImageManager imageManager = getImageManager();
             
       try {
-        mIsFollowing = api.isFollows(mMe, mUsername);
-        mIsFollower = api.isFollows(mUsername, mMe);        
-        jsonArray = api.getUserTimeline(mUsername);
+        jsonArray = api.getUserTimeline(mUsername);        
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -304,20 +300,46 @@ public class UserActivity extends BaseActivity {
         }
       }
 
+      // Bad style! But learned something.
+      UserActivity.this.mTweets = mTweets;
+      
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
-
+      
+      publishProgress();
+      
+      try {
+        mIsFollowing = api.isFollows(mMe, mUsername);
+        mIsFollower = api.isFollows(mUsername, mMe);        
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return TaskResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      }
+      
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+      
       return TaskResult.OK;
     }
 
+    @Override
+    public void onProgressUpdate(Void... progress) {
+      draw();
+    }
+    
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
         onAuthFailure();
       } else if (result == TaskResult.OK) {
-        // Bad style! But learned something.
-        UserActivity.this.mTweets = mTweets;
         draw();
       } else {
         // Do nothing.
