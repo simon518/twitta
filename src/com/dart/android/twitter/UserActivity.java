@@ -415,30 +415,29 @@ public class UserActivity extends BaseActivity {
   
   @Override
   protected Dialog onCreateDialog(int id) {
-    AlertDialog mConfirmDialog = new AlertDialog.Builder(this).create();
+    AlertDialog dialog = new AlertDialog.Builder(this).create();
 
-    mConfirmDialog.setTitle(R.string.friendship);
-    mConfirmDialog.setButton(AlertDialog.BUTTON_POSITIVE, "", mConfirmListener);
-    mConfirmDialog.setButton(AlertDialog.BUTTON_NEUTRAL, getString(R.string.cancel), mCancelListener);
-    /*
-    mConfirmDialog.setMessage(message);
-    */
+    dialog.setTitle(R.string.friendship);
+    dialog.setButton(AlertDialog.BUTTON_POSITIVE, "FOO", mConfirmListener);
+    dialog.setButton(AlertDialog.BUTTON_NEUTRAL,
+        getString(R.string.cancel), mCancelListener);
+    dialog.setMessage("FOO");
     
-    return mConfirmDialog;
+    return dialog;
   }
 
   @Override
   protected void onPrepareDialog(int id, Dialog dialog) {
     super.onPrepareDialog(id, dialog);       
     
-    AlertDialog mConfirmDialog = (AlertDialog) dialog;
+    AlertDialog confirmDialog = (AlertDialog) dialog;
     
     String action = mIsFollowing ? getString(R.string.unfollow) :
         getString(R.string.follow);
     String message = action + " " + mUsername + "?";
 
-    ((Button) mConfirmDialog.getButton(AlertDialog.BUTTON_POSITIVE)).setText(action);    
-    mConfirmDialog.setMessage(message);
+    ((Button) confirmDialog.getButton(AlertDialog.BUTTON_POSITIVE)).setText(action);    
+    confirmDialog.setMessage(message);
   }
       
   private DialogInterface.OnClickListener mConfirmListener = new DialogInterface.OnClickListener() {
