@@ -209,7 +209,9 @@ public class UserActivity extends BaseActivity {
       mNameText.setText(mUser.name);
     }
     
-    if (mIsFollowing != null) {
+    if (mUsername.equalsIgnoreCase(mMe)) {
+      mFollowButton.setVisibility(View.GONE);
+    } else if (mIsFollowing != null) {
       mFollowButton.setVisibility(View.VISIBLE);
       
       if (mIsFollowing) {
