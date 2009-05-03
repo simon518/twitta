@@ -370,6 +370,8 @@ public class UserActivity extends BaseActivity {
     
     @Override
     public void onPreExecute() {
+      mFollowButton.setEnabled(false);
+      
       if (mIsDestroy) {
         updateProgress("Unfollowing...");        
       } else {
@@ -431,6 +433,7 @@ public class UserActivity extends BaseActivity {
         // Do nothing.
       }
 
+      mFollowButton.setEnabled(true);          
       updateProgress("");
     }    
   }
