@@ -553,8 +553,6 @@ public class TwitterApi {
 
     String url = String.format(FRIENDSHIPS_CREATE_URL, id);
     
-    Log.i(TAG, url);
-
     InputStream data = requestData(url, METHOD_POST,
         new ArrayList<NameValuePair>());
     JSONObject json = null;
