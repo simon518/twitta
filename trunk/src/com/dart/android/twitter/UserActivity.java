@@ -284,7 +284,7 @@ public class UserActivity extends BaseActivity {
             if (!Utils.isEmpty(mUser.profileImageUrl)) {
               // Fetch image to cache.
               try {
-                imageManager.put(tweet.profileImageUrl);
+                imageManager.put(mUser.profileImageUrl);
               } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
               }
