@@ -69,6 +69,7 @@ public class UserActivity extends BaseActivity {
   
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
+  private UserTask<Void, Void, TaskResult> mFriendshipTask;
 
   private static final String EXTRA_USER = "user";
 
@@ -178,6 +179,11 @@ public class UserActivity extends BaseActivity {
       mRetrieveTask.cancel(true);
     }
 
+    if (mFriendshipTask != null
+        && mFriendshipTask.getStatus() == UserTask.Status.RUNNING) {
+      mFriendshipTask.cancel(true);
+    }
+    
     super.onDestroy();
   }
   
@@ -353,6 +359,83 @@ public class UserActivity extends BaseActivity {
     }    
   }
 
+  
+  private class FriendshipTask extends UserTask<Void, Void, TaskResult> {
+    
+    private boolean mIsDestroy;
+    
+    public FriendshipTask(boolean isDestroy) {
+      mIsDestroy = isDestroy;
+    }
+    
+    @Override
+    public void onPreExecute() {
+      if (mIsDestroy) {
+        updateProgress("Unfollowing...");        
+      } else {
+        updateProgress("Following...");        
+      }
+    }
+
+    @Override
+    public TaskResult doInBackground(Void... params) {
+      JSONObject jsonObject;
+
+      int id = Integer.parseInt(mUser.id);
+      
+      TwitterApi api = getApi();
+            
+      try {
+        if (mIsDestroy) {
+          jsonObject = api.destroyFriendship(id);                            
+        } else {
+          jsonObject = api.createFriendship(id);                            
+        }
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return TaskResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      }
+
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+
+      try {
+        User.create(jsonObject);
+      } catch (JSONException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;        
+      }
+      
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+            
+      return TaskResult.OK;
+    }
+
+    @Override
+    public void onPostExecute(TaskResult result) {
+      if (result == TaskResult.AUTH_ERROR) {
+        onAuthFailure();
+      } else if (result == TaskResult.OK) {
+        mIsFollowing = !mIsFollowing;
+        draw();
+      } else {
+        // Do nothing.
+      }
+
+      updateProgress("");
+    }    
+  }
+
+  
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
@@ -478,13 +561,13 @@ public class UserActivity extends BaseActivity {
   };
   
   private void toggleFollow() {
-    if (mIsFollowing) {
-    } else {
-      
+    if (mFriendshipTask != null
+        && mFriendshipTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already updating friendship.");
+      return;
     }
     
-    mIsFollowing = !mIsFollowing;
-    draw();
+    mFriendshipTask = new FriendshipTask(mIsFollowing).execute();      
     
     // TODO: should we do a timeline refresh here?
   }  
