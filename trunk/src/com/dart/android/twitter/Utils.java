@@ -25,7 +25,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.text.util.Linkify;
@@ -33,7 +32,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 public class Utils {
-  
+
   private static final String TAG = "Utils";
 
   public static boolean isEmpty(String s) {
@@ -108,24 +107,26 @@ public class Utils {
   }
 
   public static long getNowTime() {
-    return Calendar.getInstance().getTime().getTime();    
+    return Calendar.getInstance().getTime().getTime();
   }
 
-  private static final Pattern NAME_MATCHER = Pattern.compile("\\B\\@\\w+\\b");
-  private static final Linkify.TransformFilter NAME_MATCHER_TRANFORM = new Linkify.TransformFilter() {
+  private static final Pattern NAME_MATCHER = Pattern.compile("\\b\\w+\\b");
+  private static final Linkify.MatchFilter NAME_MATCHER_MATCH_FILER = new Linkify.MatchFilter() {
     @Override
-    public String transformUrl(Matcher matcher, String url) {
-      return url.replace("@", "");
+    public final boolean acceptMatch(final CharSequence s, final int start, final int end) {
+      if (start == 0) {
+        return false;
+      }
+
+      return s.charAt(start - 1) == '@';
     }
   };
 
+
   private static final String TWITTA_USER_URL = "twitta://users/";
-  
+
   public static void linkifyUsers(TextView view) {
-    Linkify.addLinks(view, NAME_MATCHER,
-        TWITTA_USER_URL, null,
-        NAME_MATCHER_TRANFORM);    
+    Linkify.addLinks(view, NAME_MATCHER, TWITTA_USER_URL, NAME_MATCHER_MATCH_FILER, null);
   }
 
-  
 }
