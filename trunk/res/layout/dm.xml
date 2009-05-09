@@ -38,7 +38,8 @@
     android:layout_height="wrap_content"
     android:textSize="15px"
     android:singleLine="true"
-    android:dropDownSelector="@drawable/list_selector"        
+    android:dropDownSelector="@drawable/list_selector"
+    android:inputType="text"        
     />                             
     <!--  TODO: extract string -->       
     <TextView
@@ -76,6 +77,8 @@
     android:layout_weight="1"
     android:textSize="15px"
     android:singleLine="true"
+    android:inputType="textShortMessage"
+    android:imeOptions="actionSend|flagNoEnterAction"
     />      
     <ImageButton
     android:id="@+id/send_button"

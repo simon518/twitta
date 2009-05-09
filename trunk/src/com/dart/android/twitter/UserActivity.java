@@ -35,38 +35,38 @@ public class UserActivity extends BaseActivity {
 
   private static final String TAG = "UserActivity";
 
-  // State.  
+  // State.
   private String mUsername;
   private String mMe;
-  private ArrayList<Tweet> mTweets;  
+  private ArrayList<Tweet> mTweets;
   private User mUser;
   private Boolean mIsFollowing;
   private Boolean mIsFollower = false;
-  
+
   private static class State {
-    State(UserActivity activity) {      
+    State(UserActivity activity) {
       mTweets = activity.mTweets;
       mUser = activity.mUser;
       mIsFollowing = activity.mIsFollowing;
       mIsFollower = activity.mIsFollower;
-    }    
-    
-    public ArrayList<Tweet> mTweets;        
+    }
+
+    public ArrayList<Tweet> mTweets;
     public User mUser;
     public boolean mIsFollowing;
-    public boolean mIsFollower;   
+    public boolean mIsFollower;
   }
-      
+
   // Views.
   private ListView mTweetList;
-  private TextView mProgressText;  
+  private TextView mProgressText;
   private TextView mUserText;
   private TextView mNameText;
   private ImageView mProfileImage;
   private Button mFollowButton;
-  
+
   private TweetArrayAdapter mAdapter;
-  
+
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
   private UserTask<Void, Void, TaskResult> mFriendshipTask;
@@ -75,13 +75,13 @@ public class UserActivity extends BaseActivity {
 
   private static final String LAUNCH_ACTION = "com.dart.android.twitter.USER";
 
-  public static Intent createIntent(String user) {    
-    Intent intent = new Intent(LAUNCH_ACTION);    
+  public static Intent createIntent(String user) {
+    Intent intent = new Intent(LAUNCH_ACTION);
     intent.putExtra(EXTRA_USER, user);
-    
+
     return intent;
   }
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -91,73 +91,73 @@ public class UserActivity extends BaseActivity {
       handleLoggedOut();
       return;
     }
-    
+
     setContentView(R.layout.user);
-    
-    mMe = TwitterApplication.mApi.getUsername();    
-    mTweetList = (ListView) findViewById(R.id.tweet_list);        
+
+    mMe = TwitterApplication.mApi.getUsername();
+    mTweetList = (ListView) findViewById(R.id.tweet_list);
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mUserText = (TextView) findViewById(R.id.tweet_user_text);
     mNameText = (TextView) findViewById(R.id.realname_text);
     mProfileImage = (ImageView) findViewById(R.id.profile_image);
-    
+
     mFollowButton = (Button) findViewById(R.id.follow_button);
     mFollowButton.setOnClickListener(new OnClickListener() {
       public void onClick(View v) {
         confirmFollow();
       }
-    });    
-    
+    });
+
     Intent intent = getIntent();
     Uri data = intent.getData();
-    
+
     mUsername = intent.getStringExtra(EXTRA_USER);
-    
-    if (TextUtils.isEmpty(mUsername)) {    
+
+    if (TextUtils.isEmpty(mUsername)) {
       mUsername = data.getLastPathSegment();
-    }        
+    }
 
     setTitle(mUsername);
     mUserText.setText(mUsername);
-    
+
     mAdapter = new TweetArrayAdapter(this);
     mTweetList.setAdapter(mAdapter);
-    registerForContextMenu(mTweetList);    
-    
+    registerForContextMenu(mTweetList);
+
     State state = (State) getLastNonConfigurationInstance();
-    
+
     boolean wasRunning = savedInstanceState != null
         && savedInstanceState.containsKey(SIS_RUNNING_KEY)
         && savedInstanceState.getBoolean(SIS_RUNNING_KEY);
-      
+
     if (state != null && !wasRunning) {
       mTweets = state.mTweets;
       mUser = state.mUser;
       mIsFollowing = state.mIsFollowing;
       mIsFollower = state.mIsFollower;
       draw();
-    } else {   
+    } else {
       doRetrieve();
     }
-    
+
   }
-  
+
   @Override
   protected void onResume() {
     super.onResume();
-    
+
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
       handleLoggedOut();
       return;
-    }               
+    }
   }
-  
+
   @Override
   public Object onRetainNonConfigurationInstance() {
       return new State(this);
   }
-  
+
   private static final String SIS_RUNNING_KEY = "running";
 
   @Override
@@ -169,7 +169,7 @@ public class UserActivity extends BaseActivity {
       outState.putBoolean(SIS_RUNNING_KEY, true);
     }
   }
-  
+
   @Override
   protected void onDestroy() {
     Log.i(TAG, "onDestroy.");
@@ -183,50 +183,50 @@ public class UserActivity extends BaseActivity {
         && mFriendshipTask.getStatus() == UserTask.Status.RUNNING) {
       mFriendshipTask.cancel(true);
     }
-    
+
     super.onDestroy();
   }
-  
+
 
   // UI helpers.
 
   private void updateProgress(String progress) {
     mProgressText.setText(progress);
   }
-    
+
   private void draw() {
     if (mTweets.size() > 0) {
       String imageUrl = mTweets.get(0).profileImageUrl;
-      
+
       if (!TextUtils.isEmpty(imageUrl)) {
         mProfileImage.setImageBitmap(getImageManager().get(imageUrl));
       }
     }
-    
+
     mAdapter.refresh(mTweets);
-    
+
     if (mUser != null) {
       mNameText.setText(mUser.name);
     }
-    
+
     if (mUsername.equalsIgnoreCase(mMe)) {
       mFollowButton.setVisibility(View.GONE);
     } else if (mIsFollowing != null) {
       mFollowButton.setVisibility(View.VISIBLE);
-      
+
       if (mIsFollowing) {
         mFollowButton.setText(R.string.unfollow);
       } else {
-        mFollowButton.setText(R.string.follow);        
+        mFollowButton.setText(R.string.follow);
       }
-    }    
+    }
   }
-  
-  
+
+
   private enum TaskResult {
     OK, IO_ERROR, AUTH_ERROR, CANCELLED
   }
-  
+
   private void doRetrieve() {
     Log.i(TAG, "Attempting retrieve.");
 
@@ -245,7 +245,7 @@ public class UserActivity extends BaseActivity {
   private void onAuthFailure() {
     logout();
   }
-  
+
   private class RetrieveTask extends UserTask<Void, Void, TaskResult> {
     @Override
     public void onPreExecute() {
@@ -260,9 +260,9 @@ public class UserActivity extends BaseActivity {
 
       TwitterApi api = getApi();
       ImageManager imageManager = getImageManager();
-            
+
       try {
-        jsonArray = api.getUserTimeline(mUsername);        
+        jsonArray = api.getUserTimeline(mUsername);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -285,10 +285,10 @@ public class UserActivity extends BaseActivity {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           tweet = Tweet.create(jsonObject);
           mTweets.add(tweet);
-          
+
           if (mUser == null) {
             mUser = User.create(jsonObject.getJSONObject("user"));
-            
+
             if (!Utils.isEmpty(mUser.profileImageUrl)) {
               // Fetch image to cache.
               try {
@@ -296,7 +296,7 @@ public class UserActivity extends BaseActivity {
               } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
               }
-            }            
+            }
           }
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
@@ -310,20 +310,20 @@ public class UserActivity extends BaseActivity {
 
       // Bad style! But learned something.
       UserActivity.this.mTweets = mTweets;
-      
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
-      
+
       publishProgress();
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
-      
+
       try {
         mIsFollowing = api.isFollows(mMe, mUsername);
-        mIsFollower = api.isFollows(mUsername, mMe);        
+        mIsFollower = api.isFollows(mUsername, mMe);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -334,11 +334,11 @@ public class UserActivity extends BaseActivity {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
       }
-      
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
-      
+
       return TaskResult.OK;
     }
 
@@ -346,7 +346,7 @@ public class UserActivity extends BaseActivity {
     public void onProgressUpdate(Void... progress) {
       draw();
     }
-    
+
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
@@ -358,26 +358,26 @@ public class UserActivity extends BaseActivity {
       }
 
       updateProgress("");
-    }    
+    }
   }
 
-  
+
   private class FriendshipTask extends UserTask<Void, Void, TaskResult> {
-    
+
     private boolean mIsDestroy;
-    
+
     public FriendshipTask(boolean isDestroy) {
       mIsDestroy = isDestroy;
     }
-    
+
     @Override
     public void onPreExecute() {
       mFollowButton.setEnabled(false);
-      
+
       if (mIsDestroy) {
-        updateProgress("Unfollowing...");        
+        updateProgress("Unfollowing...");
       } else {
-        updateProgress("Following...");        
+        updateProgress("Following...");
       }
     }
 
@@ -386,14 +386,14 @@ public class UserActivity extends BaseActivity {
       JSONObject jsonObject;
 
       int id = Integer.parseInt(mUser.id);
-      
+
       TwitterApi api = getApi();
-            
+
       try {
         if (mIsDestroy) {
-          jsonObject = api.destroyFriendship(id);                            
+          jsonObject = api.destroyFriendship(id);
         } else {
-          jsonObject = api.createFriendship(id);                            
+          jsonObject = api.createFriendship(id);
         }
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
@@ -414,13 +414,13 @@ public class UserActivity extends BaseActivity {
         User.create(jsonObject);
       } catch (JSONException e) {
         Log.e(TAG, e.getMessage(), e);
-        return TaskResult.IO_ERROR;        
+        return TaskResult.IO_ERROR;
       }
-      
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
-            
+
       return TaskResult.OK;
     }
 
@@ -435,12 +435,12 @@ public class UserActivity extends BaseActivity {
         // Do nothing.
       }
 
-      mFollowButton.setEnabled(true);          
+      mFollowButton.setEnabled(true);
       updateProgress("");
-    }    
+    }
   }
 
-  
+
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
@@ -448,6 +448,9 @@ public class UserActivity extends BaseActivity {
 
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
+
+    item = menu.add(0, OPTIONS_MENU_ID_FOLLOW, 0, R.string.follow);
+    item.setIcon(android.R.drawable.ic_menu_add);
 
     return super.onCreateOptionsMenu(menu);
   }
@@ -457,9 +460,19 @@ public class UserActivity extends BaseActivity {
     MenuItem item = menu.findItem(OPTIONS_MENU_ID_DM);
     item.setEnabled(mIsFollower);
 
+    item = menu.findItem(OPTIONS_MENU_ID_FOLLOW);
+
+    if (mIsFollowing) {
+      item.setTitle(R.string.unfollow);
+      item.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
+    } else {
+      item.setTitle(R.string.follow);
+      item.setIcon(android.R.drawable.ic_menu_add);
+    }
+
     return super.onPrepareOptionsMenu(menu);
   }
-  
+
   @Override
   public boolean onOptionsItemSelected(MenuItem item) {
     switch (item.getItemId()) {
@@ -468,12 +481,12 @@ public class UserActivity extends BaseActivity {
       return true;
     case OPTIONS_MENU_ID_DM:
       launchActivity(DmActivity.createIntent(mUsername));
-      return true;      
+      return true;
     }
 
     return super.onOptionsItemSelected(item);
   }
- 
+
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
   private static final int CONTEXT_DM_ID = 2;
@@ -515,18 +528,18 @@ public class UserActivity extends BaseActivity {
       return super.onContextItemSelected(item);
     }
   }
-  
-  private void launchNewTweetActivity(String text) {    
+
+  private void launchNewTweetActivity(String text) {
     launchActivity(TwitterActivity.createNewTweetIntent(text));
   }
 
-  
+
   private static final int DIALOG_CONFIRM = 0;
-  
+
   private void confirmFollow() {
     showDialog(DIALOG_CONFIRM);
   }
-  
+
   @Override
   protected Dialog onCreateDialog(int id) {
     AlertDialog dialog = new AlertDialog.Builder(this).create();
@@ -536,24 +549,24 @@ public class UserActivity extends BaseActivity {
     dialog.setButton(AlertDialog.BUTTON_NEUTRAL,
         getString(R.string.cancel), mCancelListener);
     dialog.setMessage("FOO");
-    
+
     return dialog;
   }
 
   @Override
   protected void onPrepareDialog(int id, Dialog dialog) {
-    super.onPrepareDialog(id, dialog);       
-    
+    super.onPrepareDialog(id, dialog);
+
     AlertDialog confirmDialog = (AlertDialog) dialog;
-    
+
     String action = mIsFollowing ? getString(R.string.unfollow) :
         getString(R.string.follow);
     String message = action + " " + mUsername + "?";
 
-    ((Button) confirmDialog.getButton(AlertDialog.BUTTON_POSITIVE)).setText(action);    
+    (confirmDialog.getButton(AlertDialog.BUTTON_POSITIVE)).setText(action);
     confirmDialog.setMessage(message);
   }
-      
+
   private DialogInterface.OnClickListener mConfirmListener = new DialogInterface.OnClickListener() {
     public void onClick(DialogInterface dialog, int whichButton) {
       toggleFollow();
@@ -564,17 +577,17 @@ public class UserActivity extends BaseActivity {
     public void onClick(DialogInterface dialog, int whichButton) {
     }
   };
-  
+
   private void toggleFollow() {
     if (mFriendshipTask != null
         && mFriendshipTask.getStatus() == UserTask.Status.RUNNING) {
       Log.w(TAG, "Already updating friendship.");
       return;
     }
-    
-    mFriendshipTask = new FriendshipTask(mIsFollowing).execute();      
-    
+
+    mFriendshipTask = new FriendshipTask(mIsFollowing).execute();
+
     // TODO: should we do a timeline refresh here?
-  }  
-  
+  }
+
 }

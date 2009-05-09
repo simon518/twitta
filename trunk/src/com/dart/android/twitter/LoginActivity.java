@@ -79,11 +79,11 @@ public class LoginActivity extends Activity {
     mApi = new TwitterApi();
 
     setContentView(R.layout.login);
-    
+
     mUsernameEdit = (EditText) findViewById(R.id.username_edit);
     mPasswordEdit = (EditText) findViewById(R.id.password_edit);
 //    mUsernameEdit.setOnKeyListener(enterKeyHandler);
-//    mPasswordEdit.setOnKeyListener(enterKeyHandler);
+    mPasswordEdit.setOnKeyListener(enterKeyHandler);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mProgressText.setFreezesText(true);
@@ -169,7 +169,7 @@ public class LoginActivity extends Activity {
     editor.putString(Preferences.USERNAME_KEY, username);
     editor.putString(Preferences.PASSWORD_KEY, password);
     editor.commit();
-    
+
     TwitterApplication.mApi.setCredentials(username, password);
 
     Intent intent = getIntent().getParcelableExtra(Intent.EXTRA_INTENT);
@@ -179,10 +179,10 @@ public class LoginActivity extends Activity {
         || !Intent.ACTION_SEND.equals(action)) {
       // We only want to reuse the intent if it was photo send.
       // Or else default to the main activity.
-      intent = new Intent(this, TwitterActivity.class);            
+      intent = new Intent(this, TwitterActivity.class);
     }
-    
-    startActivity(intent);       
+
+    startActivity(intent);
     finish();
   }
 

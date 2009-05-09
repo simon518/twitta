@@ -67,7 +67,7 @@ public class TwitterActivity extends BaseActivity {
 
   // State.
   private int mState;
-  
+
   private static final int STATE_ALL = 0;
   private static final int STATE_REPLIES = 1;
 
@@ -84,9 +84,9 @@ public class TwitterActivity extends BaseActivity {
 
   private static final String LAUNCH_ACTION = "com.dart.android.twitter.TWEETS";
   private static final String NEW_TWEET_ACTION = "com.dart.android.twitter.NEW";
-  
+
   private static final String EXTRA_TEXT = "text";
-  
+
   public static Intent createIntent(Context context) {
     Intent intent = new Intent(LAUNCH_ACTION);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -104,14 +104,14 @@ public class TwitterActivity extends BaseActivity {
   public static Intent createNewTweetIntent(String text) {
     Intent intent = new Intent(NEW_TWEET_ACTION);
     intent.putExtra(EXTRA_TEXT, text);
-    
+
     return intent;
   }
-  
+
   private boolean isReplies() {
     return mState == STATE_REPLIES;
-  }  
-  
+  }
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -121,15 +121,15 @@ public class TwitterActivity extends BaseActivity {
       handleLoggedOut();
       return;
     }
-    
+
     setContentView(R.layout.main);
 
     Intent intent = getIntent();
     String action = intent.getAction();
-    
+
     mState = mPreferences.getInt(
         Preferences.TWITTER_ACTIVITY_STATE_KEY, STATE_ALL);
-    
+
     mTweetList = (ListView) findViewById(R.id.tweet_list);
 
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
@@ -140,7 +140,7 @@ public class TwitterActivity extends BaseActivity {
     if (NEW_TWEET_ACTION.equals(action)) {
       mTweetEdit.setText(intent.getStringExtra(EXTRA_TEXT));
     }
-            
+
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     mSendButton = (ImageButton) findViewById(R.id.send_button);
@@ -154,7 +154,7 @@ public class TwitterActivity extends BaseActivity {
     getDb().markAllTweetsRead();
 
     setupState();
-    
+
     registerForContextMenu(mTweetList);
 
     boolean shouldRetrieve = false;
@@ -230,7 +230,7 @@ public class TwitterActivity extends BaseActivity {
     } else if (mSendTask != null
         && mSendTask.getStatus() == UserTask.Status.RUNNING) {
       outState.putBoolean(SIS_RUNNING_KEY, true);
-    }    
+    }
   }
 
   @Override
@@ -268,7 +268,7 @@ public class TwitterActivity extends BaseActivity {
 
   private void setupState() {
     Cursor cursor;
-    
+
     if (isReplies()) {
       cursor = getDb().fetchReplies();
       setTitle("@" + getApi().getUsername());
@@ -276,7 +276,7 @@ public class TwitterActivity extends BaseActivity {
       cursor = getDb().fetchAllTweets();
       setTitle(R.string.app_name);
     }
-    
+
     startManagingCursor(cursor);
 
     mTweetAdapter = new TweetAdapter(this, cursor);
@@ -303,7 +303,7 @@ public class TwitterActivity extends BaseActivity {
     menu.add(0, CONTEXT_MORE_ID, 0, user);
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
-    
+
     MenuItem item = menu.add(0, CONTEXT_DM_ID, 0, R.string.dm);
     item.setEnabled(getDb().isFollower(userId));
   }
@@ -322,9 +322,9 @@ public class TwitterActivity extends BaseActivity {
     case CONTEXT_MORE_ID:
       String who = cursor.getString(
           cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
-      launchActivity(UserActivity.createIntent(who));      
+      launchActivity(UserActivity.createIntent(who));
 
-      return true;    
+      return true;
     case CONTEXT_REPLY_ID:
       int userIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER);
       // TODO: this isn't quite perfect. It leaves extra empty spaces if you
@@ -420,14 +420,14 @@ public class TwitterActivity extends BaseActivity {
 
       if (!Utils.isEmpty(profileImageUrl)) {
         holder.profileImage.setImageBitmap(TwitterApplication.mImageManager.get(
-            profileImageUrl));        
+            profileImageUrl));
       }
-      
+
       try {
         Date createdAt = TwitterDbAdapter.DB_DATE_FORMATTER.parse(cursor
             .getString(mCreatedAtColumn));
         holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder, createdAt,
-            cursor.getString(mSourceColumn)));                      
+            cursor.getString(mSourceColumn)));
       } catch (ParseException e) {
         Log.w(TAG, "Invalid created at data.");
       }
@@ -701,15 +701,18 @@ public class TwitterActivity extends BaseActivity {
     item = menu.add(0, OPTIONS_MENU_ID_DM, 0, R.string.dm);
     item.setIcon(android.R.drawable.ic_menu_send);
 
+    /*
     item = menu.add(0, OPTIONS_MENU_ID_TOGGLE_REPLIES, 0,
         R.string.show_at_replies);
     item.setIcon(android.R.drawable.ic_menu_zoom);
+    */
 
     return super.onCreateOptionsMenu(menu);
   }
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
+    /*
     MenuItem item = menu.findItem(OPTIONS_MENU_ID_TOGGLE_REPLIES);
 
     if (isReplies()) {
@@ -719,17 +722,18 @@ public class TwitterActivity extends BaseActivity {
       item.setIcon(android.R.drawable.ic_menu_zoom);
       item.setTitle(R.string.show_at_replies);
     }
+    */
 
     return super.onPrepareOptionsMenu(menu);
   }
 
-  public void toggleShowReplies() {    
+  public void toggleShowReplies() {
     mState = mState == STATE_REPLIES ? STATE_ALL : STATE_REPLIES;
-    
+
     SharedPreferences.Editor editor = mPreferences.edit();
     editor.putInt(Preferences.TWITTER_ACTIVITY_STATE_KEY, mState);
     editor.commit();
-    
+
     setupState();
   }
 

@@ -118,6 +118,10 @@ public class Utils {
         return false;
       }
 
+      if (start > 1 && !Character.isWhitespace(s.charAt(start - 2))) {
+        return false;
+      }
+
       return s.charAt(start - 1) == '@';
     }
   };
