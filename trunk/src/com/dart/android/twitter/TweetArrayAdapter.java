@@ -13,19 +13,19 @@ import android.widget.TextView;
 public class TweetArrayAdapter extends BaseAdapter {
   @SuppressWarnings("unused")
   private static final String TAG = "TweetArrayAdapter";
-  
+
   private ArrayList<Tweet> mTweets;
   private Context mContext;
   private LayoutInflater mInflater;
   private StringBuilder mMetaBuilder;
-      
+
   public TweetArrayAdapter(Context context) {
     mTweets = new ArrayList<Tweet>();
     mContext = context;
     mInflater = LayoutInflater.from(mContext);
     mMetaBuilder = new StringBuilder();
   }
-  
+
   @Override
   public int getCount() {
     return mTweets.size();
@@ -45,14 +45,14 @@ public class TweetArrayAdapter extends BaseAdapter {
     public TextView tweetText;
     public TextView metaText;
   }
-  
+
   @Override
   public View getView(int position, View convertView, ViewGroup parent) {
     View view;
-    
+
     if (convertView == null) {
       view = mInflater.inflate(R.layout.uniform_tweet, parent, false);
-      
+
       ViewHolder holder = new ViewHolder();
       holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
       holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
@@ -64,23 +64,21 @@ public class TweetArrayAdapter extends BaseAdapter {
     ViewHolder holder = (ViewHolder) view.getTag();
 
     Tweet tweet = mTweets.get(position);
-    
+
     holder.tweetText.setText(tweet.text);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
     Utils.linkifyUsers(holder.tweetText);
-    holder.tweetText.setMovementMethod(
-        LessClickyLinkMovementMethod.getInstance());
 
     holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
-        tweet.createdAt, tweet.source));        
-    
-    return view;    
+        tweet.createdAt, tweet.source));
+
+    return view;
   }
-        
+
   public void refresh(ArrayList<Tweet> tweets) {
     mTweets = tweets;
     notifyDataSetChanged();
   }
-  
-}    
+
+}
 
