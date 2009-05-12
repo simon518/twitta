@@ -192,8 +192,8 @@ public class TwitterActivity extends BaseActivity {
       doRetrieveFollowers();
     }
 
-    mTweetList.setItemsCanFocus(false);
-    mTweetList.setFocusable(false);
+    mTweetList.setItemsCanFocus(true);
+    mTweetList.setFocusable(true);
   }
 
   @Override
@@ -413,8 +413,6 @@ public class TwitterActivity extends BaseActivity {
       holder.tweetText.setText(cursor.getString(mTextColumn));
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
       Utils.linkifyUsers(holder.tweetText);
-      holder.tweetText.setMovementMethod(
-          LessClickyLinkMovementMethod.getInstance());
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
