@@ -545,7 +545,7 @@ public class UserActivity extends BaseActivity {
     AlertDialog dialog = new AlertDialog.Builder(this).create();
 
     dialog.setTitle(R.string.friendship);
-    dialog.setButton(AlertDialog.BUTTON_POSITIVE, "FOO", mConfirmListener);
+    dialog.setButton(AlertDialog.BUTTON_POSITIVE, "Doesn't matter", mConfirmListener);
     dialog.setButton(AlertDialog.BUTTON_NEUTRAL,
         getString(R.string.cancel), mCancelListener);
     dialog.setMessage("FOO");

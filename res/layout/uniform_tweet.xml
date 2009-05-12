@@ -6,11 +6,12 @@
   android:layout_height="wrap_content"
 >
 
-<TextView
+<com.dart.android.twitter.MyTextView
   android:id="@+id/tweet_text" 
   android:layout_width="fill_parent"
   android:layout_height="wrap_content"
-  android:textColor="@drawable/tweet_color"        
+  android:textColor="@drawable/tweet_color"
+  android:linksClickable="false"
 />
 
 <TextView

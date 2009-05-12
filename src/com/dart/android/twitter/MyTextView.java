@@ -18,6 +18,8 @@ public class MyTextView extends TextView {
     super(context, attrs);
   }
 
+  private URLSpan mCurrentLink;
+
   @Override
   public boolean onTouchEvent(MotionEvent event) {
     CharSequence text = getText();
@@ -45,13 +47,18 @@ public class MyTextView extends TextView {
 
       if (link.length != 0) {
         if (action == MotionEvent.ACTION_UP) {
-          link[0].onClick(widget);
+          if (mCurrentLink == link[0]) {
+            link[0].onClick(widget);
+          }
+          mCurrentLink = null;
         } else if (action == MotionEvent.ACTION_DOWN) {
+          mCurrentLink = link[0];
           /*
            * Selection.setSelection(buffer, buffer.getSpanStart(link[0]),
            * buffer.getSpanEnd(link[0]));
            */
         }
+
         return true;
       } else {
         /*
