@@ -48,6 +48,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.TextView.BufferType;
 
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
@@ -191,9 +192,6 @@ public class TwitterActivity extends BaseActivity {
     if (diff > FOLLOWERS_REFRESH_THRESHOLD) {
       doRetrieveFollowers();
     }
-
-    mTweetList.setItemsCanFocus(true);
-    mTweetList.setFocusable(true);
   }
 
   @Override
@@ -409,8 +407,7 @@ public class TwitterActivity extends BaseActivity {
       ViewHolder holder = (ViewHolder) view.getTag();
 
       holder.tweetUserText.setText(cursor.getString(mUserTextColumn));
-
-      holder.tweetText.setText(cursor.getString(mTextColumn));
+      holder.tweetText.setText(cursor.getString(mTextColumn), BufferType.SPANNABLE);
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
       Utils.linkifyUsers(holder.tweetText);
 

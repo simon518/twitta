@@ -139,7 +139,7 @@ public class UserActivity extends BaseActivity {
     } else {
       doRetrieve();
     }
-
+   
   }
 
   @Override

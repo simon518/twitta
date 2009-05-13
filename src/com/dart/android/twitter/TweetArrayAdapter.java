@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import android.widget.TextView.BufferType;
 
 public class TweetArrayAdapter extends BaseAdapter {
   @SuppressWarnings("unused")
@@ -65,7 +66,7 @@ public class TweetArrayAdapter extends BaseAdapter {
 
     Tweet tweet = mTweets.get(position);
 
-    holder.tweetText.setText(tweet.text);
+    holder.tweetText.setText(tweet.text, BufferType.SPANNABLE);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
     Utils.linkifyUsers(holder.tweetText);
 
