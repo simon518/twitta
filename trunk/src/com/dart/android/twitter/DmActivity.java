@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -30,6 +31,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.TextView.BufferType;
 
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
@@ -62,22 +64,22 @@ public class DmActivity extends BaseActivity {
   private static final String EXTRA_USER = "user";
 
   private static final String LAUNCH_ACTION = "com.dart.android.twitter.DMS";
-  
-  public static Intent createIntent() {    
+
+  public static Intent createIntent() {
     return createIntent("");
   }
 
-  public static Intent createIntent(String user) {    
+  public static Intent createIntent(String user) {
     Intent intent = new Intent(LAUNCH_ACTION);
     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-    
+
     if (!Utils.isEmpty(user)) {
       intent.putExtra(EXTRA_USER, user);
-    }    
-    
+    }
+
     return intent;
   }
-  
+
   @Override
   protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
@@ -86,14 +88,14 @@ public class DmActivity extends BaseActivity {
       Log.i(TAG, "Not logged in.");
       handleLoggedOut();
       return;
-    }        
-    
+    }
+
     setContentView(R.layout.dm);
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
 
     TwitterDbAdapter db = getDb();
-    
+
     mToEdit = (AutoCompleteTextView) findViewById(R.id.to_edit);
     Cursor cursor = db.getFollowerUsernames("");
     // startManagingCursor(cursor);
@@ -162,14 +164,14 @@ public class DmActivity extends BaseActivity {
   @Override
   protected void onResume() {
     super.onResume();
-    
+
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
       handleLoggedOut();
       return;
-    }               
+    }
   }
-  
+
   private static final String SIS_RUNNING_KEY = "running";
 
   @Override
@@ -296,9 +298,9 @@ public class DmActivity extends BaseActivity {
       TwitterDbAdapter db = getDb();
       TwitterApi api = getApi();
       ImageManager imageManager = getImageManager();
-      
+
       int maxId = db.fetchMaxDmId(false);
-      
+
       try {
         jsonArray = api.getDmsSinceId(maxId, false);
       } catch (IOException e) {
@@ -347,7 +349,7 @@ public class DmActivity extends BaseActivity {
       }
 
       maxId = db.fetchMaxDmId(true);
-      
+
       try {
         jsonArray = api.getDmsSinceId(maxId, true);
       } catch (IOException e) {
@@ -358,7 +360,7 @@ public class DmActivity extends BaseActivity {
         return TaskResult.AUTH_ERROR;
       } catch (ApiException e) {
         Log.e(TAG, e.getMessage(), e);
-        return TaskResult.IO_ERROR;        
+        return TaskResult.IO_ERROR;
       }
 
       for (int i = 0; i < jsonArray.length(); ++i) {
@@ -480,7 +482,9 @@ public class DmActivity extends BaseActivity {
         holder.userText.setText("to " + user);
       }
 
-      holder.tweetText.setText(cursor.getString(mTextColumn));
+      holder.tweetText.setText(cursor.getString(mTextColumn), BufferType.SPANNABLE);
+      Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
+      Utils.linkifyUsers(holder.tweetText);
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
@@ -566,7 +570,7 @@ public class DmActivity extends BaseActivity {
         update();
       } else if (result == TaskResult.NOT_FOLLOWED_ERROR) {
         updateProgress("Unable to send. Is the person following you?");
-        enableEntry();        
+        enableEntry();
       } else if (result == TaskResult.IO_ERROR) {
         updateProgress("Unable to send");
         enableEntry();
@@ -637,7 +641,7 @@ public class DmActivity extends BaseActivity {
 
     item = menu.add(0, OPTIONS_MENU_ID_TWEETS, 0, R.string.tweets);
     item.setIcon(android.R.drawable.ic_menu_view);
-    
+
     return super.onCreateOptionsMenu(menu);
   }
 
@@ -649,7 +653,7 @@ public class DmActivity extends BaseActivity {
       return true;
     case OPTIONS_MENU_ID_TWEETS:
       launchActivity(TwitterActivity.createIntent(this));
-      return true;                  
+      return true;
     }
 
     return super.onOptionsItemSelected(item);
@@ -714,7 +718,7 @@ public class DmActivity extends BaseActivity {
 
     @Override
     public TaskResult doInBackground(Integer... params) {
-      Integer id = (Integer) params[0];
+      Integer id = params[0];
 
       try {
         JSONObject json = getApi().destroyDirectMessage(id);

@@ -1,8 +1,11 @@
 package com.dart.android.twitter;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.text.Layout;
-import android.text.Spanned;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.URLSpan;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -12,21 +15,33 @@ public class MyTextView extends TextView {
 
   public MyTextView(Context context) {
     super(context);
+
+    setLinksClickable(false);
   }
 
   public MyTextView(Context context, AttributeSet attrs) {
     super(context, attrs);
+
+    setLinksClickable(false);
   }
 
   private URLSpan mCurrentLink;
+  private ForegroundColorSpan mLinkFocusStyle = new ForegroundColorSpan(
+      Color.RED);
 
   @Override
   public boolean onTouchEvent(MotionEvent event) {
     CharSequence text = getText();
     int action = event.getAction();
 
-    if ((action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_DOWN)
-        && text instanceof Spanned) {
+    if (!(text instanceof Spannable)) {
+      return super.onTouchEvent(event);
+    }
+
+    Spannable buffer = (Spannable) text;
+
+    if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_DOWN
+        || action == MotionEvent.ACTION_MOVE) {
       TextView widget = this;
 
       int x = (int) event.getX();
@@ -42,7 +57,6 @@ public class MyTextView extends TextView {
       int line = layout.getLineForVertical(y);
       int off = layout.getOffsetForHorizontal(line, x);
 
-      Spanned buffer = (Spanned) text;
       URLSpan[] link = buffer.getSpans(off, off, URLSpan.class);
 
       if (link.length != 0) {
@@ -51,21 +65,20 @@ public class MyTextView extends TextView {
             link[0].onClick(widget);
           }
           mCurrentLink = null;
+          buffer.removeSpan(mLinkFocusStyle);
         } else if (action == MotionEvent.ACTION_DOWN) {
           mCurrentLink = link[0];
-          /*
-           * Selection.setSelection(buffer, buffer.getSpanStart(link[0]),
-           * buffer.getSpanEnd(link[0]));
-           */
+
+          buffer.setSpan(mLinkFocusStyle, buffer.getSpanStart(link[0]), buffer
+              .getSpanEnd(link[0]), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
 
         return true;
-      } else {
-        /*
-         * Selection.removeSelection(buffer);
-         */
       }
     }
+
+    buffer.removeSpan(mLinkFocusStyle);
+    mCurrentLink = null;
 
     return super.onTouchEvent(event);
   }
