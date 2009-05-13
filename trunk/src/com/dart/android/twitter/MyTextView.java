@@ -68,7 +68,6 @@ public class MyTextView extends TextView {
           buffer.removeSpan(mLinkFocusStyle);
         } else if (action == MotionEvent.ACTION_DOWN) {
           mCurrentLink = link[0];
-
           buffer.setSpan(mLinkFocusStyle, buffer.getSpanStart(link[0]), buffer
               .getSpanEnd(link[0]), SpannableString.SPAN_EXCLUSIVE_EXCLUSIVE);
         }
@@ -77,8 +76,8 @@ public class MyTextView extends TextView {
       }
     }
 
-    buffer.removeSpan(mLinkFocusStyle);
     mCurrentLink = null;
+    buffer.removeSpan(mLinkFocusStyle);
 
     return super.onTouchEvent(event);
   }
