@@ -75,6 +75,7 @@ public class TwitterApi {
   private static final String FRIENDSHIPS_EXISTS_URL = "http://twitter.com/friendships/exists.json";
   private static final String FRIENDSHIPS_CREATE_URL = "http://twitter.com/friendships/create/%d.json";
   private static final String FRIENDSHIPS_DESTROY_URL = "http://twitter.com/friendships/destroy/%d.json";
+  private static final String SEARCH_URL = "http://search.twitter.com/search.json";
 
   private static final String UPLOAD_AND_POST_URL = "http://twitpic.com/api/uploadAndPost";
 
@@ -122,7 +123,7 @@ public class TwitterApi {
   public boolean isLoggedIn() {
     return isValidCredentials(mUsername, mPassword);
   }
-  
+
   public String getUsername() {
     return mUsername;
   }
@@ -528,7 +529,7 @@ public class TwitterApi {
 
     return json;
   }
-  
+
   public boolean isFollows(String a, String b) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Check follows.");
@@ -539,20 +540,20 @@ public class TwitterApi {
         + URLEncoder.encode(b, HTTP.UTF_8);
 
     InputStream data = requestData(url, METHOD_GET, null);
-    
+
     try {
       return "true".equals(Utils.stringifyStream(data).trim());
     } finally {
       data.close();
     }
   }
-  
+
   public JSONObject createFriendship(int id) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Following: " + id);
 
     String url = String.format(FRIENDSHIPS_CREATE_URL, id);
-    
+
     InputStream data = requestData(url, METHOD_POST,
         new ArrayList<NameValuePair>());
     JSONObject json = null;
@@ -588,6 +589,27 @@ public class TwitterApi {
     }
 
     return json;
-  }  
-  
+  }
+
+  public JSONArray search(String query) throws IOException, AuthException,
+      ApiException {
+    Log.i(TAG, "Searching.");
+
+    String url = SEARCH_URL + "?q=" + URLEncoder.encode(query, HTTP.UTF_8);
+
+    InputStream data = requestData(url, METHOD_GET, null);
+    JSONArray json = null;
+
+    try {
+      json = new JSONArray(Utils.stringifyStream(data));
+    } catch (JSONException e) {
+      Log.e(TAG, e.getMessage(), e);
+      throw new IOException("Could not parse JSON.");
+    } finally {
+      data.close();
+    }
+
+    return json;
+  }
+
 }
