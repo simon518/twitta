@@ -1,6 +1,7 @@
 package com.dart.android.twitter;
 
 import android.app.Activity;
+import android.app.SearchManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -106,7 +107,6 @@ public class BaseActivity extends Activity {
   protected static final int OPTIONS_MENU_ID_LOGOUT = 1;
   protected static final int OPTIONS_MENU_ID_PREFERENCES = 2;
   protected static final int OPTIONS_MENU_ID_ABOUT = 3;
-
   protected static final int OPTIONS_MENU_ID_REFRESH = 4;
   protected static final int OPTIONS_MENU_ID_REPLIES = 5;
   protected static final int OPTIONS_MENU_ID_DM = 6;
@@ -114,12 +114,17 @@ public class BaseActivity extends Activity {
   protected static final int OPTIONS_MENU_ID_TOGGLE_REPLIES = 8;
   protected static final int OPTIONS_MENU_ID_FOLLOW = 9;
   protected static final int OPTIONS_MENU_ID_UNFOLLOW = 10;
+  protected static final int OPTIONS_MENU_ID_SEARCH = 11;
 
   @Override
   public boolean onCreateOptionsMenu(Menu menu) {
     super.onCreateOptionsMenu(menu);
 
-    MenuItem item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.settings);
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_SEARCH, 0, R.string.search);
+    item.setIcon(android.R.drawable.ic_search_category_default);
+    item.setAlphabeticShortcut(SearchManager.MENU_KEY);
+
+    item = menu.add(0, OPTIONS_MENU_ID_PREFERENCES, 0, R.string.settings);
     item.setIcon(android.R.drawable.ic_menu_preferences);
 
     item = menu.add(0, OPTIONS_MENU_ID_LOGOUT, 0, R.string.signout);
@@ -139,6 +144,9 @@ public class BaseActivity extends Activity {
     switch (item.getItemId()) {
     case OPTIONS_MENU_ID_LOGOUT:
       logout();
+      return true;
+    case OPTIONS_MENU_ID_SEARCH:
+      onSearchRequested();
       return true;
     case OPTIONS_MENU_ID_PREFERENCES:
       Intent launchPreferencesIntent = new Intent().setClass(this,
