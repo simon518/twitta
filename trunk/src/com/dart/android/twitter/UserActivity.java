@@ -139,7 +139,7 @@ public class UserActivity extends BaseActivity {
     } else {
       doRetrieve();
     }
-   
+
   }
 
   @Override
@@ -462,7 +462,11 @@ public class UserActivity extends BaseActivity {
 
     item = menu.findItem(OPTIONS_MENU_ID_FOLLOW);
 
-    if (mIsFollowing) {
+    if (mIsFollowing == null) {
+      item.setEnabled(false);
+      item.setTitle(R.string.follow);
+      item.setIcon(android.R.drawable.ic_menu_add);
+    } else if (mIsFollowing) {
       item.setTitle(R.string.unfollow);
       item.setIcon(android.R.drawable.ic_menu_close_clear_cancel);
     } else {

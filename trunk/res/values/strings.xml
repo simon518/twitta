@@ -23,6 +23,7 @@
     <string name="unfollow">Unfollow</string>
     <string name="friendship">Friendship</string>
     <string name="cancel">Cancel</string>
+    <string name="search">Search</string>
 
     <string name="replies_only_title">Only @replies?</string>
     <string name="replies_only_summary">Notify only of @replies</string>
@@ -63,5 +64,8 @@
     <string name="cool">Cool</string>
     
     <string name="preferences_notifications">Notifications</string>
+    
+    <string name="search_label">Twitta</string>
+    <string name="search_hint">Search Twitter</string>
     
 </resources>
