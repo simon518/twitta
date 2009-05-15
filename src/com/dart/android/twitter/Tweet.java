@@ -26,36 +26,52 @@ import org.json.JSONObject;
 public class Tweet extends Message {
   @SuppressWarnings("unused")
   private static final String TAG = "Tweet";
-  
+
   public String source;
-  
+
   public boolean isReply() {
     // TODO: this is so wrong.
-    String username = TwitterApplication.mApi.getUsername();    
+    String username = TwitterApplication.mApi.getUsername();
     Pattern namePattern = Pattern.compile("\\B\\@\\Q" + username + "\\E\\b");
     Matcher matcher = namePattern.matcher(text);
-    
+
     return matcher.find();
   }
-  
+
   public static Tweet create(JSONObject jsonObject) throws JSONException {
     Tweet tweet = new Tweet();
-    
-    tweet.id = jsonObject.getLong("id") + "";    
+
+    tweet.id = jsonObject.getLong("id") + "";
     tweet.text = Utils.decodeTwitterJson(jsonObject.getString("text"));
     tweet.createdAt = Utils.parseDateTime(jsonObject.getString("created_at"));
-    
+
     JSONObject user = jsonObject.getJSONObject("user");
     tweet.screenName = Utils.decodeTwitterJson(user.getString("screen_name"));
     tweet.profileImageUrl = user.getString("profile_image_url");
     tweet.userId = user.getString("id");
     tweet.source = Utils.decodeTwitterJson(jsonObject.getString("source")).
         replaceAll("\\<.*?>", "");
-        
+
     return tweet;
   }
 
-  public static String buildMetaText(StringBuilder builder, 
+  public static Tweet createFromSearch(JSONObject jsonObject) throws JSONException {
+    Tweet tweet = new Tweet();
+
+    tweet.id = jsonObject.getLong("id") + "";
+    tweet.text = Utils.decodeTwitterJson(jsonObject.getString("text"));
+    tweet.createdAt = Utils.parseSearchApiDateTime(jsonObject.getString("created_at"));
+
+    tweet.screenName = Utils.decodeTwitterJson(jsonObject.getString("from_user"));
+    tweet.profileImageUrl = jsonObject.getString("profile_image_url");
+    tweet.userId = jsonObject.getString("from_user_id");
+    tweet.source = Utils.decodeTwitterJson(jsonObject.getString("source")).
+        replaceAll("\\<.*?>", "");
+
+    return tweet;
+  }
+
+  public static String buildMetaText(StringBuilder builder,
       Date createdAt, String source) {
     builder.setLength(0);
 
@@ -64,8 +80,8 @@ public class Tweet extends Message {
 
     builder.append("from ");
     builder.append(source);
-    
-    return builder.toString();      
+
+    return builder.toString();
   }
 
 }

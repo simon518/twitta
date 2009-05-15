@@ -182,7 +182,7 @@ public class SearchActivity extends BaseActivity {
 
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.create(jsonObject);
+          tweet = Tweet.createFromSearch(jsonObject);
           mTweets.add(tweet);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);

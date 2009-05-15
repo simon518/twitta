@@ -59,9 +59,21 @@ public class Utils {
   public static final DateFormat TWITTER_DATE_FORMATTER = new SimpleDateFormat(
       "E MMM d HH:mm:ss Z yyyy");
 
+  public static final DateFormat TWITTER_SEARCH_API_DATE_FORMATTER = new SimpleDateFormat(
+      "E, d MMM yyyy HH:mm:ss Z");
+
   public static final Date parseDateTime(String dateString) {
     try {
       return TWITTER_DATE_FORMATTER.parse(dateString);
+    } catch (ParseException e) {
+      Log.w(TAG, "Could not parse Twitter date string: " + dateString);
+      return null;
+    }
+  }
+
+  public static final Date parseSearchApiDateTime(String dateString) {
+    try {
+      return TWITTER_SEARCH_API_DATE_FORMATTER.parse(dateString);
     } catch (ParseException e) {
       Log.w(TAG, "Could not parse Twitter date string: " + dateString);
       return null;
