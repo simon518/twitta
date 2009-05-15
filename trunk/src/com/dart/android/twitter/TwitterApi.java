@@ -601,7 +601,8 @@ public class TwitterApi {
     JSONArray json = null;
 
     try {
-      json = new JSONArray(Utils.stringifyStream(data));
+      JSONObject object = new JSONObject(Utils.stringifyStream(data));
+      json = object.getJSONArray("results");
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);
       throw new IOException("Could not parse JSON.");
