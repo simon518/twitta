@@ -66,7 +66,6 @@ public class SearchActivity extends BaseActivity {
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
-    /*
     State state = (State) getLastNonConfigurationInstance();
 
     boolean wasRunning = savedInstanceState != null
@@ -79,10 +78,6 @@ public class SearchActivity extends BaseActivity {
     } else {
       doSearch();
     }
-     */
-
-    // Search.
-    doSearch();
   }
 
   @Override
@@ -118,8 +113,6 @@ public class SearchActivity extends BaseActivity {
     Log.i(TAG, "onDestroy.");
 
     if (mSearchTask != null && mSearchTask.getStatus() == UserTask.Status.RUNNING) {
-      // Doesn't really cancel execution (we let it continue running).
-      // See the SendTask code for more details.
       mSearchTask.cancel(true);
     }
 
@@ -198,15 +191,6 @@ public class SearchActivity extends BaseActivity {
 
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
-        }
-
-        if (!Utils.isEmpty(tweet.profileImageUrl)) {
-          // Fetch image to cache.
-          try {
-            getImageManager().put(tweet.profileImageUrl);
-          } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-          }
         }
       }
 
