@@ -15,6 +15,8 @@ import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -51,7 +53,7 @@ public class SearchActivity extends BaseActivity {
       return;
     }
 
-    setContentView(R.layout.main);
+    setContentView(R.layout.search);
 
     Intent intent = getIntent();
     // Assume it's SEARCH.
@@ -182,7 +184,7 @@ public class SearchActivity extends BaseActivity {
 
         try {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
-          tweet = Tweet.createFromSearch(jsonObject);
+          tweet = Tweet.createFromSearchApi(jsonObject);
           mTweets.add(tweet);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
@@ -210,6 +212,25 @@ public class SearchActivity extends BaseActivity {
 
       updateProgress("");
     }
+  }
+
+  @Override
+  public boolean onCreateOptionsMenu(Menu menu) {
+    MenuItem item = menu.add(0, OPTIONS_MENU_ID_REFRESH, 0, R.string.refresh);
+    item.setIcon(R.drawable.refresh);
+
+    return super.onCreateOptionsMenu(menu);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    switch (item.getItemId()) {
+    case OPTIONS_MENU_ID_REFRESH:
+      doSearch();
+      return true;
+    }
+
+    return super.onOptionsItemSelected(item);
   }
 
 }
