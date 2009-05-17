@@ -9,16 +9,19 @@ import org.json.JSONObject;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.widget.Button;
@@ -26,6 +29,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+import android.widget.TextView.BufferType;
 
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
@@ -65,7 +69,7 @@ public class UserActivity extends BaseActivity {
   private ImageView mProfileImage;
   private Button mFollowButton;
 
-  private TweetArrayAdapter mAdapter;
+  private TweetAdapter mAdapter;
 
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
@@ -120,7 +124,7 @@ public class UserActivity extends BaseActivity {
     setTitle(mUsername);
     mUserText.setText(mUsername);
 
-    mAdapter = new TweetArrayAdapter(this);
+    mAdapter = new TweetAdapter(this);
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
 
@@ -592,6 +596,47 @@ public class UserActivity extends BaseActivity {
     mFriendshipTask = new FriendshipTask(mIsFollowing).execute();
 
     // TODO: should we do a timeline refresh here?
+  }
+
+  private static class TweetAdapter extends TweetArrayAdapter {
+    public TweetAdapter(Context context) {
+      super(context);
+    }
+
+    private static class ViewHolder {
+      public TextView tweetText;
+      public TextView metaText;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+      View view;
+
+      if (convertView == null) {
+        view = mInflater.inflate(R.layout.user_tweet, parent, false);
+
+        ViewHolder holder = new ViewHolder();
+        holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
+        holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
+        view.setTag(holder);
+      } else {
+        view = convertView;
+      }
+
+      ViewHolder holder = (ViewHolder) view.getTag();
+
+      Tweet tweet = mTweets.get(position);
+
+      holder.tweetText.setText(tweet.text, BufferType.SPANNABLE);
+      Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
+      Utils.linkifyUsers(holder.tweetText);
+      Utils.linkifyTags(holder.tweetText);
+
+      holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
+          tweet.createdAt, tweet.source));
+
+      return view;
+    }
   }
 
 }

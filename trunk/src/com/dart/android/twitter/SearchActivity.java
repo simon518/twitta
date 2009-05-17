@@ -7,10 +7,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.dart.android.twitter.TwitterApi.ApiException;
-import com.dart.android.twitter.TwitterApi.AuthException;
-import com.google.android.photostream.UserTask;
-
 import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
@@ -20,9 +16,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+
+import com.dart.android.twitter.TwitterApi.ApiException;
+import com.dart.android.twitter.TwitterApi.AuthException;
+import com.google.android.photostream.UserTask;
 
 public class SearchActivity extends BaseActivity {
   private static final String TAG = "SearchActivity";
@@ -237,6 +238,7 @@ public class SearchActivity extends BaseActivity {
     return super.onOptionsItemSelected(item);
   }
 
+  private static final int CONTEXT_MORE_ID = 3;
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
   private static final int CONTEXT_DM_ID = 2;
@@ -245,6 +247,10 @@ public class SearchActivity extends BaseActivity {
   public void onCreateContextMenu(ContextMenu menu, View v,
       ContextMenuInfo menuInfo) {
     super.onCreateContextMenu(menu, v, menuInfo);
+
+    AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
+    Tweet tweet = (Tweet) mAdapter.getItem(info.position);
+    menu.add(0, CONTEXT_MORE_ID, 0, tweet.screenName);
     menu.add(0, CONTEXT_REPLY_ID, 0, R.string.reply);
     menu.add(0, CONTEXT_RETWEET_ID, 0, R.string.retweet);
 
@@ -265,6 +271,10 @@ public class SearchActivity extends BaseActivity {
     }
 
     switch (item.getItemId()) {
+    case CONTEXT_MORE_ID:
+      String who = tweet.screenName;
+      launchActivity(UserActivity.createIntent(who));
+      return true;
     case CONTEXT_REPLY_ID:
       String replyTo = "@" + tweet.screenName + " ";
       launchNewTweetActivity(replyTo);
