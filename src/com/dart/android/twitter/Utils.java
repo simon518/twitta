@@ -123,7 +123,7 @@ public class Utils {
   }
 
   private static final Pattern NAME_MATCHER = Pattern.compile("\\b\\w+\\b");
-  private static final Linkify.MatchFilter NAME_MATCHER_MATCH_FILER = new Linkify.MatchFilter() {
+  private static final Linkify.MatchFilter NAME_MATCHER_MATCH_FILTER = new Linkify.MatchFilter() {
     @Override
     public final boolean acceptMatch(final CharSequence s, final int start, final int end) {
       if (start == 0) {
@@ -142,7 +142,27 @@ public class Utils {
   private static final String TWITTA_USER_URL = "twitta://users/";
 
   public static void linkifyUsers(TextView view) {
-    Linkify.addLinks(view, NAME_MATCHER, TWITTA_USER_URL, NAME_MATCHER_MATCH_FILER, null);
+    Linkify.addLinks(view, NAME_MATCHER, TWITTA_USER_URL, NAME_MATCHER_MATCH_FILTER, null);
+  }
+
+  private static final Pattern TAG_MATCHER = Pattern.compile("\\b\\w+\\b");
+  private static final Linkify.MatchFilter TAG_MATCHER_MATCH_FILTER = new Linkify.MatchFilter() {
+    @Override
+    public final boolean acceptMatch(final CharSequence s, final int start, final int end) {
+      if (start == 0) {
+        return false;
+      }
+
+      if (start > 1 && !Character.isWhitespace(s.charAt(start - 2))) {
+        return false;
+      }
+
+      return s.charAt(start - 1) == '#';
+    }
+  };
+
+  public static void linkifyTags(TextView view) {
+    Linkify.addLinks(view, TAG_MATCHER, TWITTA_USER_URL, TAG_MATCHER_MATCH_FILTER, null);
   }
 
 }

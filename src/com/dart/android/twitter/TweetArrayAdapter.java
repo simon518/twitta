@@ -69,6 +69,7 @@ public class TweetArrayAdapter extends BaseAdapter {
     holder.tweetText.setText(tweet.text, BufferType.SPANNABLE);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
     Utils.linkifyUsers(holder.tweetText);
+    Utils.linkifyTags(holder.tweetText);
 
     holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
         tweet.createdAt, tweet.source));

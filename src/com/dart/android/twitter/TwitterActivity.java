@@ -410,6 +410,7 @@ public class TwitterActivity extends BaseActivity {
       holder.tweetText.setText(cursor.getString(mTextColumn), BufferType.SPANNABLE);
       Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
       Utils.linkifyUsers(holder.tweetText);
+      Utils.linkifyTags(holder.tweetText);
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
