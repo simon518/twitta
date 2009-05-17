@@ -55,7 +55,7 @@ public class Tweet extends Message {
     return tweet;
   }
 
-  public static Tweet createFromSearch(JSONObject jsonObject) throws JSONException {
+  public static Tweet createFromSearchApi(JSONObject jsonObject) throws JSONException {
     Tweet tweet = new Tweet();
 
     tweet.id = jsonObject.getLong("id") + "";
