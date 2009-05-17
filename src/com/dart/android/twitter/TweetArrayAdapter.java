@@ -1,13 +1,13 @@
 package com.dart.android.twitter;
 
 import java.util.ArrayList;
-
 import android.content.Context;
 import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.TextView.BufferType;
 
@@ -15,10 +15,10 @@ public class TweetArrayAdapter extends BaseAdapter {
   @SuppressWarnings("unused")
   private static final String TAG = "TweetArrayAdapter";
 
-  private ArrayList<Tweet> mTweets;
+  protected ArrayList<Tweet> mTweets;
   private Context mContext;
-  private LayoutInflater mInflater;
-  private StringBuilder mMetaBuilder;
+  protected LayoutInflater mInflater;
+  protected StringBuilder mMetaBuilder;
 
   public TweetArrayAdapter(Context context) {
     mTweets = new ArrayList<Tweet>();
@@ -43,7 +43,9 @@ public class TweetArrayAdapter extends BaseAdapter {
   }
 
   private static class ViewHolder {
+    public TextView tweetUserText;
     public TextView tweetText;
+    public ImageView profileImage;
     public TextView metaText;
   }
 
@@ -52,10 +54,12 @@ public class TweetArrayAdapter extends BaseAdapter {
     View view;
 
     if (convertView == null) {
-      view = mInflater.inflate(R.layout.uniform_tweet, parent, false);
+      view = mInflater.inflate(R.layout.tweet, parent, false);
 
       ViewHolder holder = new ViewHolder();
+      holder.tweetUserText = (TextView) view.findViewById(R.id.tweet_user_text);
       holder.tweetText = (TextView) view.findViewById(R.id.tweet_text);
+      holder.profileImage = (ImageView) view.findViewById(R.id.profile_image);
       holder.metaText = (TextView) view.findViewById(R.id.tweet_meta_text);
       view.setTag(holder);
     } else {
@@ -66,10 +70,18 @@ public class TweetArrayAdapter extends BaseAdapter {
 
     Tweet tweet = mTweets.get(position);
 
+    holder.tweetUserText.setText(tweet.screenName);
     holder.tweetText.setText(tweet.text, BufferType.SPANNABLE);
     Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
     Utils.linkifyUsers(holder.tweetText);
     Utils.linkifyTags(holder.tweetText);
+
+    String profileImageUrl = tweet.profileImageUrl;
+
+    if (!Utils.isEmpty(profileImageUrl)) {
+      holder.profileImage.setImageBitmap(TwitterApplication.mImageManager.get(
+          profileImageUrl));
+    }
 
     holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
         tweet.createdAt, tweet.source));
