@@ -272,8 +272,7 @@ public class SearchActivity extends BaseActivity {
 
     switch (item.getItemId()) {
     case CONTEXT_MORE_ID:
-      String who = tweet.screenName;
-      launchActivity(UserActivity.createIntent(who));
+      launchActivity(UserActivity.createIntent(tweet.screenName));
       return true;
     case CONTEXT_REPLY_ID:
       String replyTo = "@" + tweet.screenName + " ";
