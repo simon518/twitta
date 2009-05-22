@@ -111,6 +111,7 @@ public class PictureActivity extends BaseActivity {
 
     if (!getApi().isLoggedIn()) {
       Log.i(TAG, "Not logged in.");
+      // I forgot why I did this.
       // handleLoggedOut();
       showLogin();
       finish();
@@ -199,7 +200,7 @@ public class PictureActivity extends BaseActivity {
       }
 
       if (result == TaskResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == TaskResult.API_ERROR) {
         updateProgress(apiErrorMessage);
         enableEntry();
@@ -210,10 +211,6 @@ public class PictureActivity extends BaseActivity {
         enableEntry();
       }
     }
-  }
-
-  private void onAuthFailure() {
-    logout();
   }
 
   private View.OnKeyListener editEnterHandler = new View.OnKeyListener() {

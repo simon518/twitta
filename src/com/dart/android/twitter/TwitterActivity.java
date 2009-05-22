@@ -30,7 +30,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -48,8 +47,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.TextView.BufferType;
-
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -135,7 +132,6 @@ public class TwitterActivity extends BaseActivity {
 
     mTweetEdit = new TweetEdit((EditText) findViewById(R.id.tweet_edit),
         (TextView) findViewById(R.id.chars_text));
-
     mTweetEdit.setOnKeyListener(tweetEnterHandler);
 
     if (NEW_TWEET_ACTION.equals(action)) {
@@ -169,9 +165,7 @@ public class TwitterActivity extends BaseActivity {
 
     if (diff > REFRESH_THRESHOLD) {
       shouldRetrieve = true;
-    } else if (savedInstanceState != null
-        && savedInstanceState.containsKey(SIS_RUNNING_KEY)
-        && savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+    } else if (Utils.isTrue(savedInstanceState, SIS_RUNNING_KEY)) {
       // Check to see if it was running a send or retrieve task.
       // It makes no sense to resend the send request (don't want dupes)
       // so we instead retrieve (refresh) to see if the message has posted.
@@ -407,10 +401,7 @@ public class TwitterActivity extends BaseActivity {
       ViewHolder holder = (ViewHolder) view.getTag();
 
       holder.tweetUserText.setText(cursor.getString(mUserTextColumn));
-      holder.tweetText.setText(cursor.getString(mTextColumn), BufferType.SPANNABLE);
-      Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
-      Utils.linkifyUsers(holder.tweetText);
-      Utils.linkifyTags(holder.tweetText);
+      Utils.setTweetText(holder.tweetText, cursor.getString(mTextColumn));
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
@@ -518,7 +509,7 @@ public class TwitterActivity extends BaseActivity {
       }
 
       if (result == SendResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == SendResult.OK) {
         onSendSuccess();
       } else if (result == SendResult.IO_ERROR) {
@@ -557,10 +548,6 @@ public class TwitterActivity extends BaseActivity {
 
   private void onRetrieveBegin() {
     updateProgress("Refreshing...");
-  }
-
-  private void onAuthFailure() {
-    logout();
   }
 
   private enum RetrieveResult {
@@ -640,7 +627,7 @@ public class TwitterActivity extends BaseActivity {
     @Override
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == RetrieveResult.OK) {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_TWEET_REFRESH_KEY, Utils.getNowTime());

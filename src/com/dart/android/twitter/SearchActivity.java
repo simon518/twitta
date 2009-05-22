@@ -74,10 +74,7 @@ public class SearchActivity extends BaseActivity {
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     State state = (State) getLastNonConfigurationInstance();
-
-    boolean wasRunning = savedInstanceState != null
-        && savedInstanceState.containsKey(SIS_RUNNING_KEY)
-        && savedInstanceState.getBoolean(SIS_RUNNING_KEY);
+    boolean wasRunning = Utils.isTrue(savedInstanceState, SIS_RUNNING_KEY);
 
     if (state != null && !wasRunning) {
       mTweets = state.mTweets;
@@ -100,7 +97,7 @@ public class SearchActivity extends BaseActivity {
 
   @Override
   public Object onRetainNonConfigurationInstance() {
-      return new State(this);
+    return new State(this);
   }
 
   private static final String SIS_RUNNING_KEY = "running";
@@ -134,10 +131,6 @@ public class SearchActivity extends BaseActivity {
 
   private void draw() {
     mAdapter.refresh(mTweets);
-  }
-
-  private void onAuthFailure() {
-    logout();
   }
 
   private enum RetrieveResult {
@@ -207,7 +200,7 @@ public class SearchActivity extends BaseActivity {
     @Override
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == RetrieveResult.OK) {
         SearchActivity.this.mTweets = mTweets;
         draw();
@@ -241,6 +234,7 @@ public class SearchActivity extends BaseActivity {
   private static final int CONTEXT_MORE_ID = 3;
   private static final int CONTEXT_REPLY_ID = 0;
   private static final int CONTEXT_RETWEET_ID = 1;
+  @SuppressWarnings("unused")
   private static final int CONTEXT_DM_ID = 2;
 
   @Override

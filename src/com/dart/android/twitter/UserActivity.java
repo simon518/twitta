@@ -15,7 +15,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -29,8 +28,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.TextView.BufferType;
-
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -130,9 +127,7 @@ public class UserActivity extends BaseActivity {
 
     State state = (State) getLastNonConfigurationInstance();
 
-    boolean wasRunning = savedInstanceState != null
-        && savedInstanceState.containsKey(SIS_RUNNING_KEY)
-        && savedInstanceState.getBoolean(SIS_RUNNING_KEY);
+    boolean wasRunning = Utils.isTrue(savedInstanceState, SIS_RUNNING_KEY);
 
     if (state != null && !wasRunning) {
       mTweets = state.mTweets;
@@ -246,10 +241,6 @@ public class UserActivity extends BaseActivity {
     updateProgress("Refreshing...");
   }
 
-  private void onAuthFailure() {
-    logout();
-  }
-
   private class RetrieveTask extends UserTask<Void, Void, TaskResult> {
     @Override
     public void onPreExecute() {
@@ -354,7 +345,7 @@ public class UserActivity extends BaseActivity {
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == TaskResult.OK) {
         draw();
       } else {
@@ -431,7 +422,7 @@ public class UserActivity extends BaseActivity {
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == TaskResult.OK) {
         mIsFollowing = !mIsFollowing;
         draw();
@@ -627,10 +618,7 @@ public class UserActivity extends BaseActivity {
 
       Tweet tweet = mTweets.get(position);
 
-      holder.tweetText.setText(tweet.text, BufferType.SPANNABLE);
-      Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
-      Utils.linkifyUsers(holder.tweetText);
-      Utils.linkifyTags(holder.tweetText);
+      Utils.setTweetText(holder.tweetText, tweet.text);
 
       holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
           tweet.createdAt, tweet.source));
