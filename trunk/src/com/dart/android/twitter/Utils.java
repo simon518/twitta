@@ -27,9 +27,11 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.regex.Pattern;
 
+import android.os.Bundle;
 import android.text.util.Linkify;
 import android.util.Log;
 import android.widget.TextView;
+import android.widget.TextView.BufferType;
 
 public class Utils {
 
@@ -125,7 +127,8 @@ public class Utils {
   private static final Pattern NAME_MATCHER = Pattern.compile("\\b\\w+\\b");
   private static final Linkify.MatchFilter NAME_MATCHER_MATCH_FILTER = new Linkify.MatchFilter() {
     @Override
-    public final boolean acceptMatch(final CharSequence s, final int start, final int end) {
+    public final boolean acceptMatch(final CharSequence s, final int start,
+        final int end) {
       if (start == 0) {
         return false;
       }
@@ -138,17 +141,18 @@ public class Utils {
     }
   };
 
-
   private static final String TWITTA_USER_URL = "twitta://users/";
 
   public static void linkifyUsers(TextView view) {
-    Linkify.addLinks(view, NAME_MATCHER, TWITTA_USER_URL, NAME_MATCHER_MATCH_FILTER, null);
+    Linkify.addLinks(view, NAME_MATCHER, TWITTA_USER_URL,
+        NAME_MATCHER_MATCH_FILTER, null);
   }
 
   private static final Pattern TAG_MATCHER = Pattern.compile("\\b\\w+\\b");
   private static final Linkify.MatchFilter TAG_MATCHER_MATCH_FILTER = new Linkify.MatchFilter() {
     @Override
-    public final boolean acceptMatch(final CharSequence s, final int start, final int end) {
+    public final boolean acceptMatch(final CharSequence s, final int start,
+        final int end) {
       if (start == 0) {
         return false;
       }
@@ -162,7 +166,18 @@ public class Utils {
   };
 
   public static void linkifyTags(TextView view) {
-    Linkify.addLinks(view, TAG_MATCHER, TWITTA_USER_URL, TAG_MATCHER_MATCH_FILTER, null);
+    Linkify.addLinks(view, TAG_MATCHER, TWITTA_USER_URL,
+        TAG_MATCHER_MATCH_FILTER, null);
   }
 
+  public static boolean isTrue(Bundle bundle, String key) {
+    return bundle != null && bundle.containsKey(key) && bundle.getBoolean(key);
+  }
+
+  public static void setTweetText(TextView textView, String text) {
+    textView.setText(text, BufferType.SPANNABLE);
+    Linkify.addLinks(textView, Linkify.WEB_URLS);
+    Utils.linkifyUsers(textView);
+    Utils.linkifyTags(textView);
+  }
 }

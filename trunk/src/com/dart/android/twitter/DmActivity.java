@@ -13,7 +13,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.text.util.Linkify;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.KeyEvent;
@@ -31,8 +30,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.TextView.BufferType;
-
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -132,9 +129,7 @@ public class DmActivity extends BaseActivity {
 
     if (diff > REFRESH_THRESHOLD) {
       shouldRetrieve = true;
-    } else if (savedInstanceState != null
-        && savedInstanceState.containsKey(SIS_RUNNING_KEY)
-        && savedInstanceState.getBoolean(SIS_RUNNING_KEY)) {
+    } else if (Utils.isTrue(savedInstanceState, SIS_RUNNING_KEY)) {
       // Check to see if it was running a send or retrieve task.
       // It makes no sense to resend the send request (don't want dupes)
       // so we instead retrieve (refresh) to see if the message has posted.
@@ -279,10 +274,6 @@ public class DmActivity extends BaseActivity {
     updateProgress("Refreshing...");
   }
 
-  private void onAuthFailure() {
-    logout();
-  }
-
   private class RetrieveTask extends UserTask<Void, Void, TaskResult> {
     @Override
     public void onPreExecute() {
@@ -409,7 +400,7 @@ public class DmActivity extends BaseActivity {
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == TaskResult.OK) {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_DM_REFRESH_KEY, Utils.getNowTime());
@@ -423,7 +414,7 @@ public class DmActivity extends BaseActivity {
     }
   }
 
-  private class Adapter extends CursorAdapter {
+  private static class Adapter extends CursorAdapter {
 
     public Adapter(Context context, Cursor cursor) {
       super(context, cursor);
@@ -482,14 +473,12 @@ public class DmActivity extends BaseActivity {
         holder.userText.setText("to " + user);
       }
 
-      holder.tweetText.setText(cursor.getString(mTextColumn), BufferType.SPANNABLE);
-      Linkify.addLinks(holder.tweetText, Linkify.WEB_URLS);
-      Utils.linkifyUsers(holder.tweetText);
+      Utils.setTweetText(holder.tweetText, cursor.getString(mTextColumn));
 
       String profileImageUrl = cursor.getString(mProfileImageUrlColumn);
 
       if (!Utils.isEmpty(profileImageUrl)) {
-        holder.profileImage.setImageBitmap(getImageManager().get(profileImageUrl));
+        holder.profileImage.setImageBitmap(TwitterApplication.mImageManager.get(profileImageUrl));
       }
 
       try {
@@ -561,7 +550,7 @@ public class DmActivity extends BaseActivity {
       }
 
       if (result == TaskResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == TaskResult.OK) {
         mToEdit.setText("");
         mTweetEdit.setText("");
@@ -578,7 +567,7 @@ public class DmActivity extends BaseActivity {
     }
   }
 
-  private class FriendsAdapter extends CursorAdapter {
+  private static class FriendsAdapter extends CursorAdapter {
 
     public FriendsAdapter(Context context, Cursor cursor) {
       super(context, cursor);
@@ -618,7 +607,7 @@ public class DmActivity extends BaseActivity {
     public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
       String filter = constraint == null ? "" : constraint.toString();
 
-      return getDb().getFollowerUsernames(filter);
+      return TwitterApplication.mDb.getFollowerUsernames(filter);
     }
 
     @Override
@@ -748,7 +737,7 @@ public class DmActivity extends BaseActivity {
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
-        onAuthFailure();
+        logout();
       } else if (result == TaskResult.OK) {
         mAdapter.refresh();
       } else {
