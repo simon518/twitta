@@ -283,16 +283,6 @@ public class UserActivity extends BaseActivity {
 
           if (mUser == null) {
             mUser = User.create(jsonObject.getJSONObject("user"));
-
-            if (!Utils.isEmpty(mUser.profileImageUrl)) {
-              // Fetch image to cache.
-              try {
-                // Don't store on disk.
-                imageManager.put(mUser.profileImageUrl, false);
-              } catch (IOException e) {
-                Log.e(TAG, e.getMessage(), e);
-              }
-            }
           }
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
@@ -313,9 +303,21 @@ public class UserActivity extends BaseActivity {
 
       publishProgress();
 
+      if (!Utils.isEmpty(mUser.profileImageUrl)) {
+        // Fetch image to cache.
+        try {
+          // Don't store on disk.
+          imageManager.put(mUser.profileImageUrl, false);
+        } catch (IOException e) {
+          Log.e(TAG, e.getMessage(), e);
+        }
+      }
+
       if (isCancelled()) {
         return TaskResult.CANCELLED;
       }
+
+      publishProgress();
 
       try {
         mIsFollowing = api.isFollows(mMe, mUsername);
