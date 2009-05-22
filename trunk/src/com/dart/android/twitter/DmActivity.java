@@ -3,6 +3,7 @@ package com.dart.android.twitter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -225,8 +226,11 @@ public class DmActivity extends BaseActivity {
     registerForContextMenu(mTweetList);
   }
 
-  private void update() {
+  private void draw() {
     mAdapter.refresh();
+  }
+
+  private void goTop() {
     mTweetList.setSelection(0);
   }
 
@@ -281,6 +285,11 @@ public class DmActivity extends BaseActivity {
     }
 
     @Override
+    public void onProgressUpdate(Void... progress) {
+      draw();
+    }
+
+    @Override
     public TaskResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
@@ -291,6 +300,8 @@ public class DmActivity extends BaseActivity {
       ImageManager imageManager = getImageManager();
 
       int maxId = db.fetchMaxDmId(false);
+
+      HashSet<String> imageUrls = new HashSet<String>();
 
       try {
         jsonArray = api.getDmsSinceId(maxId, false);
@@ -325,14 +336,7 @@ public class DmActivity extends BaseActivity {
           return TaskResult.CANCELLED;
         }
 
-        if (!Utils.isEmpty(dm.profileImageUrl)) {
-          // Fetch image to cache.
-          try {
-            imageManager.put(dm.profileImageUrl);
-          } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-          }
-        }
+        imageUrls.add(dm.profileImageUrl);
       }
 
       if (isCancelled()) {
@@ -374,14 +378,7 @@ public class DmActivity extends BaseActivity {
           return TaskResult.CANCELLED;
         }
 
-        if (!Utils.isEmpty(dm.profileImageUrl)) {
-          // Fetch image to cache.
-          try {
-            imageManager.put(dm.profileImageUrl);
-          } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-          }
-        }
+        imageUrls.add(dm.profileImageUrl);
       }
 
       if (isCancelled()) {
@@ -389,6 +386,23 @@ public class DmActivity extends BaseActivity {
       }
 
       db.addDms(dms, false);
+
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+
+      publishProgress();
+
+      for (String imageUrl : imageUrls) {
+        if (!Utils.isEmpty(imageUrl)) {
+          // Fetch image to cache.
+          try {
+            imageManager.put(imageUrl);
+          } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+          }
+        }
+      }
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
@@ -405,7 +419,8 @@ public class DmActivity extends BaseActivity {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_DM_REFRESH_KEY, Utils.getNowTime());
         editor.commit();
-        update();
+        draw();
+        goTop();
       } else {
         // Do nothing.
       }
@@ -556,7 +571,8 @@ public class DmActivity extends BaseActivity {
         mTweetEdit.setText("");
         updateProgress("");
         enableEntry();
-        update();
+        draw();
+        goTop();
       } else if (result == TaskResult.NOT_FOLLOWED_ERROR) {
         updateProgress("Unable to send. Is the person following you?");
         enableEntry();

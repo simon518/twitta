@@ -2,6 +2,7 @@ package com.dart.android.twitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -179,7 +180,7 @@ public class SearchActivity extends BaseActivity {
         return RetrieveResult.IO_ERROR;
       }
 
-      ArrayList<String> imageUrls = new ArrayList<String>();
+      HashSet<String> imageUrls = new HashSet<String>();
 
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
@@ -203,6 +204,14 @@ public class SearchActivity extends BaseActivity {
         }
       }
 
+      SearchActivity.this.mTweets = mTweets;
+
+      if (isCancelled()) {
+        return RetrieveResult.CANCELLED;
+      }
+
+      publishProgress();
+
       ImageManager imageManager = getImageManager();
 
       for (String imageUrl : imageUrls) {
@@ -225,11 +234,15 @@ public class SearchActivity extends BaseActivity {
     }
 
     @Override
+    public void onProgressUpdate(Void... progress) {
+      draw();
+    }
+
+    @Override
     public void onPostExecute(RetrieveResult result) {
       if (result == RetrieveResult.AUTH_ERROR) {
         logout();
       } else if (result == RetrieveResult.OK) {
-        SearchActivity.this.mTweets = mTweets;
         draw();
       } else {
         // Do nothing.
