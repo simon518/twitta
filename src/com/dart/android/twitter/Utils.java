@@ -25,6 +25,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import android.os.Bundle;
@@ -165,11 +166,19 @@ public class Utils {
     }
   };
 
+  private static final Linkify.TransformFilter TAG_MATCHER_TRANSFORM_FILTER =
+      new Linkify.TransformFilter() {
+    @Override
+    public final String transformUrl(Matcher match, String url) {
+      return "%23" + url;
+    }
+  };
+
   private static final String TWITTA_SEARCH_URL = "twitta://search/";
 
   public static void linkifyTags(TextView view) {
     Linkify.addLinks(view, TAG_MATCHER, TWITTA_SEARCH_URL,
-        TAG_MATCHER_MATCH_FILTER, null);
+        TAG_MATCHER_MATCH_FILTER, TAG_MATCHER_TRANSFORM_FILTER);
   }
 
   public static boolean isTrue(Bundle bundle, String key) {
