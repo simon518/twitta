@@ -69,7 +69,7 @@ public class TweetArrayAdapter extends BaseAdapter {
     Tweet tweet = mTweets.get(position);
 
     holder.tweetUserText.setText(tweet.screenName);
-    Utils.setTweetText(holder.tweetUserText, tweet.text);
+    Utils.setTweetText(holder.tweetText, tweet.text);
 
     String profileImageUrl = tweet.profileImageUrl;
 

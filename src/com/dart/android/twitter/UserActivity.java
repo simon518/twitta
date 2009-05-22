@@ -118,7 +118,7 @@ public class UserActivity extends BaseActivity {
       mUsername = data.getLastPathSegment();
     }
 
-    setTitle(mUsername);
+    setTitle("@" + mUsername);
     mUserText.setText(mUsername);
 
     mAdapter = new TweetAdapter(this);
