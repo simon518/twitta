@@ -10,6 +10,7 @@ import org.json.JSONObject;
 import android.app.SearchManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -64,6 +65,11 @@ public class SearchActivity extends BaseActivity {
     // Assume it's SEARCH.
     // String action = intent.getAction();
     mSearchQuery = intent.getStringExtra(SearchManager.QUERY);
+
+    if (TextUtils.isEmpty(mSearchQuery)) {
+      mSearchQuery = intent.getData().getLastPathSegment();
+    }
+
     setTitle(mSearchQuery);
 
     mTweetList = (ListView) findViewById(R.id.tweet_list);
