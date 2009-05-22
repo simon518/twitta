@@ -165,8 +165,10 @@ public class Utils {
     }
   };
 
+  private static final String TWITTA_SEARCH_URL = "twitta://search/";
+
   public static void linkifyTags(TextView view) {
-    Linkify.addLinks(view, TAG_MATCHER, TWITTA_USER_URL,
+    Linkify.addLinks(view, TAG_MATCHER, TWITTA_SEARCH_URL,
         TAG_MATCHER_MATCH_FILTER, null);
   }
 
