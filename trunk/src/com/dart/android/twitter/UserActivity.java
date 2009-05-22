@@ -287,7 +287,8 @@ public class UserActivity extends BaseActivity {
             if (!Utils.isEmpty(mUser.profileImageUrl)) {
               // Fetch image to cache.
               try {
-                imageManager.put(mUser.profileImageUrl);
+                // Don't store on disk.
+                imageManager.put(mUser.profileImageUrl, false);
               } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
               }

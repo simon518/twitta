@@ -179,6 +179,8 @@ public class SearchActivity extends BaseActivity {
         return RetrieveResult.IO_ERROR;
       }
 
+      ArrayList<String> imageUrls = new ArrayList<String>();
+
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
@@ -190,9 +192,28 @@ public class SearchActivity extends BaseActivity {
           JSONObject jsonObject = jsonArray.getJSONObject(i);
           tweet = Tweet.createFromSearchApi(jsonObject);
           mTweets.add(tweet);
+          imageUrls.add(tweet.profileImageUrl);
         } catch (JSONException e) {
           Log.e(TAG, e.getMessage(), e);
           return RetrieveResult.IO_ERROR;
+        }
+
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }
+      }
+
+      ImageManager imageManager = getImageManager();
+
+      for (String imageUrl : imageUrls) {
+        if (!Utils.isEmpty(imageUrl)) {
+          // Fetch image to cache.
+          try {
+            // Store these temporarily (not to file).
+            imageManager.put(imageUrl, true);
+          } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+          }
         }
 
         if (isCancelled()) {
