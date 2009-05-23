@@ -332,15 +332,11 @@ public class DmActivity extends BaseActivity {
           return TaskResult.IO_ERROR;
         }
 
+        imageUrls.add(dm.profileImageUrl);
+
         if (isCancelled()) {
           return TaskResult.CANCELLED;
         }
-
-        imageUrls.add(dm.profileImageUrl);
-      }
-
-      if (isCancelled()) {
-        return TaskResult.CANCELLED;
       }
 
       maxId = db.fetchMaxDmId(true);
@@ -374,15 +370,11 @@ public class DmActivity extends BaseActivity {
           return TaskResult.IO_ERROR;
         }
 
+        imageUrls.add(dm.profileImageUrl);
+
         if (isCancelled()) {
           return TaskResult.CANCELLED;
         }
-
-        imageUrls.add(dm.profileImageUrl);
-      }
-
-      if (isCancelled()) {
-        return TaskResult.CANCELLED;
       }
 
       db.addDms(dms, false);
@@ -402,10 +394,10 @@ public class DmActivity extends BaseActivity {
             Log.e(TAG, e.getMessage(), e);
           }
         }
-      }
 
-      if (isCancelled()) {
-        return TaskResult.CANCELLED;
+        if (isCancelled()) {
+          return TaskResult.CANCELLED;
+        }
       }
 
       return TaskResult.OK;
