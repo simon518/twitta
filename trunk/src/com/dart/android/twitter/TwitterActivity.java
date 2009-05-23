@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,6 +48,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -426,8 +428,11 @@ public class TwitterActivity extends BaseActivity {
 
   }
 
-  private void update() {
+  private void draw() {
     mTweetAdapter.refresh();
+  }
+
+  private void goTop() {
     mTweetList.setSelection(0);
   }
 
@@ -527,7 +532,8 @@ public class TwitterActivity extends BaseActivity {
     mTweetEdit.setText("");
     updateProgress("");
     enableEntry();
-    update();
+    draw();
+    goTop();
   }
 
   private void onSendFailure() {
@@ -561,6 +567,11 @@ public class TwitterActivity extends BaseActivity {
     }
 
     @Override
+    public void onProgressUpdate(Void... progress) {
+      draw();
+    }
+
+    @Override
     public RetrieveResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
@@ -580,6 +591,7 @@ public class TwitterActivity extends BaseActivity {
       }
 
       ArrayList<Tweet> tweets = new ArrayList<Tweet>();
+      HashSet<String> imageUrls = new HashSet<String>();
 
       for (int i = 0; i < jsonArray.length(); ++i) {
         if (isCancelled()) {
@@ -597,28 +609,34 @@ public class TwitterActivity extends BaseActivity {
           return RetrieveResult.IO_ERROR;
         }
 
+        imageUrls.add(tweet.profileImageUrl);
+
         if (isCancelled()) {
           return RetrieveResult.CANCELLED;
         }
-
-        if (!Utils.isEmpty(tweet.profileImageUrl)) {
-          // Fetch image to cache.
-          try {
-            getImageManager().put(tweet.profileImageUrl);
-          } catch (IOException e) {
-            Log.e(TAG, e.getMessage(), e);
-          }
-        }
-      }
-
-      if (isCancelled()) {
-        return RetrieveResult.CANCELLED;
       }
 
       getDb().addTweets(tweets, false);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
+      }
+
+      publishProgress();
+
+      for (String imageUrl : imageUrls) {
+        if (!Utils.isEmpty(imageUrl)) {
+          // Fetch image to cache.
+          try {
+            getImageManager().put(imageUrl);
+          } catch (IOException e) {
+            Log.e(TAG, e.getMessage(), e);
+          }
+        }
+
+        if (isCancelled()) {
+          return RetrieveResult.CANCELLED;
+        }
       }
 
       return RetrieveResult.OK;
@@ -632,7 +650,8 @@ public class TwitterActivity extends BaseActivity {
         SharedPreferences.Editor editor = mPreferences.edit();
         editor.putLong(Preferences.LAST_TWEET_REFRESH_KEY, Utils.getNowTime());
         editor.commit();
-        update();
+        draw();
+        goTop();
       } else {
         // Do nothing.
       }
