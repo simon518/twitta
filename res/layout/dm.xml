@@ -91,7 +91,7 @@
     </LinearLayout>
 
     <!-- Main content area. -->
-    <<com.dart.android.twitter.MyListView
+    <com.dart.android.twitter.MyListView
     android:id="@+id/tweet_list"
     android:layout_width="fill_parent"
     android:layout_height="0px"
