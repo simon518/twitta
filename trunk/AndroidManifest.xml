@@ -47,8 +47,9 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>                                                           
         </activity>
+        <!--  TODO: why need stateHidden on the magic? -->
         <activity android:name="DmActivity"
-                  android:windowSoftInputMode="adjustResize"        
+                  android:windowSoftInputMode="adjustResize|stateHidden"  
                   android:label="@string/direct_messages">
             <intent-filter>
                 <action android:name="com.dart.android.twitter.DMS" />
