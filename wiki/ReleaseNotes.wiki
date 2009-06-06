@@ -4,12 +4,13 @@
 
 == Version 9 ==
 
-  * A surprise!
+  * Search
+  * # tag links
+  * Performance
 
 == Version 8 ==
 
-  * @Replies filter 
-  * Performance
+  * Minor bug fixes
 
 == Version 7 ==
 
