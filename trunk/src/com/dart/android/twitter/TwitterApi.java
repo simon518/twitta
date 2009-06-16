@@ -330,7 +330,7 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONArray getTimelineSinceId(int sinceId) throws IOException,
+  public JSONArray getTimelineSinceId(long sinceId) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Requesting friends timeline since id.");
 
@@ -394,7 +394,7 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONObject destroyDirectMessage(int id) throws IOException,
+  public JSONObject destroyDirectMessage(long id) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Deleting direct message: " + id);
 
@@ -461,7 +461,7 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONArray getDmsSinceId(int sinceId, boolean isSent)
+  public JSONArray getDmsSinceId(long sinceId, boolean isSent)
       throws IOException, AuthException, ApiException {
     Log.i(TAG, "Requesting DMs since id.");
 
@@ -486,17 +486,17 @@ public class TwitterApi {
     return json;
   }
 
-  public ArrayList<Integer> getFollowersIds() throws IOException,
+  public ArrayList<Long> getFollowersIds() throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Requesting followers ids.");
 
     InputStream data = requestData(FOLLOWERS_IDS_URL, METHOD_GET, null);
-    ArrayList<Integer> followers = new ArrayList<Integer>();
+    ArrayList<Long> followers = new ArrayList<Long>();
 
     try {
       JSONArray jsonArray = new JSONArray(Utils.stringifyStream(data));
       for (int i = 0; i < jsonArray.length(); ++i) {
-        followers.add(jsonArray.getInt(i));
+        followers.add(jsonArray.getLong(i));
       }
     } catch (JSONException e) {
       Log.e(TAG, e.getMessage(), e);

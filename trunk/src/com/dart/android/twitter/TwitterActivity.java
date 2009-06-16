@@ -289,7 +289,7 @@ public class TwitterActivity extends BaseActivity {
 
     AdapterView.AdapterContextMenuInfo info = (AdapterContextMenuInfo) menuInfo;
     Cursor cursor = (Cursor) mTweetAdapter.getItem(info.position);
-    int userId = cursor.getInt(cursor
+    long userId = cursor.getLong(cursor
         .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER_ID));
     String user = cursor.getString(cursor
         .getColumnIndexOrThrow(TwitterDbAdapter.KEY_USER));
@@ -575,7 +575,7 @@ public class TwitterActivity extends BaseActivity {
     public RetrieveResult doInBackground(Void... params) {
       JSONArray jsonArray;
 
-      int maxId = getDb().fetchMaxId();
+      long maxId = getDb().fetchMaxId();
 
       try {
         jsonArray = getApi().getTimelineSinceId(maxId);
@@ -664,7 +664,7 @@ public class TwitterActivity extends BaseActivity {
     @Override
     public RetrieveResult doInBackground(Void... params) {
       try {
-        ArrayList<Integer> followers = getApi().getFollowersIds();
+        ArrayList<Long> followers = getApi().getFollowersIds();
         getDb().syncFollowers(followers);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
