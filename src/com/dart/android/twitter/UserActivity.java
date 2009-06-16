@@ -383,7 +383,7 @@ public class UserActivity extends BaseActivity {
     public TaskResult doInBackground(Void... params) {
       JSONObject jsonObject;
 
-      int id = Integer.parseInt(mUser.id);
+      long id = Long.parseLong(mUser.id);
 
       TwitterApi api = getApi();
 

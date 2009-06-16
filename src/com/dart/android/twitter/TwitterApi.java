@@ -548,7 +548,7 @@ public class TwitterApi {
     }
   }
 
-  public JSONObject createFriendship(int id) throws IOException,
+  public JSONObject createFriendship(long id) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Following: " + id);
 
@@ -570,7 +570,7 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONObject destroyFriendship(int id) throws IOException,
+  public JSONObject destroyFriendship(long id) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Unfollowing: " + id);
 
