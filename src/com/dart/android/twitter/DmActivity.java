@@ -53,7 +53,7 @@ public class DmActivity extends BaseActivity {
 
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
-  private UserTask<Integer, Void, TaskResult> mDeleteTask;
+  private UserTask<Long, Void, TaskResult> mDeleteTask;
   private UserTask<Void, Void, TaskResult> mSendTask;
 
   // Refresh data at startup if last refresh was this long ago or greater.
@@ -299,7 +299,7 @@ public class DmActivity extends BaseActivity {
       TwitterApi api = getApi();
       ImageManager imageManager = getImageManager();
 
-      int maxId = db.fetchMaxDmId(false);
+      long maxId = db.fetchMaxDmId(false);
 
       HashSet<String> imageUrls = new HashSet<String>();
 
@@ -687,7 +687,7 @@ public class DmActivity extends BaseActivity {
       return true;
     case CONTEXT_DELETE_ID:
       int idIndex = cursor.getColumnIndexOrThrow(TwitterDbAdapter.KEY_ID);
-      int id = cursor.getInt(idIndex);
+      long id = cursor.getLong(idIndex);
       doDestroy(id);
 
       return true;
@@ -696,26 +696,26 @@ public class DmActivity extends BaseActivity {
     }
   }
 
-  private void doDestroy(int id) {
+  private void doDestroy(long id) {
     Log.i(TAG, "Attempting delete.");
 
     if (mDeleteTask != null
         && mDeleteTask.getStatus() == UserTask.Status.RUNNING) {
       Log.w(TAG, "Already deleting.");
     } else {
-      mDeleteTask = new DeleteTask().execute(new Integer[] { id });
+      mDeleteTask = new DeleteTask().execute(new Long[] { id });
     }
   }
 
-  private class DeleteTask extends UserTask<Integer, Void, TaskResult> {
+  private class DeleteTask extends UserTask<Long, Void, TaskResult> {
     @Override
     public void onPreExecute() {
       updateProgress("Deleting...");
     }
 
     @Override
-    public TaskResult doInBackground(Integer... params) {
-      Integer id = params[0];
+    public TaskResult doInBackground(Long... params) {
+      Long id = params[0];
 
       try {
         JSONObject json = getApi().destroyDirectMessage(id);
