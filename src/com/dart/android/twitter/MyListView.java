@@ -26,9 +26,32 @@ public class MyListView extends ListView implements ListView.OnScrollListener {
     return result;
   }
 
+  private OnNeedMoreListener mOnNeedMoreListener;
+
+  public static interface OnNeedMoreListener {
+    public void needMore();
+  }
+
+  public void setOnNeedMoreListener(OnNeedMoreListener onNeedMoreListener) {
+    mOnNeedMoreListener = onNeedMoreListener;
+  }
+
+  private int mFirstVisibleItem;
+
   @Override
   public void onScroll(AbsListView view, int firstVisibleItem,
       int visibleItemCount, int totalItemCount) {
+    if (mOnNeedMoreListener == null) {
+      return;
+    }
+
+    if (firstVisibleItem != mFirstVisibleItem) {
+      if (firstVisibleItem + visibleItemCount >= totalItemCount) {
+        mOnNeedMoreListener.needMore();
+      }
+    } else {
+      mFirstVisibleItem = firstVisibleItem;
+    }
   }
 
   @Override
