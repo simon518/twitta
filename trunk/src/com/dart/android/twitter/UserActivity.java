@@ -25,14 +25,13 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
-public class UserActivity extends BaseActivity {
+public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreListener {
 
   private static final String TAG = "UserActivity";
 
@@ -59,7 +58,7 @@ public class UserActivity extends BaseActivity {
   }
 
   // Views.
-  private ListView mTweetList;
+  private MyListView mTweetList;
   private TextView mProgressText;
   private TextView mUserText;
   private TextView mNameText;
@@ -71,6 +70,7 @@ public class UserActivity extends BaseActivity {
   // Tasks.
   private UserTask<Void, Void, TaskResult> mRetrieveTask;
   private UserTask<Void, Void, TaskResult> mFriendshipTask;
+  private UserTask<Void, Void, TaskResult> mLoadMoreTask;
 
   private static final String EXTRA_USER = "user";
 
@@ -96,7 +96,7 @@ public class UserActivity extends BaseActivity {
     setContentView(R.layout.user);
 
     mMe = TwitterApplication.mApi.getUsername();
-    mTweetList = (ListView) findViewById(R.id.tweet_list);
+    mTweetList = (MyListView) findViewById(R.id.tweet_list);
     mProgressText = (TextView) findViewById(R.id.progress_text);
     mUserText = (TextView) findViewById(R.id.tweet_user_text);
     mNameText = (TextView) findViewById(R.id.realname_text);
@@ -124,6 +124,7 @@ public class UserActivity extends BaseActivity {
     mAdapter = new TweetAdapter(this);
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
+    mTweetList.setOnNeedMoreListener(this);
 
     State state = (State) getLastNonConfigurationInstance();
 
@@ -183,6 +184,11 @@ public class UserActivity extends BaseActivity {
       mFriendshipTask.cancel(true);
     }
 
+    if (mLoadMoreTask != null
+        && mLoadMoreTask.getStatus() == UserTask.Status.RUNNING) {
+      mLoadMoreTask.cancel(true);
+    }
+
     super.onDestroy();
   }
 
@@ -237,8 +243,23 @@ public class UserActivity extends BaseActivity {
     }
   }
 
+  private void doLoadMore() {
+    Log.i(TAG, "Attempting load more.");
+
+    if (mLoadMoreTask != null
+        && mLoadMoreTask.getStatus() == UserTask.Status.RUNNING) {
+      Log.w(TAG, "Already loading more.");
+    } else {
+      mLoadMoreTask = new LoadMoreTask().execute();
+    }
+  }
+
   private void onRetrieveBegin() {
     updateProgress("Refreshing...");
+  }
+
+  private void onLoadMoreBegin() {
+    updateProgress("Getting more...");
   }
 
   private class RetrieveTask extends UserTask<Void, Void, TaskResult> {
@@ -359,6 +380,83 @@ public class UserActivity extends BaseActivity {
     }
   }
 
+  private class LoadMoreTask extends UserTask<Void, Void, TaskResult> {
+    @Override
+    public void onPreExecute() {
+      onLoadMoreBegin();
+    }
+
+    ArrayList<Tweet> mTweets = new ArrayList<Tweet>();
+
+    @Override
+    public TaskResult doInBackground(Void... params) {
+      JSONArray jsonArray;
+
+      TwitterApi api = getApi();
+
+      try {
+        jsonArray = api.getUserTimeline(mUsername);
+      } catch (IOException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      } catch (AuthException e) {
+        Log.i(TAG, "Invalid authorization.");
+        return TaskResult.AUTH_ERROR;
+      } catch (ApiException e) {
+        Log.e(TAG, e.getMessage(), e);
+        return TaskResult.IO_ERROR;
+      }
+
+      for (int i = 0; i < jsonArray.length(); ++i) {
+        if (isCancelled()) {
+          return TaskResult.CANCELLED;
+        }
+
+        Tweet tweet;
+
+        try {
+          JSONObject jsonObject = jsonArray.getJSONObject(i);
+          tweet = Tweet.create(jsonObject);
+          mTweets.add(tweet);
+        } catch (JSONException e) {
+          Log.e(TAG, e.getMessage(), e);
+          return TaskResult.IO_ERROR;
+        }
+      }
+
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+
+      // Bad style! But learned something.
+      // TODO: thread safety.
+      UserActivity.this.mTweets.addAll(mTweets);
+
+      if (isCancelled()) {
+        return TaskResult.CANCELLED;
+      }
+
+      return TaskResult.OK;
+    }
+
+    @Override
+    public void onProgressUpdate(Void... progress) {
+      draw();
+    }
+
+    @Override
+    public void onPostExecute(TaskResult result) {
+      if (result == TaskResult.AUTH_ERROR) {
+        logout();
+      } else if (result == TaskResult.OK) {
+        draw();
+      } else {
+        // Do nothing.
+      }
+
+      updateProgress("");
+    }
+  }
 
   private class FriendshipTask extends UserTask<Void, Void, TaskResult> {
 
@@ -628,6 +726,11 @@ public class UserActivity extends BaseActivity {
 
       return view;
     }
+  }
+
+  @Override
+  public void needMore() {
+    doLoadMore();
   }
 
 }
