@@ -61,8 +61,8 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
     public User mUser;
     public boolean mIsFollowing;
     public boolean mIsFollower;
-    private int mNextPage;
-    private Bitmap mProfileBitmap;
+    public int mNextPage;
+    public Bitmap mProfileBitmap;
   }
 
   // Views.
