@@ -335,7 +335,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
         // Fetch image to cache.
         try {
           // Don't store on disk.
-          imageManager.put(mUser.profileImageUrl, false);
+          imageManager.put(mUser.profileImageUrl);
         } catch (IOException e) {
           Log.e(TAG, e.getMessage(), e);
         }
@@ -697,7 +697,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
 
   private static class TweetAdapter extends TweetArrayAdapter {
     public TweetAdapter(Context context) {
-      super(context);
+      super(context, null);
     }
 
     private static class ViewHolder {

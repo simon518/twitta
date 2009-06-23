@@ -10,6 +10,7 @@ import org.json.JSONObject;
 
 import android.app.SearchManager;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -37,16 +38,19 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
   private String mSearchQuery;
   private ArrayList<Tweet> mTweets;
   private TweetArrayAdapter mAdapter;
+  private MemoryImageCache mImageCache;
   private int mNextPage = 1;
 
   private static class State {
     State(SearchActivity activity) {
       mTweets = activity.mTweets;
       mNextPage = activity.mNextPage;
+      mImageCache = activity.mImageCache;
     }
 
     public ArrayList<Tweet> mTweets;
     public int mNextPage;
+    public ImageCache mImageCache;
   }
 
   // Tasks.
@@ -76,7 +80,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
     setTitle(mSearchQuery);
 
     mTweetList = (MyListView) findViewById(R.id.tweet_list);
-    mAdapter = new TweetArrayAdapter(this);
+    mAdapter = new TweetArrayAdapter(this, mImageCache);
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
     mTweetList.setOnNeedMoreListener(this);
@@ -84,10 +88,10 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
     State state = (State) getLastNonConfigurationInstance();
-    boolean wasRunning = Utils.isTrue(savedInstanceState, SIS_RUNNING_KEY);
 
-    if (state != null && !wasRunning) {
+    if (state != null) {
       mTweets = state.mTweets;
+      mAdapter.setImageCache(state.mImageCache);
       draw();
     } else {
       doSearch();
@@ -114,16 +118,9 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
     return new State(this);
   }
 
-  private static final String SIS_RUNNING_KEY = "running";
-
   @Override
   protected void onSaveInstanceState(Bundle outState) {
     super.onSaveInstanceState(outState);
-
-    if (mSearchTask != null
-        && mSearchTask.getStatus() == UserTask.Status.RUNNING) {
-      outState.putBoolean(SIS_RUNNING_KEY, true);
-    }
   }
 
   @Override
@@ -225,13 +222,14 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
 
       // TODO: what if orientation change?
       ImageManager imageManager = getImageManager();
+      MemoryImageCache imageCache = new MemoryImageCache();
 
       for (String imageUrl : imageUrls) {
         if (!Utils.isEmpty(imageUrl)) {
           // Fetch image to cache.
           try {
-            // Store these temporarily (not to file).
-            imageManager.put(imageUrl, true);
+            Bitmap bitmap = imageManager.fetchImage(imageUrl);
+            imageCache.put(imageUrl, bitmap);
           } catch (IOException e) {
             Log.e(TAG, e.getMessage(), e);
           }
@@ -241,6 +239,8 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
           return RetrieveResult.CANCELLED;
         }
       }
+
+      addImages(imageCache);
 
       return RetrieveResult.OK;
     }
@@ -256,6 +256,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
         logout();
       } else if (result == RetrieveResult.OK) {
         draw();
+        mAdapter.setImageCache(mImageCache);
       } else {
         // Do nothing.
       }
@@ -366,6 +367,14 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
     }
 
     ++mNextPage;
+  }
+
+  private synchronized void addImages(MemoryImageCache imageCache) {
+    if (mImageCache == null) {
+      mImageCache = imageCache;
+    } else {
+      mImageCache.putAll(imageCache);
+    }
   }
 
 }
