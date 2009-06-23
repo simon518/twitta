@@ -79,6 +79,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
 
     setTitle(mSearchQuery);
 
+    mTweets = new ArrayList<Tweet>();
     mTweetList = (MyListView) findViewById(R.id.tweet_list);
     mAdapter = new TweetArrayAdapter(this, mImageCache);
     mTweetList.setAdapter(mAdapter);
@@ -359,11 +360,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
       return;
     }
 
-    if (mTweets == null) {
-      mTweets = tweets;
-    } else {
-      mTweets.addAll(tweets);
-    }
+    mTweets.addAll(tweets);
 
     ++mNextPage;
   }
