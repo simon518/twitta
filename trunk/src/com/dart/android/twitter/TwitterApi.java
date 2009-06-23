@@ -592,11 +592,12 @@ public class TwitterApi {
     return json;
   }
 
-  public JSONArray search(String query) throws IOException, AuthException,
+  public JSONArray search(String query, int page) throws IOException, AuthException,
       ApiException {
     Log.i(TAG, "Searching.");
 
-    String url = SEARCH_URL + "?q=" + URLEncoder.encode(query, HTTP.UTF_8);
+    String url = SEARCH_URL + "?q=" + URLEncoder.encode(query, HTTP.UTF_8)
+        + "&page=" + URLEncoder.encode(page + "", HTTP.UTF_8);
 
     InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
