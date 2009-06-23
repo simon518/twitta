@@ -129,6 +129,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
     setTitle("@" + mUsername);
     mUserText.setText(mUsername);
 
+    mTweets = new ArrayList<Tweet>();
     mAdapter = new TweetAdapter(this);
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
@@ -376,7 +377,9 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
     @Override
     public void onPostExecute(TaskResult result) {
       if (result == TaskResult.AUTH_ERROR) {
-        logout();
+        updateProgress("This person has protected their updates");
+
+        return;
       } else if (result == TaskResult.OK) {
         draw();
       } else {
@@ -750,11 +753,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       return;
     }
 
-    if (mTweets == null) {
-      mTweets = tweets;
-    } else {
-      mTweets.addAll(tweets);
-    }
+    mTweets.addAll(tweets);
 
     ++mNextPage;
   }
