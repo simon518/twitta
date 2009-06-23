@@ -27,11 +27,6 @@ public class TweetArrayAdapter extends BaseAdapter {
     mImageCache = imageCache;
   }
 
-  public void setImageCache(ImageCache imageCache) {
-    mImageCache = imageCache;
-    notifyDataSetChanged();
-  }
-
   @Override
   public int getCount() {
     return mTweets.size();
@@ -93,10 +88,14 @@ public class TweetArrayAdapter extends BaseAdapter {
     return view;
   }
 
+  public void refresh(ArrayList<Tweet> tweets, ImageCache imageCache) {
+    mImageCache = imageCache;
+    refresh(tweets);
+  }
+
   public void refresh(ArrayList<Tweet> tweets) {
     mTweets = tweets;
     notifyDataSetChanged();
   }
 
 }
-
