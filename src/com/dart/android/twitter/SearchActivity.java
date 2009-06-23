@@ -50,7 +50,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
 
     public ArrayList<Tweet> mTweets;
     public int mNextPage;
-    public ImageCache mImageCache;
+    public MemoryImageCache mImageCache;
   }
 
   // Tasks.
@@ -91,7 +91,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
 
     if (state != null) {
       mTweets = state.mTweets;
-      mAdapter.setImageCache(state.mImageCache);
+      mImageCache = state.mImageCache;
       draw();
     } else {
       doSearch();
@@ -141,7 +141,7 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
   }
 
   private void draw() {
-    mAdapter.refresh(mTweets);
+    mAdapter.refresh(mTweets, mImageCache);
   }
 
   private enum RetrieveResult {
@@ -256,7 +256,6 @@ public class SearchActivity extends BaseActivity implements MyListView.OnNeedMor
         logout();
       } else if (result == RetrieveResult.OK) {
         draw();
-        mAdapter.setImageCache(mImageCache);
       } else {
         // Do nothing.
       }

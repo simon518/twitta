@@ -14,7 +14,9 @@ public class MemoryImageCache implements ImageCache {
 
   @Override
   public Bitmap get(String url) {
-    return mCache.get(url);
+    synchronized(this) {
+      return mCache.get(url);
+    }
   }
 
   @Override
