@@ -19,7 +19,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 
@@ -27,24 +26,27 @@ import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
 
-public class SearchActivity extends BaseActivity {
+public class SearchActivity extends BaseActivity implements MyListView.OnNeedMoreListener {
   private static final String TAG = "SearchActivity";
 
   // Views.
-  private ListView mTweetList;
+  private MyListView mTweetList;
   private TextView mProgressText;
 
   // State.
   private String mSearchQuery;
   private ArrayList<Tweet> mTweets;
   private TweetArrayAdapter mAdapter;
+  private int mNextPage = 1;
 
   private static class State {
     State(SearchActivity activity) {
       mTweets = activity.mTweets;
+      mNextPage = activity.mNextPage;
     }
 
     public ArrayList<Tweet> mTweets;
+    public int mNextPage;
   }
 
   // Tasks.
@@ -73,10 +75,11 @@ public class SearchActivity extends BaseActivity {
 
     setTitle(mSearchQuery);
 
-    mTweetList = (ListView) findViewById(R.id.tweet_list);
+    mTweetList = (MyListView) findViewById(R.id.tweet_list);
     mAdapter = new TweetArrayAdapter(this);
     mTweetList.setAdapter(mAdapter);
     registerForContextMenu(mTweetList);
+    mTweetList.setOnNeedMoreListener(this);
 
     mProgressText = (TextView) findViewById(R.id.progress_text);
 
@@ -104,6 +107,10 @@ public class SearchActivity extends BaseActivity {
 
   @Override
   public Object onRetainNonConfigurationInstance() {
+    return createState();
+  }
+
+  private synchronized State createState() {
     return new State(this);
   }
 
@@ -158,7 +165,11 @@ public class SearchActivity extends BaseActivity {
   private class SearchTask extends UserTask<Void, Void, RetrieveResult> {
     @Override
     public void onPreExecute() {
-      updateProgress("Searching...");
+      if (mNextPage == 1) {
+        updateProgress("Searching...");
+      } else {
+        updateProgress("Getting more...");
+      }
     }
 
     ArrayList<Tweet> mTweets = new ArrayList<Tweet>();
@@ -168,7 +179,7 @@ public class SearchActivity extends BaseActivity {
       JSONArray jsonArray;
 
       try {
-        jsonArray = getApi().search(mSearchQuery);
+        jsonArray = getApi().search(mSearchQuery, mNextPage);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return RetrieveResult.IO_ERROR;
@@ -204,7 +215,7 @@ public class SearchActivity extends BaseActivity {
         }
       }
 
-      SearchActivity.this.mTweets = mTweets;
+      addTweets(mTweets);
 
       if (isCancelled()) {
         return RetrieveResult.CANCELLED;
@@ -212,6 +223,7 @@ public class SearchActivity extends BaseActivity {
 
       publishProgress();
 
+      // TODO: what if orientation change?
       ImageManager imageManager = getImageManager();
 
       for (String imageUrl : imageUrls) {
@@ -328,6 +340,32 @@ public class SearchActivity extends BaseActivity {
 
   private void launchNewTweetActivity(String text) {
     launchActivity(TwitterActivity.createNewTweetIntent(text));
+  }
+
+  @Override
+  public void needMore() {
+    if (!isLastPage()) {
+      doSearch();
+    }
+  }
+
+  public boolean isLastPage() {
+    return mNextPage == -1;
+  }
+
+  private synchronized void addTweets(ArrayList<Tweet> tweets) {
+    if (tweets.size() == 0) {
+      mNextPage = -1;
+      return;
+    }
+
+    if (mTweets == null) {
+      mTweets = tweets;
+    } else {
+      mTweets.addAll(tweets);
+    }
+
+    ++mNextPage;
   }
 
 }
