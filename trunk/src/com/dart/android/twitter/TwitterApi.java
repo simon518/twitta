@@ -508,12 +508,13 @@ public class TwitterApi {
     return followers;
   }
 
-  public JSONArray getUserTimeline(String user) throws IOException,
+  public JSONArray getUserTimeline(String user, int page) throws IOException,
       AuthException, ApiException {
     Log.i(TAG, "Requesting user timeline.");
 
     String url = USER_TIMELINE_URL + "?screen_name="
-        + URLEncoder.encode(user, HTTP.UTF_8);
+        + URLEncoder.encode(user, HTTP.UTF_8)
+        + "&page=" + URLEncoder.encode(page + "", HTTP.UTF_8);
 
     InputStream data = requestData(url, METHOD_GET, null);
     JSONArray json = null;
