@@ -12,6 +12,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -27,6 +28,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
+
 import com.dart.android.twitter.TwitterApi.ApiException;
 import com.dart.android.twitter.TwitterApi.AuthException;
 import com.google.android.photostream.UserTask;
@@ -43,6 +45,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
   private Boolean mIsFollowing;
   private Boolean mIsFollower = false;
   private int mNextPage = 1;
+  private Bitmap mProfileBitmap;
 
   private static class State {
     State(UserActivity activity) {
@@ -51,6 +54,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       mIsFollowing = activity.mIsFollowing;
       mIsFollower = activity.mIsFollower;
       mNextPage = activity.mNextPage;
+      mProfileBitmap = activity.mProfileBitmap;
     }
 
     public ArrayList<Tweet> mTweets;
@@ -58,6 +62,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
     public boolean mIsFollowing;
     public boolean mIsFollower;
     private int mNextPage;
+    private Bitmap mProfileBitmap;
   }
 
   // Views.
@@ -139,6 +144,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       mIsFollowing = state.mIsFollowing;
       mIsFollower = state.mIsFollower;
       mNextPage = state.mNextPage;
+      mProfileBitmap = state.mProfileBitmap;
       draw();
     } else {
       doRetrieve();
@@ -208,12 +214,8 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
   }
 
   private void draw() {
-    if (mTweets.size() > 0) {
-      String imageUrl = mTweets.get(0).profileImageUrl;
-
-      if (!TextUtils.isEmpty(imageUrl)) {
-        mProfileImage.setImageBitmap(getImageManager().get(imageUrl));
-      }
+    if (mProfileBitmap != null) {
+      mProfileImage.setImageBitmap(mProfileBitmap);
     }
 
     mAdapter.refresh(mTweets);
@@ -332,10 +334,8 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       publishProgress();
 
       if (!Utils.isEmpty(mUser.profileImageUrl)) {
-        // Fetch image to cache.
         try {
-          // Don't store on disk.
-          imageManager.put(mUser.profileImageUrl);
+          setProfileBitmap(imageManager.fetchImage(mUser.profileImageUrl));
         } catch (IOException e) {
           Log.e(TAG, e.getMessage(), e);
         }
@@ -757,6 +757,10 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
     }
 
     ++mNextPage;
+  }
+
+  private synchronized void setProfileBitmap(Bitmap bitmap) {
+    mProfileBitmap = bitmap;
   }
 
 }
