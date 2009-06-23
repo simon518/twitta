@@ -46,7 +46,7 @@ import android.util.Log;
  * Use the put method to download and store images.
  * Use the get method to retrieve images from the manager.
  */
-public class ImageManager {
+public class ImageManager implements ImageCache {
   private static final String TAG = "ImageManager";
 
   private Context mContext;
@@ -118,19 +118,7 @@ public class ImageManager {
     }
   }
 
-  public void put(String url) throws IOException {
-    put(url, false);
-  }
-
-  // Downloads and stores an image.
-  public void put(String url, boolean isTemp) throws IOException {
-    if (contains(url)) {
-      // Image already exists.
-      return;
-
-      // TODO: write to file if not present.
-    }
-
+  public Bitmap fetchImage(String url) throws IOException {
     Log.i(TAG, "Fetching image: " + url);
 
     HttpGet get = new HttpGet(url);
@@ -159,17 +147,34 @@ public class ImageManager {
     Bitmap bitmap = BitmapFactory.decodeStream(bis);
     bis.close();
 
+    return bitmap;
+  }
+
+  // Downloads and stores an image.
+  public void put(String url) throws IOException {
+    if (contains(url)) {
+      // Image already exists.
+      return;
+
+      // TODO: write to file if not present.
+    }
+
+    Bitmap bitmap = fetchImage(url);
+
     if (bitmap == null) {
       Log.w(TAG, "Retrieved bitmap is null.");
     } else {
-      synchronized(this) {
-        mCache.put(url, new SoftReference<Bitmap>(bitmap));
-      }
-
-      if (!isTemp) {
-        writeFile(url, bitmap);
-      }
+      put(url, bitmap);
     }
+  }
+
+  @Override
+  public void put(String url, Bitmap bitmap) {
+    synchronized(this) {
+      mCache.put(url, new SoftReference<Bitmap>(bitmap));
+    }
+
+    writeFile(url, bitmap);
   }
 
   private void writeFile(String url, Bitmap bitmap) {

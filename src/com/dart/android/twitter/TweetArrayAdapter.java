@@ -17,12 +17,19 @@ public class TweetArrayAdapter extends BaseAdapter {
   private Context mContext;
   protected LayoutInflater mInflater;
   protected StringBuilder mMetaBuilder;
+  protected ImageCache mImageCache;
 
-  public TweetArrayAdapter(Context context) {
+  public TweetArrayAdapter(Context context, ImageCache imageCache) {
     mTweets = new ArrayList<Tweet>();
     mContext = context;
     mInflater = LayoutInflater.from(mContext);
     mMetaBuilder = new StringBuilder();
+    mImageCache = imageCache;
+  }
+
+  public void setImageCache(ImageCache imageCache) {
+    mImageCache = imageCache;
+    notifyDataSetChanged();
   }
 
   @Override
@@ -71,11 +78,13 @@ public class TweetArrayAdapter extends BaseAdapter {
     holder.tweetUserText.setText(tweet.screenName);
     Utils.setTweetText(holder.tweetText, tweet.text);
 
-    String profileImageUrl = tweet.profileImageUrl;
+    if (mImageCache != null) {
+      String profileImageUrl = tweet.profileImageUrl;
 
-    if (!Utils.isEmpty(profileImageUrl)) {
-      holder.profileImage.setImageBitmap(TwitterApplication.mImageManager.get(
-          profileImageUrl));
+      if (!Utils.isEmpty(profileImageUrl)) {
+        holder.profileImage.setImageBitmap(mImageCache.get(
+            profileImageUrl));
+      }
     }
 
     holder.metaText.setText(Tweet.buildMetaText(mMetaBuilder,
