@@ -159,7 +159,11 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
 
   @Override
   public Object onRetainNonConfigurationInstance() {
-      return new State(this);
+    return createState();
+  }
+
+  private synchronized State createState() {
+    return new State(this);
   }
 
   private static final String SIS_RUNNING_KEY = "running";
@@ -319,9 +323,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
         }
       }
 
-      // Bad style! But learned something.
-      UserActivity.this.mTweets = mTweets;
-      ++mNextPage;
+      addTweets(mTweets);
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
@@ -433,10 +435,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
         return TaskResult.CANCELLED;
       }
 
-      // Bad style! But learned something.
-      // TODO: thread safety.
-      UserActivity.this.mTweets.addAll(mTweets);
-      ++mNextPage;
+      addTweets(mTweets);
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
@@ -736,7 +735,28 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
 
   @Override
   public void needMore() {
-    doLoadMore();
+    if (!isLastPage()) {
+      doLoadMore();
+    }
+  }
+
+  public boolean isLastPage() {
+    return mNextPage == -1;
+  }
+
+  private synchronized void addTweets(ArrayList<Tweet> tweets) {
+    if (tweets.size() == 0) {
+      mNextPage = -1;
+      return;
+    }
+
+    if (mTweets == null) {
+      mTweets = tweets;
+    } else {
+      mTweets.addAll(tweets);
+    }
+
+    ++mNextPage;
   }
 
 }
