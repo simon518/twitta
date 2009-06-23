@@ -42,6 +42,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
   private User mUser;
   private Boolean mIsFollowing;
   private Boolean mIsFollower = false;
+  private int mNextPage = 1;
 
   private static class State {
     State(UserActivity activity) {
@@ -49,12 +50,14 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       mUser = activity.mUser;
       mIsFollowing = activity.mIsFollowing;
       mIsFollower = activity.mIsFollower;
+      mNextPage = activity.mNextPage;
     }
 
     public ArrayList<Tweet> mTweets;
     public User mUser;
     public boolean mIsFollowing;
     public boolean mIsFollower;
+    private int mNextPage;
   }
 
   // Views.
@@ -135,6 +138,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       mUser = state.mUser;
       mIsFollowing = state.mIsFollowing;
       mIsFollower = state.mIsFollower;
+      mNextPage = state.mNextPage;
       draw();
     } else {
       doRetrieve();
@@ -278,7 +282,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       ImageManager imageManager = getImageManager();
 
       try {
-        jsonArray = api.getUserTimeline(mUsername);
+        jsonArray = api.getUserTimeline(mUsername, mNextPage);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -317,6 +321,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
 
       // Bad style! But learned something.
       UserActivity.this.mTweets = mTweets;
+      ++mNextPage;
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
@@ -395,7 +400,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       TwitterApi api = getApi();
 
       try {
-        jsonArray = api.getUserTimeline(mUsername);
+        jsonArray = api.getUserTimeline(mUsername, mNextPage);
       } catch (IOException e) {
         Log.e(TAG, e.getMessage(), e);
         return TaskResult.IO_ERROR;
@@ -431,6 +436,7 @@ public class UserActivity extends BaseActivity implements MyListView.OnNeedMoreL
       // Bad style! But learned something.
       // TODO: thread safety.
       UserActivity.this.mTweets.addAll(mTweets);
+      ++mNextPage;
 
       if (isCancelled()) {
         return TaskResult.CANCELLED;
